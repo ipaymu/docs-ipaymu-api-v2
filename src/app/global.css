@@ -1,3 +1,9 @@
 @import 'tailwindcss';
 @import 'fumadocs-ui/css/neutral.css';
 @import 'fumadocs-ui/css/preset.css';
+
+:root {
+  /* Match the Gold/Orange color from the example */
+  --primary: 36 100% 50%;
+  --ring: 36 100% 50%;
+}

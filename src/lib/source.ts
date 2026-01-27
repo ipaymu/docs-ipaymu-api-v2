@@ -5,6 +5,10 @@ import { type InferPageType, loader } from 'fumadocs-core/source';
 export const source = loader({
   baseUrl: '/docs',
   source: docs.toFumadocsSource(),
+  i18n: {
+    defaultLanguage: 'id',  // Bahasa default (file .mdx biasa)
+    languages: ['id', 'en'], // Daftar bahasa yang disupport
+  },
   plugins: [],
 });
 
