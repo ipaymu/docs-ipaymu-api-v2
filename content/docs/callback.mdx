@@ -1,0 +1,171 @@
+---
+title: Callback
+description: Parameter dan struktur notifikasi callback.
+---
+
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+
+### **Dokumentasi Callback iPaymu**
+
+Parameter callback akan dikirimkan saat pembeli berhasil melakukan pembayaran.
+
+### **Headers**
+
+Berikut adalah contoh header yang dikirimkan oleh iPaymu. Parameter `X-Signature` wajib digunakan untuk validasi keamanan.
+
+| Header Key | Value | Keterangan |
+| :--- | :--- | :--- |
+| `Accept` | `application/json` | Tipe konten yang diterima |
+| `Content-Type` | `application/json` | Format data body |
+| `X-External-ID` | `20251111101052209120` | ID Unik Request |
+| `X-Signature` | `c9594cc8...` | Signature untuk validasi |
+| `X-Timestamp` | `2025-11-11T10:10:52+07:00` | Waktu request dikirim |
+
+### **Request Body**
+
+Berikut adalah struktur data JSON yang dikirimkan saat callback:
+
+```json
+{
+  "trx_id": 193205,
+  "sid": "5892246c-82e6-4397-af7a-92bff3f96d77",
+  "reference_id": "412097091706893",
+  "status": "berhasil",
+  "status_code": 1,
+  "sub_total": "150000",
+  "total": "151050",
+  "amount": "151050",
+  "fee": "1050",
+  "paid_off": 150000,
+  "created_at": "2026-01-27 02:47:53",
+  "expired_at": "2026-01-28 02:47:52",
+  "paid_at": "2026-01-27 02:48:08",
+  "settlement_status": "settled",
+  "transaction_status_code": 1,
+  "is_escrow": false,
+  "system_notes": "Sandbox notify",
+  "via": "qris",
+  "channel": "mpm",
+  "payment_no": "",
+  "buyer_name": "Aut libero dolor aut",
+  "buyer_email": "bucafet@mailinator.com",
+  "buyer_phone": "+1 (297) 254-2663",
+  "additional_info": [],
+  "url": "https://yournotifyUrl.com"
+}
+```
+
+### **Penjelasan Parameter**
+
+| Parameter | Tipe | Deskripsi |
+| :--- | :--- | :--- |
+| `trx_id` | Number | ID Transaksi iPaymu |
+| `sid` | String | Session ID Transaksi |
+| `reference_id` | String | ID Referensi dari Merchant |
+| `status` | String | Status transaksi (berhasil, pending, expired) |
+| `status_code` | Number | Kode status (1=Berhasil, 0=Pending, -2=Expired) |
+| `sub_total` | String (Decimal) | Nominal awal sebelum fee |
+| `total` | String (Decimal) | Total yang harus dibayar |
+| `amount` | String (Decimal) | Nominal pembayaran |
+| `fee` | String (Decimal) | Biaya admin transaksi |
+| `paid_off` | Number | Nominal yang sudah dibayarkan |
+| `created_at` | Datetime | Waktu transaksi dibuat |
+| `expired_at` | Datetime | Waktu transaksi kadaluarsa |
+| `paid_at` | Datetime | Waktu pembayaran berhasil |
+| `settlement_status` | String | Status pencairan dana |
+| `transaction_status_code` | Number | Kode status transaksi (sama dengan status_code) |
+| `is_escrow` | Boolean | Apakah transaksi escrow? |
+| `via` | String | Metode pembayaran (e.g., qris, va) |
+| `channel` | String | Channel pembayaran (e.g., mpm, bni) |
+| `buyer_name` | String | Nama pembeli |
+| `buyer_email` | String | Email pembeli |
+| `buyer_phone` | String | No. HP pembeli |
+
+---
+
+### **Validasi Signature**
+
+Untuk memverifikasi bahwa request benar-benar dari iPaymu, validasi parameter `signature`.
+
+**Langkah Validasi:**
+1. Hapus parameter `signature` dari data yang diterima (jika ada di body).
+2. Urutkan data berdasarkan kunci (key) secara **ascending** (`ksort`).
+3. Konversi data yang sudah diurutkan menjadi string JSON.
+4. Generate hash **HMAC-SHA256** menggunakan string JSON tersebut dan Secret Key (VA) Anda.
+5. Bandingkan signature hasil generate Anda dengan `X-Signature` di header.
+
+#### **Example Code: Signature Validation**
+
+<Tabs items={["PHP", "Node.js"]}>
+<Tab value="PHP">
+
+```php
+// Nomor VA iPaymu Anda
+$secretKey = '117000xxxxxx';
+// 1. Ambil Data Masuk (Mendukung JSON atau Form-Data sesuai setting dashboard)
+$input = file_get_contents('php://input');
+$data  = json_decode($input, true) ?? $_POST;
+// 2. Pisahkan signature yang diterima
+$receivedSignature = $data['signature'] ?? '';
+unset($data['signature']);
+// 3. Urutkan data berdasarkan key (Ascending A-Z)
+ksort($data);
+// 4. Generate Signature
+$jsonBody = json_encode($data);
+$calculatedSignature = hash_hmac('sha256', $jsonBody, $secretKey);
+// 5. Bandingkan
+if (hash_equals($calculatedSignature, $receivedSignature)) {
+    // Signature Valid. Proses transaksi update database.
+    echo json_encode(['status' => 'success']);
+} else {
+    // Signature Tidak Valid. Abaikan.
+    http_response_code(400);
+}
+?>
+```
+
+</Tab>
+
+<Tab value="Node.js">
+
+```javascript
+const crypto = require("crypto");
+const express = require("express");
+const app = express();
+// Middleware untuk handle JSON dan URL-encoded
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.post("/callback", (req, res) => {
+  const secretKey = "117000xxxxxx"; // Nomor VA iPaymu Anda
+  // 1. Ambil Data
+  let data = req.body;
+  // 2. Pisahkan signature yang diterima
+  const receivedSignature = data.signature;
+  delete data.signature; // Hapus signature agar tidak ikut di-hash
+  // 3. Urutkan object berdasarkan key (Meniru PHP ksort)
+  const sortedKeys = Object.keys(data).sort();
+  const sortedData = {};
+  sortedKeys.forEach((key) => {
+    sortedData[key] = data[key];
+  });
+  // 4. Generate Signature
+  const jsonBody = JSON.stringify(sortedData);
+  const calculatedSignature = crypto.createHmac("sha256", secretKey).update(jsonBody).digest("hex");
+  // 5. Bandingkan
+  if (calculatedSignature === receivedSignature) {
+    // Valid
+    console.log("Transaksi Terverifikasi");
+    res.status(200).json({ status: "OK" });
+  } else {
+    // Tidak Valid
+    console.error("Signature Salah");
+    res.status(400).send("Invalid Signature");
+  }
+});
+```
+
+</Tab>
+</Tabs>
+
+**Source:**
+[https://drive.google.com/file/d/1WfBEI5ry6V7knuSiCONYC4ZhQmD8Aipn/view](https://drive.google.com/file/d/1WfBEI5ry6V7knuSiCONYC4ZhQmD8Aipn/view)

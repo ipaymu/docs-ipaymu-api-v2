@@ -1,0 +1,14 @@
+{
+    "pages": [
+        "index",
+        "getting-started",
+        "signature",
+        "payment",
+        "cod",
+        "callback",
+        "balance",
+        "transaction",
+        "verification",
+        "ip-domain-validation"
+    ]
+}
