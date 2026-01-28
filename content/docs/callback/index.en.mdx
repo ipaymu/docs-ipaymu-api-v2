@@ -1,0 +1,107 @@
+---
+title: Callback
+description: Parameters and structure of the callback notification.
+---
+
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+
+### **iPaymu Callback Documentation**
+
+Callback parameters will be sent when the buyer successfully makes the payment.
+
+**Configuration:**  
+You can configure the Callback Content-Type (`application/x-www-form-urlencoded` or `application/json`) in your dashboard settings:
+
+- **Production:** [https://my.ipaymu.com/integration/setting](https://my.ipaymu.com/integration/setting)
+- **Sandbox:** [https://sandbox.ipaymu.com/integration/setting](https://sandbox.ipaymu.com/integration/setting)
+
+**Notes:**
+
+- Callback is automatically re-sent if we don't get `http response 200`.
+- Make sure to validate when receiving callbacks more than 1 time not to update your transaction.
+- **Signature Validation:** To verify the request is truly from iPaymu, validate the `signature` parameter.
+- **Secret Key:** Use your **iPaymu Merchant VA (Virtual Account)** number as the `$secretKey`.
+- **Mechanism:**
+
+1. Remove the `signature` parameter from the received data.
+2. Sort the data by keys in **ascending order** (`ksort`).
+3. Convert the sorted data to a JSON string.
+4. Generate the **HMAC-SHA256** hash using the JSON string and your Secret Key (VA).
+5. Compare your generated signature with the received signature.
+
+#### **Example Code: Signature Validation**
+
+<Tabs items={["PHP", "Node.js"]}>
+<Tab value="PHP">
+
+```php
+// Nomor VA iPaymu Anda
+$secretKey = '117000xxxxxx';
+// 1. Ambil Data Masuk (Mendukung JSON atau Form-Data sesuai setting dashboard)
+$input = file_get_contents('php://input');
+$data  = json_decode($input, true) ?? $_POST;
+// 2. Pisahkan signature yang diterima
+$receivedSignature = $data['signature'] ?? '';
+unset($data['signature']);
+// 3. Urutkan data berdasarkan key (Ascending A-Z)
+ksort($data);
+// 4. Generate Signature
+$jsonBody = json_encode($data);
+$calculatedSignature = hash_hmac('sha256', $jsonBody, $secretKey);
+// 5. Bandingkan
+if (hash_equals($calculatedSignature, $receivedSignature)) {
+    // Signature Valid. Proses transaksi update database.
+    echo json_encode(['status' => 'success']);
+} else {
+    // Signature Tidak Valid. Abaikan.
+    http_response_code(400);
+}
+?>
+```
+
+</Tab>
+
+<Tab value="Node.js">
+
+```javascript
+const crypto = require("crypto");
+const express = require("express");
+const app = express();
+// Middleware untuk handle JSON dan URL-encoded
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.post("/callback", (req, res) => {
+  const secretKey = "117000xxxxxx"; // Nomor VA iPaymu Anda
+  // 1. Ambil Data
+  let data = req.body;
+  // 2. Pisahkan signature yang diterima
+  const receivedSignature = data.signature;
+  delete data.signature; // Hapus signature agar tidak ikut di-hash
+  // 3. Urutkan object berdasarkan key (Meniru PHP ksort)
+  const sortedKeys = Object.keys(data).sort();
+  const sortedData = {};
+  sortedKeys.forEach((key) => {
+    sortedData[key] = data[key];
+  });
+  // 4. Generate Signature
+  const jsonBody = JSON.stringify(sortedData);
+  const calculatedSignature = crypto.createHmac("sha256", secretKey).update(jsonBody).digest("hex");
+  // 5. Bandingkan
+  if (calculatedSignature === receivedSignature) {
+    // Valid
+    console.log("Transaksi Terverifikasi");
+    res.status(200).json({ status: "OK" });
+  } else {
+    // Tidak Valid
+    console.error("Signature Salah");
+    res.status(400).send("Invalid Signature");
+  }
+});
+```
+
+</Tab>
+</Tabs>
+
+**Source:**
+
+[https://drive.google.com/file/d/1WfBEI5ry6V7knuSiCONYC4ZhQmD8Aipn/view](https://drive.google.com/file/d/1WfBEI5ry6V7knuSiCONYC4ZhQmD8Aipn/view)

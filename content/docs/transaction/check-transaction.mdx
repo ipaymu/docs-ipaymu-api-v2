@@ -1,0 +1,82 @@
+---
+title: Cek Transaksi (Check Transaction)
+description: Cek status dan detail dari transaksi tertentu.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+<a
+  href="https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#556cf73c-ee67-4222-beed-c6849b0f3284"
+  target="_blank"
+  className="button button--primary button--sm"
+>
+  Coba di Postman
+</a>
+
+Cek status dan detail dari transaksi tertentu.
+
+## Endpoint
+
+**URL**: `{{baseUrl}}/api/v2/transaction`
+**Metode**: `POST`
+
+## Request Headers
+
+| Kunci          | Nilai              | Deskripsi                                                                |
+| :------------- | :----------------- | :----------------------------------------------------------------------- |
+| `Content-Type` | `application/json` |                                                                          |
+| `signature`    | `{{signature}}`    | Signature yang dihasilkan. Lihat [Pembuatan Signature](/docs/signature). |
+| `va`           | `{{va}}`           | Nomor Virtual Account Anda.                                              |
+| `timestamp`    | `{{timestamp}}`    | Timestamp saat ini.                                                      |
+
+## Request Body
+
+| Parameter       | Tipe   | Wajib | Deskripsi                             |
+| :-------------- | :----- | :---- | :------------------------------------ |
+| `transactionId` | string | Ya    | ID Transaksi iPaymu yang ingin dicek. |
+| `account`       | string | Tidak | VA iPaymu Anda (opsional).            |
+
+## Contoh Request
+
+```json
+{
+  "transactionId": "4719"
+}
+```
+
+## Contoh Response
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "success",
+  "Data": {
+    "TransactionId": 4719,
+    "SessionId": "50B97F0F-E4B7-49EF-900C-7DC22DB8297D",
+    "ReferenceId": null,
+    "RelatedId": 0,
+    "Sender": "System",
+    "Receiver": "Akun Demo IPAYMU",
+    "Amount": 10000,
+    "Fee": 4000,
+    "Status": 1,
+    "StatusDesc": "Berhasil",
+    "PaidStatus": "paid",
+    "IsLocked": false,
+    "Type": 11,
+    "TypeDesc": "Convenience Store",
+    "Notes": "Convenience Store INDOMARET",
+    "CreatedDate": "2019-12-30 08:37:06",
+    "SuccessDate": "2021-12-12 00:33:50",
+    "ExpiredDate": "2019-12-31 08:37:06",
+    "SettlementDate": "2020-01-31 12:44:12"
+  }
+}
+```
+
+<Callout type="info" title="Kode Status Transaksi">
+  * `0`: Pending (Menunggu Pembayaran) * `1`: Success (Berhasil) * `2`: Cancelled (Dibatalkan) *
+  `3`: Refund (Dikembalikan) * `4`: Error * `5`: Failed (Gagal) * `6`: Success - Unsettled (Berhasil
+  - Belum Settlement) * `7`: Escrow * `-2`: Expired (Kedaluwarsa)
+</Callout>

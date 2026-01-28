@@ -1,0 +1,102 @@
+---
+title: Direct Payment
+description: This endpoint is used to process direct payments.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+<a
+  href="https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#005ef6ea-96e4-47f7-9282-afd1ce5a2904"
+  target="_blank"
+  className="button button--primary button--sm"
+>
+  Try it in Postman
+</a>
+
+This endpoint is used to process direct payments.
+
+**Endpoint:** `POST https://my.ipaymu.com/api/v2/payment/direct`
+
+## Headers
+
+| Key            | Value              | Description              |
+| :------------- | :----------------- | :----------------------- |
+| `Content-Type` | `application/json` |                          |
+| `signature`    | `string`           | Generated signature      |
+| `va`           | `string`           | Virtual Account number   |
+| `timestamp`    | `string`           | Timestamp of the request |
+
+## Body Parameters
+
+| Parameter         | Type     | Description                   |
+| :---------------- | :------- | :---------------------------- |
+| `name`            | `string` | Customer name                 |
+| `phone`           | `string` | Customer phone number         |
+| `email`           | `string` | Customer email                |
+| `amount`          | `number` | Payment amount                |
+| `notifyUrl`       | `string` | URL for callback notification |
+| `expired`         | `number` | Expiry time                   |
+| `expiredType`     | `string` | Expiry type (e.g., "hours")   |
+| `comments`        | `string` | Transaction comments          |
+| `referenceId`     | `string` | Unique reference ID           |
+| `paymentMethod`   | `string` | Payment method (e.g., "va")   |
+| `paymentChannel`  | `string` | Payment channel (e.g., "bca") |
+| `product`         | `array`  | List of products              |
+| `qty`             | `array`  | List of quantities            |
+| `price`           | `array`  | List of prices                |
+| `weight`          | `array`  | List of weights               |
+| `width`           | `array`  | List of widths                |
+| `height`          | `array`  | List of heights               |
+| `length`          | `array`  | List of lengths               |
+| `deliveryArea`    | `string` | Delivery area code            |
+| `deliveryAddress` | `string` | Delivery address              |
+
+## Example Request
+
+```json
+{
+  "name": "Buyer",
+  "phone": "08123456789",
+  "email": "buyer@mail.com",
+  "amount": 10000,
+  "notifyUrl": "https://mywebsite.com/callback",
+  "expired": 24,
+  "expiredType": "hours",
+  "comments": "Payment for Order #123",
+  "referenceId": "REF123456",
+  "paymentMethod": "va",
+  "paymentChannel": "bca",
+  "product": ["Product A"],
+  "qty": [1],
+  "price": [10000],
+  "weight": [1],
+  "width": [1],
+  "height": [1],
+  "length": [1],
+  "deliveryArea": "76111",
+  "deliveryAddress": "Jalan Raya No. 1"
+}
+```
+
+## Example Response
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Success",
+  "Data": {
+    "TransactionId": 12345,
+    "ReferenceId": "REF123456",
+    "Via": "va",
+    "Channel": "bca",
+    "PaymentNo": "1234567890",
+    "PaymentName": "BCA Virtual Account",
+    "Total": 10000,
+    "Fee": 0,
+    "Expired": "2023-12-31 23:59:59",
+    "Note": null,
+    "Url": "https://my.ipaymu.com/payment/12345"
+  }
+}
+```

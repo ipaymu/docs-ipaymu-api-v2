@@ -1,0 +1,81 @@
+---
+title: Check Transaction
+description: Check the status and details of a specific transaction.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+<a
+  href="https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#556cf73c-ee67-4222-beed-c6849b0f3284"
+  target="_blank"
+  className="button button--primary button--sm"
+>
+  Try it in Postman
+</a>
+
+Check the status and details of a specific transaction.
+
+## Endpoint
+
+**URL**: `{{baseUrl}}/api/v2/transaction`
+**Method**: `POST`
+
+## Request Headers
+
+| Key            | Value              | Description                                                       |
+| :------------- | :----------------- | :---------------------------------------------------------------- |
+| `Content-Type` | `application/json` |                                                                   |
+| `signature`    | `{{signature}}`    | Generated signature. See [Signature Generation](/docs/signature). |
+| `va`           | `{{va}}`           | Your Virtual Account Number.                                      |
+| `timestamp`    | `{{timestamp}}`    | Current timestamp.                                                |
+
+## Request Body
+
+| Parameter       | Type   | Required | Description                         |
+| :-------------- | :----- | :------- | :---------------------------------- |
+| `transactionId` | string | Yes      | The iPaymu transaction ID to check. |
+| `account`       | string | No       | Your iPaymu VA (optional).          |
+
+## Example Request
+
+```json
+{
+  "transactionId": "4719"
+}
+```
+
+## Example Response
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "success",
+  "Data": {
+    "TransactionId": 4719,
+    "SessionId": "50B97F0F-E4B7-49EF-900C-7DC22DB8297D",
+    "ReferenceId": null,
+    "RelatedId": 0,
+    "Sender": "System",
+    "Receiver": "Akun Demo IPAYMU",
+    "Amount": 10000,
+    "Fee": 4000,
+    "Status": 1,
+    "StatusDesc": "Berhasil",
+    "PaidStatus": "paid",
+    "IsLocked": false,
+    "Type": 11,
+    "TypeDesc": "Convenience Store",
+    "Notes": "Convenience Store INDOMARET",
+    "CreatedDate": "2019-12-30 08:37:06",
+    "SuccessDate": "2021-12-12 00:33:50",
+    "ExpiredDate": "2019-12-31 08:37:06",
+    "SettlementDate": "2020-01-31 12:44:12"
+  }
+}
+```
+
+<Callout type="info" title="Transaction Status Codes">
+  * `0`: Pending * `1`: Success * `2`: Cancelled * `3`: Refund * `4`: Error * `5`: Failed * `6`:
+  Success - Unsettled * `7`: Escrow * `-2`: Expired
+</Callout>

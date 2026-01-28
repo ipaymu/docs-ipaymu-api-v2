@@ -1,0 +1,36 @@
+---
+title: Validasi IP & Domain
+description: Untuk memastikan keamanan transaksi, iPaymu menerapkan validasi ketat untuk alamat IP dan Domain.
+---
+
+Untuk memastikan keamanan transaksi, iPaymu menerapkan validasi ketat untuk alamat IP dan Domain, terutama di lingkungan **Production/Live**.
+
+<Callout type="warn" title="Persyaratan Production">
+  Dalam mode Production, alamat IP server Anda dan domain yang digunakan dalam body request WAJIB
+  terdaftar dan divalidasi oleh iPaymu. Kegagalan melakukan ini akan mengakibatkan error `Invalid
+  IP` atau `Invalid Domain`.
+</Callout>
+
+## Validasi Alamat IP
+
+iPaymu mewajibkan server Anda menggunakan **IP Statis**. IP Dinamis dapat berubah-ubah, menyebabkan kegagalan transaksi.
+
+### Mengapa IP Statis?
+
+- **Keamanan**: Memastikan request hanya berasal dari server yang diizinkan.
+- **Stabilitas**: Mencegah gangguan layanan yang disebabkan oleh perubahan IP.
+
+Jika server Anda menggunakan IP dinamis, silakan hubungi penyedia hosting Anda untuk meminta IP Statis. Setelah didapatkan, Anda mungkin perlu melakukan whitelist di dashboard iPaymu atau menghubungi support.
+
+## Validasi Domain
+
+Ketika membuat request ke iPaymu (misalnya, untuk `notifyUrl`, `returnUrl`, `cancelUrl`), domain yang digunakan harus sesuai dengan domain yang terdaftar di akun iPaymu Anda.
+
+### Masalah Umum
+
+- **Localhost**: Anda tidak dapat menggunakan URL `localhost` di Production.
+- **Subdomain Tidak Terdaftar**: Pastikan subdomain juga diperbolehkan jika Anda menggunakannya.
+- **Ketidakcocokan Protokol**: Pastikan Anda menggunakan protokol yang benar (`http` vs `https`) sesuai yang terdaftar.
+
+Untuk panduan rinci tentang pemecahan masalah ini, silakan merujuk ke postingan blog resmi:
+[Mengatasi Masalah Error Invalid IP & Domain di iPaymu](https://blog.ipaymu.com/mengatasi-masalah-error-invalid-ip-domain-di-ipaymu/)

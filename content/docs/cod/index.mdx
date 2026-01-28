@@ -1,0 +1,117 @@
+---
+title: COD & Logistik
+description: Endpoint untuk Pembayaran Langsung COD dan Logistik.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+Pembayaran Langsung COD (Cash On Delivery) memungkinkan Anda memproses pembayaran tunai saat pengiriman. Metode ini memerlukan detail pengiriman dan produk tambahan.
+
+<a
+  href="https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#6f19137b-3746-43d5-8d75-d1a9822eea33"
+  target="_blank"
+  className="button button--primary button--sm"
+>
+  Coba di Postman
+</a>
+
+## Buat Transaksi COD
+
+**URL**: `{{baseUrl}}/api/v2/payment/direct`
+**Metode**: `POST`
+
+### Request Body
+
+| Parameter         | Tipe   | Wajib | Deskripsi                               |
+| :---------------- | :----- | :---- | :-------------------------------------- |
+| `name`            | string | Ya    | Nama pembeli.                           |
+| `amount`          | number | Ya    | Total jumlah transaksi.                 |
+| `paymentMethod`   | string | Ya    | Harus diisi `cod`.                      |
+| `paymentChannel`  | string | Ya    | Kode channel pembayaran (misal: `rpx`). |
+| `deliveryArea`    | string | Ya    | Kode pos pengiriman.                    |
+| `deliveryAddress` | string | Ya    | Alamat lengkap pengiriman.              |
+| `shipping`        | string | Ya    | Nama jasa pengiriman (misal: `RPX`).    |
+| `shippingService` | string | Ya    | Tipe layanan pengiriman (misal: `REG`). |
+
+Lihat [dokumentasi Direct Payment](/docs/payment/direct-payment) untuk daftar parameter lengkap.
+
+---
+
+## Endpoint Logistik
+
+Endpoint pembantu untuk menghitung ongkir, mencari area, request pickup, dan melacak paket.
+
+### Cari Area (Get Area)
+
+<a
+  href="https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#06f70da6-ec5b-4dad-910c-cea16c681762"
+  target="_blank"
+  className="button button--secondary button--sm"
+>
+  Postman
+</a>
+
+Cari area pengiriman (kode pos) berdasarkan kata kunci.
+
+**URL**: `{{baseUrl}}/api/v2/payment/area`
+**Metode**: `POST`
+
+### Hitung Ongkir (Calculate Shipping)
+
+<a
+  href="https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#e76c0c3f-42c4-401c-a860-c3a5f030d8b5"
+  target="_blank"
+  className="button button--secondary button--sm"
+>
+  Postman
+</a>
+
+Hitung biaya pengiriman.
+
+**URL**: `{{baseUrl}}/api/v2/payment/shipping`
+**Metode**: `POST`
+
+### Unduh Label (Download Label)
+
+<a
+  href="https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#49dbd0f4-ea9b-437d-83e2-4c6e4e493164"
+  target="_blank"
+  className="button button--secondary button--sm"
+>
+  Postman
+</a>
+
+Unduh label pengiriman untuk transaksi COD.
+
+**URL**: `{{baseUrl}}/api/v2/payment/label`
+**Metode**: `POST`
+
+### Lacak Paket (Tracking)
+
+<a
+  href="https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#226ea7d9-12cb-41cd-af47-34be589ec3d7"
+  target="_blank"
+  className="button button--secondary button--sm"
+>
+  Postman
+</a>
+
+Lacak status pengiriman transaksi COD.
+
+**URL**: `{{baseUrl}}/api/v2/payment/tracking`
+**Metode**: `POST`
+
+### Request Pickup
+
+<a
+  href="https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#8f2ed5b9-53c6-45a9-8d6c-baa2442fc263"
+  target="_blank"
+  className="button button--secondary button--sm"
+>
+  Postman
+</a>
+
+Permintaan penjemputan paket.
+
+**URL**: `{{baseUrl}}/api/v2/payment/pickup`
+**Metode**: `POST`

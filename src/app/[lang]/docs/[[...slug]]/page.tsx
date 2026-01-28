@@ -1,38 +1,34 @@
-import { getPageImage, source } from '@/lib/source';
-import { DocsBody, DocsDescription, DocsPage, DocsTitle } from 'fumadocs-ui/page';
-import { notFound } from 'next/navigation';
-import { getMDXComponents } from '@/mdx-components';
-import type { Metadata } from 'next';
-import { createRelativeLink } from 'fumadocs-ui/mdx';
+import { getPageImage, source } from "@/lib/source";
+import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/page";
+import { notFound } from "next/navigation";
+import { getMDXComponents } from "@/mdx-components";
+import type { Metadata } from "next";
+import { createRelativeLink } from "fumadocs-ui/mdx";
 
 // 1. IMPORT KOMPONEN UI FUMADOCS
-import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
-import { Callout } from 'fumadocs-ui/components/callout';
-import { Card, Cards } from 'fumadocs-ui/components/card';
-import { Tab, Tabs } from 'fumadocs-ui/components/tabs'; // Perhatikan: di MDX Anda tertulis CodeBlockTabs, tapi kita mapping ke Tabs
-import { Step, Steps } from 'fumadocs-ui/components/steps';
-import { File, Folder, Files } from 'fumadocs-ui/components/files';
+import { File, Folder, Files } from "fumadocs-ui/components/files";
+
+import { Card, Cards } from "@/components/mdx/card";
+import { Callout } from "@/components/mdx/callout";
+import { Step, Steps } from "@/components/mdx/steps";
+import { Accordion, Accordions } from "@/components/mdx/accordion";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/mdx/tabs";
 
 // 2. IMPORT ICON YANG ERROR DARI LUCIDE-REACT
-import { CpuIcon, PanelsTopLeft, Database, Terminal } from 'lucide-react';
+import { CpuIcon, PanelsTopLeft, Database, Terminal } from "lucide-react";
 
 // 3. BUAT DUMMY COMPONENT UNTUK FEEDBACKBLOCK (Supaya tidak error)
 const FeedbackBlock = ({ children }: { children: React.ReactNode }) => (
-  <div className="my-4 p-4 border rounded-lg bg-secondary/10">
-    {children}
-  </div>
+  <div className="my-4 p-4 border rounded-lg bg-secondary/10">{children}</div>
 );
 
 // 4. MAPPING UNTUK CodeBlockTabs (Karena di MDX Anda pakai nama lama/custom)
 const CodeBlockTabs = Tabs;
-const CodeBlockTabsList = ({ children }: any) => <>{children}</>;
-const CodeBlockTabsTrigger = Tab;
-const CodeBlockTab = ({ children }: any) => <>{children}</>;
+const CodeBlockTabsList = TabsList;
+const CodeBlockTabsTrigger = TabsTrigger;
+const CodeBlockTab = TabsContent;
 
-
-export default async function Page(props: {
-  params: Promise<{ slug?: string[]; lang: string }>;
-}) {
+export default async function Page(props: { params: Promise<{ slug?: string[]; lang: string }> }) {
   const params = await props.params;
   const page = source.getPage(params.slug, params.lang);
 
@@ -45,8 +41,8 @@ export default async function Page(props: {
       toc={page.data.toc}
       full={page.data.full}
       tableOfContent={{
-        style: 'clerk',
-        single: false
+        style: "clerk",
+        single: false,
       }}
     >
       <DocsTitle>{page.data.title}</DocsTitle>

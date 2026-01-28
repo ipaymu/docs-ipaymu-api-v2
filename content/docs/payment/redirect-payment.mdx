@@ -1,0 +1,86 @@
+---
+title: Pembayaran Redirect (Redirect Payment)
+description: Redirect Payment memungkinkan Anda menggunakan halaman pembayaran iPaymu.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+<a
+  href="https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#5f0710b1-1aaa-4ece-aab2-a8e04b3ec9c6"
+  target="_blank"
+  className="button button--primary button--sm"
+>
+  Coba di Postman
+</a>
+
+Redirect Payment memungkinkan Anda menggunakan halaman pembayaran yang di-host oleh iPaymu. Ini adalah cara termudah untuk integrasi jika Anda tidak ingin menangani UI untuk pemilihan pembayaran.
+
+<Callout type="warn" title="Persyaratan Production">
+  Dalam mode Production, pastikan server Anda menggunakan **IP Statis** dan domain Anda terdaftar.
+  Lihat [Validasi IP & Domain](../ip-domain-validation).
+</Callout>
+
+## Endpoint
+
+**URL**: `{{baseUrl}}/api/v2/payment`
+**Metode**: `POST`
+
+## Request Headers
+
+| Kunci          | Nilai              | Deskripsi                                                                |
+| :------------- | :----------------- | :----------------------------------------------------------------------- |
+| `Content-Type` | `application/json` |                                                                          |
+| `signature`    | `{{signature}}`    | Signature yang dihasilkan. Lihat [Pembuatan Signature](/docs/signature). |
+| `va`           | `{{va}}`           | Nomor Virtual Account Anda.                                              |
+| `timestamp`    | `{{timestamp}}`    | Timestamp saat ini.                                                      |
+
+## Request Body
+
+| Parameter       | Tipe   | Wajib | Deskripsi                                                                                |
+| :-------------- | :----- | :---- | :--------------------------------------------------------------------------------------- |
+| `product[]`     | array  | Ya    | Daftar nama produk.                                                                      |
+| `qty[]`         | array  | Ya    | Daftar jumlah produk.                                                                    |
+| `price[]`       | array  | Ya    | Daftar harga produk.                                                                     |
+| `description[]` | array  | Ya    | Daftar deskripsi produk.                                                                 |
+| `imageUrl[]`    | array  | Tidak | Opsional. Ganti gambar produk di halaman pembayaran iPaymu. Diurutkan berdasarkan index. |
+| `returnUrl`     | string | Ya    | URL untuk redirect setelah pembayaran berhasil.                                          |
+| `notifyUrl`     | string | Ya    | URL untuk menerima notifikasi webhook.                                                   |
+| `cancelUrl`     | string | Ya    | URL untuk redirect setelah pembayaran gagal/dibatalkan.                                  |
+| `referenceId`   | string | Tidak | ID transaksi unik Anda.                                                                  |
+| `buyerName`     | string | Tidak | Nama pembeli.                                                                            |
+| `buyerEmail`    | string | Tidak | Email pembeli.                                                                           |
+| `buyerPhone`    | string | Tidak | Telepon pembeli.                                                                         |
+| `expired`       | number | Tidak | Waktu kedaluwarsa kustom dalam jam.                                                      |
+| `feeDirection`  | string | Tidak | `BUYER` atau `MERCHANT`.                                                                 |
+| `paymentMethod` | string | Tidak | Pilih metode pembayaran pra-seleksi (misal: `va`, `cc`).                                 |
+
+## Contoh Request
+
+```json
+{
+  "product": ["T-Shirt"],
+  "qty": ["1"],
+  "price": ["100000"],
+  "description": ["Blue Size L"],
+  "imageUrl": ["https://images.com/example.jpg"],
+  "returnUrl": "https://your-website.com/thank-you",
+  "notifyUrl": "https://your-website.com/callback",
+  "cancelUrl": "https://your-website.com/cancel",
+  "referenceId": "INV-002"
+}
+```
+
+## Contoh Response (Sukses)
+
+```json
+{
+  "Status": 200,
+  "Message": "success",
+  "Data": {
+    "SessionID": "91538218-5158-459B-8716-DD97FFE3EDAB",
+    "Url": "https://sandbox.ipaymu.com/payment/91538218-5158-459B-8716-DD97FFE3EDAB"
+  }
+}
+```
+
+Anda harus mengarahkan pengguna ke `Url` yang disediakan dalam response.

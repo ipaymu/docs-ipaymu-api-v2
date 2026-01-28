@@ -1,0 +1,58 @@
+---
+title: Check Balance
+description: Check your current iPaymu merchant balance.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+<a
+  href="https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#2c252bed-47c6-4b88-9c68-e9906c0d7e4d"
+  target="_blank"
+  className="button button--primary button--sm"
+>
+  Try it in Postman
+</a>
+
+Check your current iPaymu merchant balance.
+
+## Endpoint
+
+**URL**: `{{baseUrl}}/api/v2/balance`
+**Method**: `POST`
+
+## Request Headers
+
+| Key            | Value              | Description                                                       |
+| :------------- | :----------------- | :---------------------------------------------------------------- |
+| `Content-Type` | `application/json` |                                                                   |
+| `signature`    | `{{signature}}`    | Generated signature. See [Signature Generation](/docs/signature). |
+| `va`           | `{{va}}`           | Your Virtual Account Number.                                      |
+| `timestamp`    | `{{timestamp}}`    | Current timestamp.                                                |
+
+## Request Body
+
+| Parameter | Type   | Required | Description     |
+| :-------- | :----- | :------- | :-------------- |
+| `account` | string | Yes      | Your iPaymu VA. |
+
+## Example Request
+
+```json
+{
+  "account": "1179000899"
+}
+```
+
+## Example Response
+
+```json
+{
+  "Status": 200,
+  "Data": {
+    "Va": "1179000899",
+    "MerchantBalance": "1500000",
+    "MemberBalance": "0"
+  },
+  "Message": "success"
+}
+```

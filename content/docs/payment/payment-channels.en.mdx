@@ -1,0 +1,65 @@
+---
+title: Payment Channels
+description: Get the list of available payment channels and their status.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+<a
+  href="https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#3733b82a-e8c0-432a-9f48-26bdba298df4"
+  target="_blank"
+  className="button button--primary button--sm"
+>
+  Try it in Postman
+</a>
+
+Get the list of available payment channels and their status.
+
+## Endpoint
+
+**URL**: `{{baseUrl}}/api/v2/payment-channels`
+**Method**: `GET`
+
+## Request Headers
+
+| Key            | Value              | Description                                                       |
+| :------------- | :----------------- | :---------------------------------------------------------------- |
+| `Content-Type` | `application/json` |                                                                   |
+| `signature`    | `{{signature}}`    | Generated signature. See [Signature Generation](/docs/signature). |
+| `va`           | `{{va}}`           | Your Virtual Account Number.                                      |
+| `timestamp`    | `{{timestamp}}`    | Current timestamp.                                                |
+
+## Example Response
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Success",
+  "Data": [
+    {
+      "Code": "va",
+      "Name": "Virtual Account",
+      "Description": "Virtual Account",
+      "Channels": [
+        {
+          "Code": "bca",
+          "Name": "BCA",
+          "Description": "BCA",
+          "Logo": "https://storage.googleapis.com/ipaymu-docs/assets/bca.png",
+          "PaymentInstructionsDoc": "https://storage.googleapis.com/ipaymu-docs/cara-pembayaran/va-bca.pdf",
+          "FeatureStatus": "active",
+          "HealthStatus": "online",
+          "TransactionFee": {
+            "ActualFee": 4000,
+            "ActualFeeType": "FLAT",
+            "AdditionalFee": 0
+          }
+        }
+        // ... other channels
+      ]
+    }
+    // ... other methods
+  ]
+}
+```

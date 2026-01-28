@@ -1,0 +1,85 @@
+---
+title: Riwayat Transaksi (History)
+description: Ambil daftar transaksi berdasarkan berbagai filter.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+<a
+  href="https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#916bc291-6fe9-4ffc-a678-7703d6def9d7"
+  target="_blank"
+  className="button button--primary button--sm"
+>
+  Coba di Postman
+</a>
+
+Ambil daftar transaksi berdasarkan berbagai filter.
+
+## Endpoint
+
+**URL**: `{{baseUrl}}/api/v2/history`
+**Metode**: `POST`
+
+## Request Headers
+
+| Kunci          | Nilai              | Deskripsi                                                                |
+| :------------- | :----------------- | :----------------------------------------------------------------------- |
+| `Content-Type` | `application/json` |                                                                          |
+| `signature`    | `{{signature}}`    | Signature yang dihasilkan. Lihat [Pembuatan Signature](/docs/signature). |
+| `va`           | `{{va}}`           | Nomor Virtual Account Anda.                                              |
+| `timestamp`    | `{{timestamp}}`    | Timestamp saat ini.                                                      |
+
+## Request Body
+
+| Parameter   | Tipe   | Wajib | Deskripsi                                                        |
+| :---------- | :----- | :---- | :--------------------------------------------------------------- |
+| `status`    | string | Tidak | Filter berdasarkan kode status (misal, `1` untuk sukses).        |
+| `date`      | string | Tidak | Tipe filter tanggal: `created_at` atau `indate` (tanggal bayar). |
+| `startdate` | string | Tidak | Tanggal mulai (YYYY-MM-DD).                                      |
+| `enddate`   | string | Tidak | Tanggal akhir (YYYY-MM-DD).                                      |
+| `page`      | number | Tidak | Nomor halaman (default 1).                                       |
+| `limit`     | number | Tidak | Limit per halaman (maks 20).                                     |
+| `orderBy`   | string | Tidak | `id`, `created_at`, atau `indate`.                               |
+| `order`     | string | Tidak | `ASC` atau `DESC`.                                               |
+| `lang`      | string | Tidak | `en` atau `id`.                                                  |
+
+## Contoh Request
+
+```json
+{
+  "status": "1",
+  "orderBy": "id",
+  "order": "DESC",
+  "limit": "10"
+}
+```
+
+## Contoh Response
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Success",
+  "Data": {
+    "Total": 150,
+    "Per_Page": 10,
+    "Current_Page": 1,
+    "Total_Page": 15,
+    "Results": [
+      {
+        "TransactionId": 341189,
+        "ReferenceId": "INV-001",
+        "Amount": 10000,
+        "Fee": 4000,
+        "Status": 1,
+        "StatusDesc": "Berhasil",
+        "Type": 11,
+        "TypeDesc": "Convenience Store",
+        "CreatedDate": "2023-11-23 10:00:00"
+      }
+      // ... transaksi lainnya
+    ]
+  }
+}
+```

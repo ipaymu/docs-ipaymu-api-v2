@@ -1,0 +1,61 @@
+---
+title: Memulai
+description: Selamat datang di iPaymu! Ikuti langkah-langkah berikut untuk mulai mengintegrasikan payment gateway iPaymu ke dalam aplikasi Anda.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+
+Selamat datang di iPaymu! Ikuti langkah-langkah berikut untuk mulai mengintegrasikan payment gateway iPaymu ke dalam aplikasi Anda.
+
+<Steps>
+<Step>
+
+## Pendaftaran
+
+Pertama, Anda perlu membuat akun di iPaymu.
+
+![Alur Pendaftaran](/img/getting-started/register.png)
+
+1.  Kunjungi [Halaman Pendaftaran iPaymu](https://my.ipaymu.com/register).
+2.  Isi detail pribadi dan bisnis Anda.
+3.  Verifikasi alamat email Anda.
+
+</Step>
+
+<Step>
+
+## Masuk (Login)
+
+Setelah terdaftar, masuk ke dashboard iPaymu Anda.
+
+![Alur Login](/img/getting-started/login.png)
+
+1.  Buka [Halaman Login iPaymu](https://my.ipaymu.com/login).
+2.  Masukkan email dan kata sandi Anda.
+
+</Step>
+
+<Step>
+
+## Pengaturan Integrasi
+
+Untuk mulai menggunakan API, Anda perlu mengambil API Key dan nomor Virtual Account (VA) Anda.
+
+![Halaman Integrasi](/img/getting-started/integration.png)
+
+1.  Di sidebar dashboard, navigasikan ke menu **Integrasi**.
+2.  Di sini Anda akan menemukan **Nomor VA** dan **API Key** Anda.
+3.  **Penting**: Pastikan Anda berada dalam mode yang benar (Sandbox untuk pengujian, Production untuk transaksi langsung). Kunci berbeda untuk setiap mode.
+
+</Step>
+</Steps>
+
+<Callout type="tip" title="Mode Sandbox">
+  Gunakan **Mode Sandbox** untuk pengembangan dan pengujian. Anda dapat mengganti mode di pojok
+  kanan atas dashboard.
+</Callout>
+
+<Callout type="warn" title="Persyaratan Production">
+  Sebelum live, pastikan server Anda menggunakan **IP Statis** dan domain Anda terdaftar. Baca
+  selengkapnya di panduan [Validasi IP & Domain](./ip-domain-validation).
+</Callout>

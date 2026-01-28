@@ -1,13 +1,41 @@
 ---
-title: Halo Dunia (Indonesian)
-description: Dokumen pertama Anda
+title: Pengantar
+description: Selamat datang di dokumentasi iPaymu API v2.
 ---
 
-Selamat datang di dokumentasi! Anda dapat mulai menulis dokumen di `/content/docs`.
+Selamat datang di dokumentasi **iPaymu API v2**. API ini memungkinkan Anda untuk mengintegrasikan layanan payment gateway iPaymu ke dalam aplikasi Anda.
 
-## Apa Selanjutnya?
+## Base URLs
 
-<Cards>
-  <Card title="Pelajari lebih lanjut tentang Next.js" href="https://nextjs.org/docs" />
-  <Card title="Pelajari lebih lanjut tentang Fumadocs" href="https://fumadocs.dev" />
-</Cards>
+- **Production/Live**: `https://my.ipaymu.com`
+- **Development/Sandbox**: `https://sandbox.ipaymu.com`
+
+<Callout type="warn" title="Catatan Penting">
+  * **VA (Virtual Account)** dan **API Key** dapat ditemukan di menu **Integrasi** pada dashboard
+  iPaymu Anda. * VA dan API Key untuk mode **Sandbox/Development** **berbeda** dengan mode
+  **Production/Live**. * Jika Anda mengalami kendala integrasi, silakan hubungi
+  [support@ipaymu.com](mailto:support@ipaymu.com) atau via WhatsApp [di
+  sini](https://wa.link/p8vnr7).
+</Callout>
+
+## Autentikasi
+
+iPaymu API v2 menggunakan **autentikasi berbasis Signature**. Setiap request harus menyertakan header berikut:
+
+| Header      | Deskripsi                                                                                                                                       |
+| :---------- | :---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `va`        | Nomor Virtual Account Anda (dari Dashboard iPaymu).                                                                                             |
+| `signature` | String signature yang dihasilkan untuk memverifikasi request.                                                                                   |
+| `timestamp` | Timestamp saat ini (format: `YYYYMMDDHHmmss` atau ISO 8601 tergantung kebutuhan endpoint, biasanya `YYYYMMDDHHmmss` untuk pembuatan signature). |
+
+## Contoh Kode (Sample Code)
+
+Anda dapat menemukan contoh kode resmi dalam berbagai bahasa di sini:
+
+- **PHP**: [ipaymu-payment-v2-sample-php](https://github.com/putuedi/ipaymu-payment-v2-sample-php)
+- **NodeJS**: [ipaymu-payment-v2-sample-nodejs](https://github.com/putuedi/ipaymu-payment-v2-sample-nodejs)
+- **Python**: [ipaymu-payment-v2-sample-python](https://github.com/putuedi/ipaymu-payment-v2-sample-python)
+- **Golang**: [ipaymu-payment-v2-sample-go](https://github.com/putuedi/ipaymu-payment-v2-sample-go)
+- **Dotnet C#**: [ipaymu-payment-v2-sample-dotnet](https://github.com/putuedi/ipaymu-payment-v2-sample-dotnet)
+- **Ruby**: [ipaymu-payment-v2-sample-ruby](https://github.com/ipaymu/ipaymu-payment-v2-sample-ruby)
+- **Java**: [ipaymu-payment-v2-sample-java](https://github.com/ipaymu/ipaymu-payment-v2-sample-java)

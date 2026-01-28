@@ -1,0 +1,85 @@
+---
+title: Transaction History
+description: Retrieve a list of transactions based on various filters.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+<a
+  href="https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#916bc291-6fe9-4ffc-a678-7703d6def9d7"
+  target="_blank"
+  className="button button--primary button--sm"
+>
+  Try it in Postman
+</a>
+
+Retrieve a list of transactions based on various filters.
+
+## Endpoint
+
+**URL**: `{{baseUrl}}/api/v2/history`
+**Method**: `POST`
+
+## Request Headers
+
+| Key            | Value              | Description                                                       |
+| :------------- | :----------------- | :---------------------------------------------------------------- |
+| `Content-Type` | `application/json` |                                                                   |
+| `signature`    | `{{signature}}`    | Generated signature. See [Signature Generation](/docs/signature). |
+| `va`           | `{{va}}`           | Your Virtual Account Number.                                      |
+| `timestamp`    | `{{timestamp}}`    | Current timestamp.                                                |
+
+## Request Body
+
+| Parameter   | Type   | Required | Description                                        |
+| :---------- | :----- | :------- | :------------------------------------------------- |
+| `status`    | string | No       | Filter by status code (e.g., `1` for success).     |
+| `date`      | string | No       | Filter type: `created_at` or `indate` (paid date). |
+| `startdate` | string | No       | Start date (YYYY-MM-DD).                           |
+| `enddate`   | string | No       | End date (YYYY-MM-DD).                             |
+| `page`      | number | No       | Page number (default 1).                           |
+| `limit`     | number | No       | Limit per page (max 20).                           |
+| `orderBy`   | string | No       | `id`, `created_at`, or `indate`.                   |
+| `order`     | string | No       | `ASC` or `DESC`.                                   |
+| `lang`      | string | No       | `en` or `id`.                                      |
+
+## Example Request
+
+```json
+{
+  "status": "1",
+  "orderBy": "id",
+  "order": "DESC",
+  "limit": "10"
+}
+```
+
+## Example Response
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Success",
+  "Data": {
+    "Total": 150,
+    "Per_Page": 10,
+    "Current_Page": 1,
+    "Total_Page": 15,
+    "Results": [
+      {
+        "TransactionId": 341189,
+        "ReferenceId": "INV-001",
+        "Amount": 10000,
+        "Fee": 4000,
+        "Status": 1,
+        "StatusDesc": "Berhasil",
+        "Type": 11,
+        "TypeDesc": "Convenience Store",
+        "CreatedDate": "2023-11-23 10:00:00"
+      }
+      // ... more transactions
+    ]
+  }
+}
+```

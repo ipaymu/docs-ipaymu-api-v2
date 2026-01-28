@@ -1,7 +1,7 @@
-import { source } from '@/lib/source';
-import { DocsLayout } from 'fumadocs-ui/layouts/docs';
-import { baseOptions } from '@/lib/layout.shared';
-import { type ReactNode } from 'react';
+import { source } from "@/lib/source";
+import { DocsLayout } from "fumadocs-ui/layouts/docs";
+import { baseOptions } from "@/lib/layout.shared";
+import { type ReactNode } from "react";
 
 export default async function Layout({
   children,
@@ -14,7 +14,7 @@ export default async function Layout({
   return (
     <DocsLayout
       tree={source.pageTree[lang]}
-      {...baseOptions}
+      {...baseOptions(lang)}
       // Enable i18n compatibility mode
       // This will assume the first path segment is the locale (e.g. /id/docs/...)
       i18n

@@ -1,0 +1,86 @@
+---
+title: Redirect Payment
+description: Redirect Payment allows you to use iPaymu's hosted payment page.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+<a
+  href="https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#5f0710b1-1aaa-4ece-aab2-a8e04b3ec9c6"
+  target="_blank"
+  className="button button--primary button--sm"
+>
+  Try it in Postman
+</a>
+
+Redirect Payment allows you to use iPaymu's hosted payment page. This is the easiest way to integrate if you don't want to handle the UI for payment selection.
+
+<Callout type="warn" title="Production Requirement">
+  In Production mode, ensure your server uses a **Static IP** and your domain is registered. See [IP
+  & Domain Validation](../ip-domain-validation).
+</Callout>
+
+## Endpoint
+
+**URL**: `{{baseUrl}}/api/v2/payment`
+**Method**: `POST`
+
+## Request Headers
+
+| Key            | Value              | Description                                                       |
+| :------------- | :----------------- | :---------------------------------------------------------------- |
+| `Content-Type` | `application/json` |                                                                   |
+| `signature`    | `{{signature}}`    | Generated signature. See [Signature Generation](/docs/signature). |
+| `va`           | `{{va}}`           | Your Virtual Account Number.                                      |
+| `timestamp`    | `{{timestamp}}`    | Current timestamp.                                                |
+
+## Request Body
+
+| Parameter       | Type   | Required | Description                                                               |
+| :-------------- | :----- | :------- | :------------------------------------------------------------------------ |
+| `product[]`     | array  | Yes      | List of product names.                                                    |
+| `qty[]`         | array  | Yes      | List of product quantities.                                               |
+| `price[]`       | array  | Yes      | List of product prices.                                                   |
+| `description[]` | array  | Yes      | List of product descriptions.                                             |
+| `imageUrl[]`    | array  | No       | Optional. Replace product image on iPaymu payment page. Ordered by index. |
+| `returnUrl`     | string | Yes      | URL to redirect after successful payment.                                 |
+| `notifyUrl`     | string | Yes      | URL to receive webhook notifications.                                     |
+| `cancelUrl`     | string | Yes      | URL to redirect after failed/cancelled payment.                           |
+| `referenceId`   | string | No       | Your unique transaction ID.                                               |
+| `buyerName`     | string | No       | Buyer's name.                                                             |
+| `buyerEmail`    | string | No       | Buyer's email.                                                            |
+| `buyerPhone`    | string | No       | Buyer's phone.                                                            |
+| `expired`       | number | No       | Custom expiry time in hours.                                              |
+| `feeDirection`  | string | No       | `BUYER` or `MERCHANT`.                                                    |
+| `paymentMethod` | string | No       | Pre-select payment method (e.g., `va`, `cc`).                             |
+
+## Example Request
+
+```json
+{
+  "product": ["T-Shirt"],
+  "qty": ["1"],
+  "price": ["100000"],
+  "description": ["Blue Size L"],
+  "imageUrl": ["https://images.com/example.jpg"],
+  "returnUrl": "https://your-website.com/thank-you",
+  "notifyUrl": "https://your-website.com/callback",
+  "cancelUrl": "https://your-website.com/cancel",
+  "referenceId": "INV-002"
+}
+```
+
+## Example Response (Success)
+
+```json
+{
+  "Status": 200,
+  "Message": "success",
+  "Data": {
+    "SessionID": "91538218-5158-459B-8716-DD97FFE3EDAB",
+    "Url": "https://sandbox.ipaymu.com/payment/91538218-5158-459B-8716-DD97FFE3EDAB"
+  }
+}
+```
+
+You should redirect the user to the `Url` provided in the response.

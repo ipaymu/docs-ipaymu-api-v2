@@ -1,0 +1,117 @@
+---
+title: COD & Logistics
+description: Direct Payment COD and Logistics endpoints.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+Direct Payment COD allows you to process Cash On Delivery payments. This method requires additional shipping and product details.
+
+<a
+  href="https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#6f19137b-3746-43d5-8d75-d1a9822eea33"
+  target="_blank"
+  className="button button--primary button--sm"
+>
+  Try it in Postman
+</a>
+
+## Create COD Transaction
+
+**URL**: `{{baseUrl}}/api/v2/payment/direct`
+**Method**: `POST`
+
+### Request Body
+
+| Parameter         | Type   | Required | Description                           |
+| :---------------- | :----- | :------- | :------------------------------------ |
+| `name`            | string | Yes      | Buyer's name.                         |
+| `amount`          | number | Yes      | Total transaction amount.             |
+| `paymentMethod`   | string | Yes      | Must be `cod`.                        |
+| `paymentChannel`  | string | Yes      | Payment channel code (e.g., `rpx`).   |
+| `deliveryArea`    | string | Yes      | Delivery postal code.                 |
+| `deliveryAddress` | string | Yes      | Full delivery address.                |
+| `shipping`        | string | Yes      | Shipping provider name (e.g., `RPX`). |
+| `shippingService` | string | Yes      | Shipping service type (e.g., `REG`).  |
+
+See [Direct Payment documentation](/docs/payment/direct-payment) for full parameter list.
+
+---
+
+## Logistics Endpoints
+
+Helper endpoints to calculate shipping, find areas, request pickup, and track packages.
+
+### Get Area
+
+<a
+  href="https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#06f70da6-ec5b-4dad-910c-cea16c681762"
+  target="_blank"
+  className="button button--secondary button--sm"
+>
+  Postman
+</a>
+
+Search for delivery areas (postal codes) by keyword.
+
+**URL**: `{{baseUrl}}/api/v2/payment/area`
+**Method**: `POST`
+
+### Calculate Shipping
+
+<a
+  href="https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#e76c0c3f-42c4-401c-a860-c3a5f030d8b5"
+  target="_blank"
+  className="button button--secondary button--sm"
+>
+  Postman
+</a>
+
+Calculate shipping costs.
+
+**URL**: `{{baseUrl}}/api/v2/payment/shipping`
+**Method**: `POST`
+
+### Download Label
+
+<a
+  href="https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#49dbd0f4-ea9b-437d-83e2-4c6e4e493164"
+  target="_blank"
+  className="button button--secondary button--sm"
+>
+  Postman
+</a>
+
+Download the shipping label for a COD transaction.
+
+**URL**: `{{baseUrl}}/api/v2/payment/label`
+**Method**: `POST`
+
+### Tracking
+
+<a
+  href="https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#226ea7d9-12cb-41cd-af47-34be589ec3d7"
+  target="_blank"
+  className="button button--secondary button--sm"
+>
+  Postman
+</a>
+
+Track the shipping status of a COD transaction.
+
+**URL**: `{{baseUrl}}/api/v2/payment/tracking`
+**Method**: `POST`
+
+### Request Pickup
+
+<a
+  href="https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#8f2ed5b9-53c6-45a9-8d6c-baa2442fc263"
+  target="_blank"
+  className="button button--secondary button--sm"
+>
+  Postman
+</a>
+
+Request a pickup for the package.
+
+**URL**: `{{baseUrl}}/api/v2/payment/pickup`
+**Method**: `POST`

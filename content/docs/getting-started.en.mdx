@@ -1,0 +1,61 @@
+---
+title: Getting Started
+description: Welcome to iPaymu! Follow these steps to start integrating iPaymu payment gateway into your application.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+
+Welcome to iPaymu! Follow these steps to start integrating iPaymu payment gateway into your application.
+
+<Steps>
+<Step>
+
+## Registration
+
+First, you need to create an account on iPaymu.
+
+![Registration Flow](/img/getting-started/register.png)
+
+1.  Visit [iPaymu Registration Page](https://my.ipaymu.com/register).
+2.  Fill in your personal and business details.
+3.  Verify your email address.
+
+</Step>
+
+<Step>
+
+## Login
+
+Once registered, log in to your iPaymu dashboard.
+
+![Login Flow](/img/getting-started/login.png)
+
+1.  Go to [iPaymu Login Page](https://my.ipaymu.com/login).
+2.  Enter your email and password.
+
+</Step>
+
+<Step>
+
+## Integration Settings
+
+To start using the API, you need to retrieve your API Key and Virtual Account (VA) number.
+
+![Integration Page](/img/getting-started/integration.png)
+
+1.  In the dashboard sidebar, navigate to **Integration**.
+2.  Here you will find your **VA Number** and **API Key**.
+3.  **Important**: Ensure you are in the correct mode (Sandbox for testing, Production for live transactions). The keys are different for each mode.
+
+</Step>
+</Steps>
+
+<Callout type="tip" title="Sandbox Mode">
+  Use **Sandbox Mode** for development and testing. You can switch modes in the top right corner of
+  the dashboard.
+</Callout>
+
+<Callout type="warn" title="Production Requirements">
+  Before going live, ensure your server uses a **Static IP** and your domain is registered. Read
+  more in the [IP & Domain Validation](./ip-domain-validation) guide.
+</Callout>

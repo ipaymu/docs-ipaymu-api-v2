@@ -1,9 +1,209 @@
-@import 'tailwindcss';
-@import 'fumadocs-ui/css/neutral.css';
-@import 'fumadocs-ui/css/preset.css';
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
 
-:root {
-  /* Match the Gold/Orange color from the example */
-  --primary: 36 100% 50%;
-  --ring: 36 100% 50%;
+@theme {
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
+
+  --color-primary: #0957c3;
+  --color-primary-light: #eef6ff;
+
+  --color-accent: #0957c3;
+  --color-accent-light: #3b82f6;
+
+  --color-background-light: #f6f7f8;
+  --color-background-dark: #050a0f;
+
+  --color-sidebar-light: #ffffff;
+  --color-sidebar-dark: #0a0f14;
+
+  --color-card-light: #ffffff;
+  --color-card-dark: #151a20; /* Specific card color from reference */
+
+  --color-border-light: #e5e5e5;
+  --color-border-dark: #27272a;
+
+  --radius-sm: 0.125rem;
+  --radius-md: 0.25rem;
+  --radius-lg: 0.5rem;
+
+  --shadow-brutal: 3px 3px 0px 0px #000000;
+  --shadow-brutal-sm: 2px 2px 0px 0px #000000;
+  --shadow-brutal-hover: 1px 1px 0px 0px #000000;
+  --shadow-brutal-primary: 3px 3px 0px 0px #0957c3;
+  --shadow-brutal-dark: 3px 3px 0px 0px #0957c3;
+}
+
+@layer base {
+  :root {
+    --background: var(--color-background-light);
+    --foreground: #0f172a;
+    --card: var(--color-card-light);
+    --card-foreground: #0f172a;
+    --popover: var(--color-sidebar-light);
+    --popover-foreground: #0f172a;
+    --primary: var(--color-primary);
+    --primary-foreground: #ffffff;
+    --secondary: #f1f5f9;
+    --secondary-foreground: #0f172a;
+    --muted: #f1f5f9;
+    --muted-foreground: #64748b;
+    --accent: #f1f5f9;
+    --accent-foreground: #0f172a;
+    --destructive: #ef4444;
+    --destructive-foreground: #f8fafc;
+    --border: var(--color-border-light);
+    --input: #e2e8f0;
+    --ring: var(--color-primary);
+    --radius: var(--radius-sm);
+  }
+
+  .dark {
+    --background: var(--color-background-dark);
+    --foreground: #d1d5db; /* gray-300 */
+    --card: var(--color-card-dark);
+    --card-foreground: #f3f4f6; /* gray-100 */
+    --popover: var(--color-sidebar-dark);
+    --popover-foreground: #f3f4f6;
+    --primary: var(--color-primary);
+    --primary-foreground: #ffffff;
+    --secondary: #1e293b;
+    --secondary-foreground: #f8fafc;
+    --muted: #1e293b;
+    --muted-foreground: #9ca3af; /* gray-400 */
+    --accent: #1e293b;
+    --accent-foreground: #f8fafc;
+    --destructive: #7f1d1d;
+    --destructive-foreground: #f8fafc;
+    --border: var(--color-border-dark);
+    --input: #1e293b;
+    --ring: var(--color-primary);
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+}
+
+@layer utilities {
+  .neo-brutalism-border {
+    @apply border border-black dark:border-zinc-700 shadow-brutal dark:shadow-none;
+  }
+}
+
+body {
+  font-family: var(--font-display);
+  font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Fix padding/margin issues in nested code blocks */
+.tabs-content figure,
+.tabs-content pre {
+  margin: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  background-color: transparent !important;
+  border-radius: 0 !important;
+  padding: 0 !important; /* Force 0 on all sides */
+}
+
+/* Ensure the code content aligns nicely */
+.tabs-content code {
+  background-color: transparent !important;
+}
+
+/* Right Sidebar (TOC) Active State */
+.fd-toc-item[data-active="true"] {
+  @apply text-primary border-l-2 border-primary pl-4 font-bold;
+}
+
+/* Main Sidebar Navigation Active State */
+.fd-sidebar-item[data-active="true"] {
+  @apply bg-accent/10 text-primary border-r-2 border-primary;
+}
+
+/* Ensure sidebar item base style allows for the border effect */
+.fd-sidebar-item {
+  @apply rounded-none border-r-2 border-transparent transition-all;
+}
+
+/* Fix padding/margin issues in nested code blocks */
+.neo-brutalism-border pre {
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--font-mono);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-from-bottom {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-accordion-down {
+  animation: accordion-down 0.2s ease-out;
+}
+
+.animate-accordion-up {
+  animation: accordion-up 0.2s ease-out;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-slide-in {
+  animation: slide-in-from-bottom 0.4s ease-out forwards;
 }

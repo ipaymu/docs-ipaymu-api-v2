@@ -1,0 +1,118 @@
+---
+title: Pembuatan Signature
+description: Untuk memastikan keamanan transaksi, iPaymu mewajibkan header signature di setiap request API.
+---
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/mdx/tabs";
+
+Untuk memastikan keamanan transaksi, iPaymu mewajibkan header `signature` di setiap request API. Signature ini dibuat menggunakan **API Key** Anda dan detail request.
+
+## Cara Membuat Signature
+
+Signature dibuat menggunakan hashing **HMAC-SHA256**.
+
+### Rumus
+
+```
+String to Sign = Method + ":" + VA + ":" + RequestBody + ":" + APIKey
+Signature = HMAC-SHA256(String to Sign, APIKey)
+```
+
+### Komponen
+
+1.  **Method**: Metode HTTP (contoh: `GET`, `POST`).
+2.  **VA**: Nomor Virtual Account Anda.
+3.  **RequestBody**:
+    - Untuk request **GET**: Query parameters yang di-stringify JSON.
+    - Untuk request **POST**: Hash SHA256 dari body JSON.
+4.  **APIKey**: API Key iPaymu Anda.
+
+### Contoh Implementasi
+
+<Tabs defaultValue="js" groupId="language">
+  <TabsList>
+    <TabsTrigger value="js">Node.js</TabsTrigger>
+    <TabsTrigger value="php">PHP</TabsTrigger>
+  </TabsList>
+
+  <TabsContent value="js">
+    ```javascript
+    const crypto = require('crypto-js');
+
+    // Konfigurasi
+    const apiKey = 'YOUR_API_KEY';
+    const va = 'YOUR_VA';
+    const method = 'POST'; // atau 'GET'
+
+    // Untuk Body Request POST
+    const body = {
+        product: ['T-Shirt'],
+        qty: ['1'],
+        price: ['100000'],
+        returnUrl: 'https://your-website.com/thank-you',
+        notifyUrl: 'https://your-website.com/notify',
+        cancelUrl: 'https://your-website.com/cancel',
+        referenceId: 'ID1234'
+    };
+
+    // 1. Stringify body
+    const bodyJson = JSON.stringify(body);
+
+    // 2. Hash body (SHA256)
+    const bodyHash = crypto.SHA256(bodyJson).toString(crypto.enc.Hex);
+
+    // 3. Susun String to Sign
+    const stringToSign = `${method}:${va}:${bodyHash}:${apiKey}`;
+
+    // 4. Generate Signature (HMAC-SHA256)
+    const signature = crypto.HmacSHA256(stringToSign, apiKey).toString(crypto.enc.Hex);
+
+    console.log('Signature:', signature);
+    ```
+
+  </TabsContent>
+
+  <TabsContent value="php">
+    ```php
+    <?php
+
+    $apiKey = 'YOUR_API_KEY';
+    $va = 'YOUR_VA';
+    $method = 'POST';
+
+    $body = [
+        'product' => ['T-Shirt'],
+        'qty' => ['1'],
+        'price' => ['100000'],
+        // ... parameter lainnya
+    ];
+
+    $jsonBody = json_encode($body, JSON_UNESCAPED_SLASHES);
+    $requestBody = strtolower(hash('sha256', $jsonBody));
+
+    $stringToSign = strtoupper($method) . ':' . $va . ':' . $requestBody . ':' . $apiKey;
+    $signature = hash_hmac('sha256', $stringToSign, $apiKey);
+
+    echo "Signature: " . $signature;
+    ?>
+    ```
+
+  </TabsContent>
+</Tabs>
+
+<Callout type="tip">
+  Pastikan urutan parameter dalam body JSON Anda sama persis dengan yang Anda kirimkan dalam
+  request. Disarankan untuk mengurutkan kunci secara alfabetis jika serializer JSON Anda tidak
+  menjamin urutan, meskipun iPaymu biasanya mengharapkan string mentah yang digunakan dalam body
+  request.
+</Callout>
+
+## Menggunakan Signature
+
+Setelah dibuat, sertakan signature dalam header request Anda:
+
+```http
+signature: <generated_signature>
+va: <your_va>
+timestamp: <current_timestamp>
+```

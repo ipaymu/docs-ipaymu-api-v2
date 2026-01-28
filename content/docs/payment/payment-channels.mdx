@@ -1,0 +1,65 @@
+---
+title: Saluran Pembayaran (Payment Channels)
+description: Dapatkan daftar saluran pembayaran yang tersedia dan statusnya.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+<a
+  href="https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#3733b82a-e8c0-432a-9f48-26bdba298df4"
+  target="_blank"
+  className="button button--primary button--sm"
+>
+  Coba di Postman
+</a>
+
+Dapatkan daftar saluran pembayaran yang tersedia dan statusnya.
+
+## Endpoint
+
+**URL**: `{{baseUrl}}/api/v2/payment-channels`
+**Metode**: `GET`
+
+## Request Headers
+
+| Kunci          | Nilai              | Deskripsi                                                                |
+| :------------- | :----------------- | :----------------------------------------------------------------------- |
+| `Content-Type` | `application/json` |                                                                          |
+| `signature`    | `{{signature}}`    | Signature yang dihasilkan. Lihat [Pembuatan Signature](/docs/signature). |
+| `va`           | `{{va}}`           | Nomor Virtual Account Anda.                                              |
+| `timestamp`    | `{{timestamp}}`    | Timestamp saat ini.                                                      |
+
+## Contoh Response
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Success",
+  "Data": [
+    {
+      "Code": "va",
+      "Name": "Virtual Account",
+      "Description": "Virtual Account",
+      "Channels": [
+        {
+          "Code": "bca",
+          "Name": "BCA",
+          "Description": "BCA",
+          "Logo": "https://storage.googleapis.com/ipaymu-docs/assets/bca.png",
+          "PaymentInstructionsDoc": "https://storage.googleapis.com/ipaymu-docs/cara-pembayaran/va-bca.pdf",
+          "FeatureStatus": "active",
+          "HealthStatus": "online",
+          "TransactionFee": {
+            "ActualFee": 4000,
+            "ActualFeeType": "FLAT",
+            "AdditionalFee": 0
+          }
+        }
+        // ... channel lainnya
+      ]
+    }
+    // ... metode lainnya
+  ]
+}
+```

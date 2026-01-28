@@ -1,0 +1,117 @@
+---
+title: Signature Generation
+description: To ensure the security of transactions, iPaymu requires a signature header in every API request.
+---
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/mdx/tabs";
+
+To ensure the security of transactions, iPaymu requires a `signature` header in every API request. This signature is generated using your **API Key** and request details.
+
+## How to Generate Signature
+
+The signature is generated using **HMAC-SHA256** hashing.
+
+### Formula
+
+```
+String to Sign = Method + ":" + VA + ":" + RequestBody + ":" + APIKey
+Signature = HMAC-SHA256(String to Sign, APIKey)
+```
+
+### Components
+
+1.  **Method**: HTTP Method (e.g., `GET`, `POST`).
+2.  **VA**: Your Virtual Account Number.
+3.  **RequestBody**:
+    - For **GET** requests: The JSON stringified query parameters.
+    - For **POST** requests: The SHA256 hash of the JSON body.
+4.  **APIKey**: Your iPaymu API Key.
+
+### Example Implementation
+
+<Tabs defaultValue="js" groupId="language">
+  <TabsList>
+    <TabsTrigger value="js">Node.js</TabsTrigger>
+    <TabsTrigger value="php">PHP</TabsTrigger>
+  </TabsList>
+
+  <TabsContent value="js">
+    ```javascript
+    const crypto = require('crypto-js');
+
+    // Configuration
+    const apiKey = 'YOUR_API_KEY';
+    const va = 'YOUR_VA';
+    const method = 'POST'; // or 'GET'
+
+    // For POST Request Body
+    const body = {
+        product: ['T-Shirt'],
+        qty: ['1'],
+        price: ['100000'],
+        returnUrl: 'https://your-website.com/thank-you',
+        notifyUrl: 'https://your-website.com/notify',
+        cancelUrl: 'https://your-website.com/cancel',
+        referenceId: 'ID1234'
+    };
+
+    // 1. Stringify the body
+    const bodyJson = JSON.stringify(body);
+
+    // 2. Hash the body (SHA256)
+    const bodyHash = crypto.SHA256(bodyJson).toString(crypto.enc.Hex);
+
+    // 3. Construct String to Sign
+    const stringToSign = `${method}:${va}:${bodyHash}:${apiKey}`;
+
+    // 4. Generate Signature (HMAC-SHA256)
+    const signature = crypto.HmacSHA256(stringToSign, apiKey).toString(crypto.enc.Hex);
+
+    console.log('Signature:', signature);
+    ```
+
+  </TabsContent>
+
+  <TabsContent value="php">
+    ```php
+    <?php
+
+    $apiKey = 'YOUR_API_KEY';
+    $va = 'YOUR_VA';
+    $method = 'POST';
+
+    $body = [
+        'product' => ['T-Shirt'],
+        'qty' => ['1'],
+        'price' => ['100000'],
+        // ... other params
+    ];
+
+    $jsonBody = json_encode($body, JSON_UNESCAPED_SLASHES);
+    $requestBody = strtolower(hash('sha256', $jsonBody));
+
+    $stringToSign = strtoupper($method) . ':' . $va . ':' . $requestBody . ':' . $apiKey;
+    $signature = hash_hmac('sha256', $stringToSign, $apiKey);
+
+    echo "Signature: " . $signature;
+    ?>
+    ```
+
+  </TabsContent>
+</Tabs>
+
+<Callout type="tip">
+  Ensure that the order of parameters in your JSON body matches exactly what you send in the
+  request. It is recommended to sort keys alphabetically if your JSON serializer does not guarantee
+  order, although iPaymu typically expects the raw string used in the request body.
+</Callout>
+
+## Using the Signature
+
+Once generated, include the signature in your request header:
+
+```http
+signature: <generated_signature>
+va: <your_va>
+timestamp: <current_timestamp>
+```

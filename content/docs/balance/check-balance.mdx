@@ -1,0 +1,58 @@
+---
+title: Cek Saldo (Check Balance)
+description: Cek saldo merchant iPaymu Anda saat ini.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+<a
+  href="https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#2c252bed-47c6-4b88-9c68-e9906c0d7e4d"
+  target="_blank"
+  className="button button--primary button--sm"
+>
+  Coba di Postman
+</a>
+
+Cek saldo merchant iPaymu Anda saat ini.
+
+## Endpoint
+
+**URL**: `{{baseUrl}}/api/v2/balance`
+**Metode**: `POST`
+
+## Request Headers
+
+| Kunci          | Nilai              | Deskripsi                                                                |
+| :------------- | :----------------- | :----------------------------------------------------------------------- |
+| `Content-Type` | `application/json` |                                                                          |
+| `signature`    | `{{signature}}`    | Signature yang dihasilkan. Lihat [Pembuatan Signature](/docs/signature). |
+| `va`           | `{{va}}`           | Nomor Virtual Account Anda.                                              |
+| `timestamp`    | `{{timestamp}}`    | Timestamp saat ini.                                                      |
+
+## Request Body
+
+| Parameter | Tipe   | Wajib | Deskripsi       |
+| :-------- | :----- | :---- | :-------------- |
+| `account` | string | Ya    | VA iPaymu Anda. |
+
+## Contoh Request
+
+```json
+{
+  "account": "1179000899"
+}
+```
+
+## Contoh Response
+
+```json
+{
+  "Status": 200,
+  "Data": {
+    "Va": "1179000899",
+    "MerchantBalance": "1500000",
+    "MemberBalance": "0"
+  },
+  "Message": "success"
+}
+```
