@@ -2,6 +2,7 @@ import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import { Provider } from "@/components/provider";
 import "@/app/global.css";
 import { type ReactNode } from "react";
+import type { Metadata } from "next";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -20,6 +21,24 @@ const jetbrainsMono = JetBrains_Mono({
 
 export function generateStaticParams() {
   return [{ lang: "id" }, { lang: "en" }];
+}
+
+export async function generateMetadata(props: {
+  params: Promise<{ lang: string }>;
+}): Promise<Metadata> {
+  const params = await props.params;
+  const lang = params.lang;
+
+  return {
+    title: {
+      template:
+        lang === "en" ? "%s | Documentations iPaymu" : "%s | iPaymu Dokumentasi",
+      default: lang === "en" ? "Documentations iPaymu" : "iPaymu Dokumentasi",
+    },
+    icons: {
+      icon: "/img/favicon.ico",
+    },
+  };
 }
 
 import { SmoothScroll } from "@/components/smooth-scroll";

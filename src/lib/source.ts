@@ -1,4 +1,4 @@
-import { docs } from 'fumadocs-mdx:collections/server';
+import { docs, plugins } from 'fumadocs-mdx:collections/server';
 import { type InferPageType, loader } from 'fumadocs-core/source';
 
 // See https://fumadocs.dev/docs/headless/source-api for more info
@@ -10,6 +10,15 @@ export const source = loader({
     languages: ['id', 'en'], // Daftar bahasa yang disupport
   },
   plugins: [],
+});
+
+export const pluginsSource = loader({
+  baseUrl: '/docs-plugins',
+  source: plugins.toFumadocsSource(),
+  i18n: {
+    defaultLanguage: 'id',
+    languages: ['id', 'en'],
+  },
 });
 
 export function getPageImage(page: InferPageType<typeof source>) {

@@ -8,6 +8,7 @@
 
   --color-primary: #0957c3;
   --color-primary-light: #eef6ff;
+  --color-fd-primary: var(--color-primary);
 
   --color-accent: #0957c3;
   --color-accent-light: #3b82f6;
@@ -19,7 +20,8 @@
   --color-sidebar-dark: #0a0f14;
 
   --color-card-light: #ffffff;
-  --color-card-dark: #151a20; /* Specific card color from reference */
+  --color-card-dark: #151a20;
+  /* Specific card color from reference */
 
   --color-border-light: #e5e5e5;
   --color-border-dark: #27272a;
@@ -57,13 +59,23 @@
     --input: #e2e8f0;
     --ring: var(--color-primary);
     --radius: var(--radius-sm);
+    --fd-nav-height: 3.5rem;
+    --fd-banner-height: 3.5rem;
+    --fd-primary: var(--color-primary);
+    /* Ensure Fumadocs sticky elements account for fixed navbar */
+  }
+
+  html {
+    scroll-padding-top: var(--fd-nav-height);
   }
 
   .dark {
     --background: var(--color-background-dark);
-    --foreground: #d1d5db; /* gray-300 */
+    --foreground: #d1d5db;
+    /* gray-300 */
     --card: var(--color-card-dark);
-    --card-foreground: #f3f4f6; /* gray-100 */
+    --card-foreground: #f3f4f6;
+    /* gray-100 */
     --popover: var(--color-sidebar-dark);
     --popover-foreground: #f3f4f6;
     --primary: var(--color-primary);
@@ -71,7 +83,8 @@
     --secondary: #1e293b;
     --secondary-foreground: #f8fafc;
     --muted: #1e293b;
-    --muted-foreground: #9ca3af; /* gray-400 */
+    --muted-foreground: #9ca3af;
+    /* gray-400 */
     --accent: #1e293b;
     --accent-foreground: #f8fafc;
     --destructive: #7f1d1d;
@@ -86,6 +99,7 @@
   * {
     border-color: var(--border);
   }
+
   body {
     background-color: var(--background);
     color: var(--foreground);
@@ -112,7 +126,8 @@ body {
   box-shadow: none !important;
   background-color: transparent !important;
   border-radius: 0 !important;
-  padding: 0 !important; /* Force 0 on all sides */
+  padding: 0 !important;
+  /* Force 0 on all sides */
 }
 
 /* Ensure the code content aligns nicely */
@@ -122,11 +137,23 @@ body {
 
 /* Right Sidebar (TOC) Active State */
 .fd-toc-item[data-active="true"] {
-  @apply text-primary border-l-2 border-primary pl-4 font-bold;
+  @apply text-primary border-l-2 border-primary pl-4 font-bold bg-primary/10 py-1;
 }
 
 .fd-toc-item[data-active="true"] svg {
   @apply text-primary stroke-current fill-current;
+}
+
+/* Clerk TOC Marker Line */
+svg.fd-toc-marker path,
+.fd-toc-marker path {
+  stroke: var(--color-primary) !important;
+  @apply text-primary;
+}
+
+/* Ensure the SVG itself has the correct color context */
+svg.fd-toc-marker {
+  @apply text-primary;
 }
 
 /* Main Sidebar Navigation Active State */
@@ -180,6 +207,7 @@ html {
   from {
     height: 0;
   }
+
   to {
     height: var(--radix-accordion-content-height);
   }
@@ -189,6 +217,7 @@ html {
   from {
     height: var(--radix-accordion-content-height);
   }
+
   to {
     height: 0;
   }
@@ -198,6 +227,7 @@ html {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -208,6 +238,7 @@ html {
     transform: translateY(10px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
