@@ -125,14 +125,36 @@ body {
   @apply text-primary border-l-2 border-primary pl-4 font-bold;
 }
 
+.fd-toc-item[data-active="true"] svg {
+  @apply text-primary stroke-current fill-current;
+}
+
 /* Main Sidebar Navigation Active State */
 .fd-sidebar-item[data-active="true"] {
   @apply bg-accent/10 text-primary border-r-2 border-primary;
 }
 
+.fd-sidebar-item[data-active="true"] svg {
+  @apply text-primary stroke-current;
+}
+
 /* Ensure sidebar item base style allows for the border effect */
 .fd-sidebar-item {
   @apply rounded-none border-r-2 border-transparent transition-all;
+}
+
+/* TOC hover effects */
+.fd-toc-item:hover {
+  @apply text-primary;
+}
+
+.fd-toc-item:hover svg {
+  @apply text-primary stroke-current;
+}
+
+/* Sidebar hover effects */
+.fd-sidebar-item:hover {
+  @apply text-gray-900 dark:text-gray-100;
 }
 
 /* Fix padding/margin issues in nested code blocks */

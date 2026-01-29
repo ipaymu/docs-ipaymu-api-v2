@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export function generateStaticParams() {
-  return [{ lang: "en" }, { lang: "id" }];
+  return [{ lang: "id" }, { lang: "en" }];
 }
 
 export default async function HomePage({ params }: { params: Promise<{ lang: string }> }) {

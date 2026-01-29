@@ -84,7 +84,11 @@ export default async function Page(props: { params: Promise<{ slug?: string[]; l
 }
 
 export async function generateStaticParams() {
-  return source.generateParams();
+  const params = await source.generateParams();
+  return params.map((p) => ({
+    ...p,
+    lang: p.lang || "id", // Ensure lang is always present
+  }));
 }
 
 export async function generateMetadata(props: {
