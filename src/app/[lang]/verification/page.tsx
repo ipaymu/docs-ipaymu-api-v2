@@ -1,75 +1,109 @@
-import { type Metadata } from "next";
+import { getPageImage, verificationSource } from "@/lib/source";
+import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/page";
+import { notFound } from "next/navigation";
+import { getMDXComponents } from "@/mdx-components";
+import type { Metadata } from "next";
+import { createRelativeLink } from "fumadocs-ui/mdx";
 
-export const metadata: Metadata = {
-  title: "Verifikasi Akun",
-  description: "Panduan verifikasi akun iPaymu.",
-};
+// 1. IMPORT KOMPONEN UI FUMADOCS
+import { File, Folder, Files } from "fumadocs-ui/components/files";
 
-export function generateStaticParams() {
-  return [{ lang: "id" }, { lang: "en" }];
-}
+import { Card, Cards } from "@/components/mdx/card";
+import { Callout } from "@/components/mdx/callout";
+import { Step, Steps } from "@/components/mdx/steps";
+import { Accordion, Accordions } from "@/components/mdx/accordion";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/mdx/tabs";
 
-export default async function VerificationPage({ params }: { params: Promise<{ lang: string }> }) {
-  const { lang } = await params;
-  const isId = lang === "id";
+// 2. IMPORT ICON YANG ERROR DARI LUCIDE-REACT
+import { CpuIcon, PanelsTopLeft, Database, Terminal } from "lucide-react";
+
+// 3. BUAT DUMMY COMPONENT UNTUK FEEDBACKBLOCK (Supaya tidak error)
+const FeedbackBlock = ({ children }: { children: React.ReactNode }) => (
+  <div className="my-4 p-4 border rounded-lg bg-secondary/10">{children}</div>
+);
+
+// 4. MAPPING UNTUK CodeBlockTabs (Karena di MDX Anda pakai nama lama/custom)
+const CodeBlockTabs = Tabs;
+const CodeBlockTabsList = TabsList;
+const CodeBlockTabsTrigger = TabsTrigger;
+const CodeBlockTab = TabsContent;
+
+export default async function VerificationPage(props: { params: Promise<{ lang: string }> }) {
+  const { lang } = await props.params;
+  const page = verificationSource.getPage([], lang); // Empty array for index page
+
+  if (!page) notFound();
+
+  const MDX = page.data.body;
 
   return (
-    <main className="container max-w-4xl py-12">
-      <h1 className="text-3xl font-bold mb-6">
-        {isId ? "Verifikasi Akun" : "Account Verification"}
-      </h1>
-
-      <p className="mb-8 text-muted-foreground text-lg">
-        {isId
-          ? "Untuk mengaktifkan akun produksi (Live), Anda perlu menyelesaikan proses verifikasi."
-          : "To activate your production account, you need to complete the verification process."}
-      </p>
-
-      <div className="grid gap-8 md:grid-cols-2">
-        <div className="p-6 border rounded-xl bg-card">
-          <h2 className="text-xl font-semibold mb-4">{isId ? "Persyaratan" : "Requirements"}</h2>
-          <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-            {isId ? (
-              <>
-                <li>KTP (Kartu Tanda Penduduk)</li>
-                <li>NPWP (Nomor Pokok Wajib Pajak)</li>
-                <li>Rekening Bank Aktif</li>
-              </>
-            ) : (
-              <>
-                <li>KTP (ID Card)</li>
-                <li>NPWP (Tax ID)</li>
-                <li>Valid Bank Account</li>
-              </>
-            )}
-          </ul>
-        </div>
-
-        <div className="p-6 border rounded-xl bg-card">
-          <h2 className="text-xl font-semibold mb-4">{isId ? "Langkah-langkah" : "Steps"}</h2>
-          <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
-            {isId ? (
-              <>
-                <li>Login ke Dashboard iPaymu Anda.</li>
-                <li>
-                  Masuk ke menu <strong>Akun &gt; Verifikasi</strong>.
-                </li>
-                <li>Unggah dokumen yang diperlukan.</li>
-                <li>Tunggu persetujuan (biasanya 1x24 jam).</li>
-              </>
-            ) : (
-              <>
-                <li>Login to your iPaymu Dashboard.</li>
-                <li>
-                  Go to <strong>Account &gt; Verification</strong>.
-                </li>
-                <li>Upload the required documents.</li>
-                <li>Wait for approval (usually 1x24 hours).</li>
-              </>
-            )}
-          </ol>
-        </div>
-      </div>
-    </main>
+    <DocsPage
+      toc={page.data.toc}
+      full={page.data.full}
+      tableOfContent={{
+        style: "clerk",
+        single: false,
+      }}
+    >
+      <DocsTitle>{page.data.title}</DocsTitle>
+      <DocsDescription>{page.data.description}</DocsDescription>
+      <DocsBody>
+        <MDX
+          components={{
+            ...getMDXComponents({
+              a: createRelativeLink(verificationSource, page),
+            }),
+            // --- DAFTARKAN SEMUA DISINI ---
+            Accordion,
+            Accordions,
+            Callout,
+            Card,
+            Cards,
+            Step,
+            Steps,
+            File,
+            Folder,
+            Files,
+            // Icon
+            CpuIcon,
+            PanelsTopLeft,
+            Database,
+            Terminal,
+            // Custom/Legacy mapping
+            FeedbackBlock,
+            CodeBlockTabs,
+            CodeBlockTabsList,
+            CodeBlockTabsTrigger,
+            CodeBlockTab,
+            // -----------------------------
+          }}
+        />
+      </DocsBody>
+    </DocsPage>
   );
+}
+
+export async function generateStaticParams() {
+  const params = await verificationSource.generateParams();
+  return params.map((p) => ({
+    ...p,
+    lang: p.lang || "id", // Ensure lang is always present
+  }));
+}
+
+export async function generateMetadata(props: {
+  params: Promise<{ lang: string }>;
+}): Promise<Metadata> {
+  const { lang } = await props.params;
+  const page = verificationSource.getPage([], lang);
+
+  if (!page) notFound();
+
+  return {
+    title: page.data.title,
+    description: page.data.description,
+    openGraph: {
+      images: getPageImage(page).url,
+    },
+  };
 }

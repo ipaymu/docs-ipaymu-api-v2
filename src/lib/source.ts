@@ -1,4 +1,4 @@
-import { docs, plugins } from 'fumadocs-mdx:collections/server';
+import { docs, plugins, verification } from 'fumadocs-mdx:collections/server';
 import { type InferPageType, loader } from 'fumadocs-core/source';
 
 // See https://fumadocs.dev/docs/headless/source-api for more info
@@ -15,6 +15,15 @@ export const source = loader({
 export const pluginsSource = loader({
   baseUrl: '/docs-plugins',
   source: plugins.toFumadocsSource(),
+  i18n: {
+    defaultLanguage: 'id',
+    languages: ['id', 'en'],
+  },
+});
+
+export const verificationSource = loader({
+  baseUrl: '/verification',
+  source: verification.toFumadocsSource(),
   i18n: {
     defaultLanguage: 'id',
     languages: ['id', 'en'],

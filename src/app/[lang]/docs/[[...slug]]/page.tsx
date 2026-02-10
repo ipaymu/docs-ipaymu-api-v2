@@ -16,6 +16,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/mdx/tabs"
 
 // 2. IMPORT ICON YANG ERROR DARI LUCIDE-REACT
 import { CpuIcon, PanelsTopLeft, Database, Terminal } from "lucide-react";
+import { PostmanButton } from "@/components/mdx/postman-button";
 
 // 3. BUAT DUMMY COMPONENT UNTUK FEEDBACKBLOCK (Supaya tidak error)
 const FeedbackBlock = ({ children }: { children: React.ReactNode }) => (
@@ -45,7 +46,10 @@ export default async function Page(props: { params: Promise<{ slug?: string[]; l
         single: false,
       }}
     >
-      <DocsTitle>{page.data.title}</DocsTitle>
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
+        <DocsTitle className="mb-0">{page.data.title}</DocsTitle>
+        <PostmanButton className="shrink-0" />
+      </div>
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>
         <MDX

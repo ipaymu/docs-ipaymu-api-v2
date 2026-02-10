@@ -7,11 +7,21 @@ import { Step, Steps } from "fumadocs-ui/components/steps";
 
 Untuk mengaktifkan akun iPaymu Anda sepenuhnya dan mulai menerima pembayaran, Anda harus menyelesaikan proses verifikasi. Berikut adalah panduan langkah demi langkah untuk melakukan verifikasi di lingkungan Sandbox.
 
+<Callout type="warn" title="Penting">
+Proses verifikasi membutuhkan waktu estimasi **2 hari kerja**. Tim verifikasi kami akan melakukan pengetesan pada website atau aplikasi Anda untuk memastikan alur integrasi berjalan lancar hingga muncul **Halaman Pembayaran iPaymu** atau **Kode Pembayaran** (bisa transaksi).
+
+Mohon pastikan integrasi Anda sudah siap dan lancar sebelum melakukan *submit* verifikasi.
+</Callout>
+
 <Callout type="info" title="Prasyarat">
-  Sebelum memulai, pastikan Anda memiliki data berikut: - **No. HP** yang aktif. - **Email** yang
-  valid. - **KTP** (NIK wajib 16 angka). - **Foto Selfie** dengan KTP. - **Rekening Bank** (Nomor
-  rekening dan bukti kepemilikan seperti buku tabungan atau screenshot m-banking). - **URL
-  Website/Toko Online** yang valid dan dapat diakses publik.
+  Sebelum memulai, pastikan Anda memiliki data berikut:
+  
+  - **No. HP** yang aktif.
+  - **Email** yang valid.
+  - **KTP** (NIK wajib 16 angka).
+  - **Foto Selfie** dengan KTP.
+  - **Rekening Bank** (Nomor rekening dan bukti kepemilikan seperti buku tabungan atau screenshot m-banking).
+  - **URL Website/Toko Online** yang valid dan dapat diakses publik.
 </Callout>
 
 <Steps>
@@ -54,10 +64,10 @@ Isi detail mengenai bisnis atau toko online Anda.
 
 - **Nama Usaha/Toko**: Nama bisnis Anda.
 - **URL Website**: Masukkan URL website atau toko online Anda yang valid (Harus benar).
-  > <Callout type="warn">
-  >   URL Website/Toko Online harus valid dan dapat diakses. Jika Anda belum memiliki domain
-  >   sendiri, pastikan URL tersebut adalah URL yang sah.
-  > </Callout>
+  <Callout type="warn">
+    URL Website/Toko Online harus valid dan dapat diakses. Jika Anda belum memiliki domain
+    sendiri, pastikan URL tersebut adalah URL yang sah.
+  </Callout>
 - **Upload Dokumen**:
   - Untuk **Selfie**, Anda dapat menggunakan contoh gambar selfie.
   - Untuk file upload lainnya (KTP, NPWP jika ada), gunakan file gambar (misal: ktp-min.png).
@@ -102,8 +112,8 @@ Unggah dokumen tambahan jika diminta, atau selesaikan proses jika sudah lengkap.
 
 Pastikan website Anda sudah siap. Untuk pengaturan lebih lanjut mengenai whitelist IP dan domain, Anda bisa mengakses menu Integrasi:
 
-- [Validasi Domain](https://sandbox.ipaymu.com/domain)
-- [Validasi IP](https://sandbox.ipaymu.com/ip)
+- **Validasi Domain**: [Sandbox](https://sandbox.ipaymu.com/domain) / [Produksi](https://my.ipaymu.com/domain)
+- **Validasi IP**: [Sandbox](https://sandbox.ipaymu.com/ip) / [Produksi](https://my.ipaymu.com/ip)
 
 <Callout type="tip" title="IP Statis">
   Disarankan untuk menggunakan **IP Statis** untuk server Anda demi keamanan dan stabilitas

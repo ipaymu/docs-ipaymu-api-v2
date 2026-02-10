@@ -28,6 +28,19 @@ export const plugins = defineDocs({
   },
 });
 
+export const verification = defineDocs({
+  dir: 'content/verification',
+  docs: {
+    schema: frontmatterSchema,
+    postprocess: {
+      includeProcessedMarkdown: true,
+    },
+  },
+  meta: {
+    schema: metaSchema,
+  },
+});
+
 export default defineConfig({
   mdxOptions: {
     // MDX options

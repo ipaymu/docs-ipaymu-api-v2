@@ -7,11 +7,21 @@ import { Step, Steps } from "fumadocs-ui/components/steps";
 
 To fully activate your iPaymu account and start accepting payments, you must complete the verification process. Below is a step-by-step guide on how to verify your account in the Sandbox environment.
 
+<Callout type="warn" title="Important">
+The verification process takes approximately **2 working days**. Our verification team will test your website or application to ensure the integration flow works correctly, up to the **iPaymu Payment Page** or generating a **Payment Code** (transaction capability).
+
+Please ensure your integration is fully functional and seamless before submitting for verification.
+</Callout>
+
 <Callout type="info" title="Prerequisites">
-  Before starting, ensure you have the following data ready: - Active **Phone Number**. - Valid
-  **Email Address**. - **ID Card (KTP)** (NIK must be 16 digits). - **Selfie Photo** with your ID
-  Card. - **Bank Account** (Account number and proof of ownership such as passbook or m-banking
-  screenshot). - Valid **Website/Online Store URL** that is publicly accessible.
+  Before starting, ensure you have the following data ready:
+  
+  - Active **Phone Number**.
+  - Valid **Email Address**.
+  - **ID Card (KTP)** (NIK must be 16 digits).
+  - **Selfie Photo** with your ID Card.
+  - **Bank Account** (Account number and proof of ownership such as passbook or m-banking screenshot).
+  - Valid **Website/Online Store URL** that is publicly accessible.
 </Callout>
 
 <Steps>
@@ -54,10 +64,10 @@ Fill in details about your business or online store.
 
 - **Business Name**: Name of your business or store.
 - **Website URL**: Enter a valid URL for your website or online store (Must be correct).
-  > <Callout type="warn">
-  >   The Website URL must be valid and accessible. If you don't have your own domain yet, ensure
-  >   the entered URL is a legitimate URL.
-  > </Callout>
+  <Callout type="warn">
+    The Website URL must be valid and accessible. If you don't have your own domain yet, ensure
+    the entered URL is a legitimate URL.
+  </Callout>
 - **Document Upload**:
   - For **Selfie**, you can use a sample selfie image.
   - For other uploads (ID Card, NPWP if available), use an image file (e.g., ktp-min.png).
@@ -102,8 +112,8 @@ Upload any additional documents if requested, or complete the process if everyth
 
 Ensure your website is ready. For further configuration regarding IP and domain whitelisting, you can access the Integration menu:
 
-- [Domain Validation](https://sandbox.ipaymu.com/domain)
-- [IP Validation](https://sandbox.ipaymu.com/ip)
+- **Domain Validation**: [Sandbox](https://sandbox.ipaymu.com/domain) / [Production](https://my.ipaymu.com/domain)
+- **IP Validation**: [Sandbox](https://sandbox.ipaymu.com/ip) / [Production](https://my.ipaymu.com/ip)
 
 <Callout type="tip" title="Static IP">
   It is recommended to use a **Static IP** for your server to ensure transaction security and

@@ -42,7 +42,7 @@ export function Tabs({
     <TabsContext.Provider value={{ activeTab, setActiveTab }}>
       <div
         className={cn(
-          "border border-black dark:border-zinc-700 shadow-brutal dark:shadow-none bg-background rounded-sm overflow-hidden my-6",
+          "border-2 border-black dark:border-white shadow-brutal dark:shadow-[4px_4px_0px_0px_#ffffff] bg-background rounded-none overflow-hidden my-6 transition-all",
           className,
         )}
         {...props}
@@ -57,7 +57,7 @@ export function TabsList({ children, className, ...props }: ComponentPropsWithou
   return (
     <div
       className={cn(
-        "bg-secondary/50 dark:bg-[#151a20] px-4 py-2 flex items-center justify-between border-b border-black dark:border-zinc-700",
+        "bg-secondary/20 dark:bg-zinc-900/50 px-4 py-3 flex items-center justify-between border-b-2 border-black dark:border-white",
         className,
       )}
       {...props}
@@ -91,8 +91,8 @@ export function TabsTrigger({
       className={cn(
         "cursor-pointer transition-all whitespace-nowrap pb-0.5",
         isActive
-          ? "text-black dark:text-white border-b-2 border-primary opacity-100"
-          : "text-muted-foreground hover:text-black dark:hover:text-white",
+          ? "text-black dark:text-white border-b-2 border-primary opacity-100 font-bold"
+          : "text-muted-foreground hover:text-black dark:hover:text-white font-medium",
         className,
       )}
       {...props}
@@ -120,7 +120,7 @@ export function TabsContent({
   return (
     <div
       className={cn(
-        "tabs-content bg-background text-sm overflow-x-auto rounded-b-sm animate-fade-in",
+        "tabs-content bg-background text-sm overflow-x-auto rounded-none animate-fade-in",
         className,
       )}
       {...props}
