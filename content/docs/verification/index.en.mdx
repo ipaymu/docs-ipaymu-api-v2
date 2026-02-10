@@ -1,23 +1,118 @@
 ---
-title: Verification
-description: Account verification process.
+title: Account Verification
+description: Step-by-step guide to verifying your iPaymu account in the Sandbox environment.
 ---
 
-import { Callout } from "fumadocs-ui/components/callout";
+import { Step, Steps } from "fumadocs-ui/components/steps";
 
-To activate your production account, you need to complete the verification process.
+To fully activate your iPaymu account and start accepting payments, you must complete the verification process. Below is a step-by-step guide on how to verify your account in the Sandbox environment.
 
-## Requirements
+<Callout type="info" title="Prerequisites">
+  Before starting, ensure you have the following data ready: - Active **Phone Number**. - Valid
+  **Email Address**. - **ID Card (KTP)** (NIK must be 16 digits). - **Selfie Photo** with your ID
+  Card. - **Bank Account** (Account number and proof of ownership such as passbook or m-banking
+  screenshot). - Valid **Website/Online Store URL** that is publicly accessible.
+</Callout>
 
-- KTP (ID Card)
-- NPWP (Tax ID)
-- Valid Bank Account
+<Steps>
+<Step>
 
-## Steps
+## Navigate to Verification Page
 
-1. Login to your iPaymu Dashboard.
-2. Go to **Account** > **Verification**.
-3. Upload the required documents.
-4. Wait for approval (usually 1x24 hours).
+After successfully [Registering](https://sandbox.ipaymu.com/register) and Logging in to the Dashboard:
 
-<Callout type="info">Ensure all documents are clear and readable to avoid rejection.</Callout>
+1.  Look for the **Verify Now** button or menu on the dashboard.
+2.  Or click the "Verification" menu in the sidebar and click "Verify Now".
+
+![Verification Dashboard](/img/verifications/dashboard.png)
+
+</Step>
+
+<Step>
+
+## Step 1: Personal Information
+
+Fill in your personal data completely and correctly according to your ID Card (KTP).
+
+![Step 1 - Personal Information](/img/verifications/step1-profile.png)
+
+- **Full Name**: As stated on ID Card.
+- **Address**: Full address required.
+- **NIK**: Must be exactly 16 digits.
+
+Click **Next**.
+
+</Step>
+
+<Step>
+
+## Step 2: Business Information
+
+Fill in details about your business or online store.
+
+![Step 2 - Business Information](/img/verifications/step2-business.png)
+
+- **Business Name**: Name of your business or store.
+- **Website URL**: Enter a valid URL for your website or online store (Must be correct).
+  > <Callout type="warn">
+  >   The Website URL must be valid and accessible. If you don't have your own domain yet, ensure
+  >   the entered URL is a legitimate URL.
+  > </Callout>
+- **Document Upload**:
+  - For **Selfie**, you can use a sample selfie image.
+  - For other uploads (ID Card, NPWP if available), use an image file (e.g., ktp-min.png).
+
+Click **Next**.
+
+</Step>
+
+<Step>
+
+## Step 3: Bank Information
+
+Enter the bank account details for fund settlement.
+
+![Step 3 - Bank Information](/img/verifications/step3-bank.png)
+
+- **Bank Name**: Select your bank.
+- **Account Number**: Enter your account number.
+- **Account Holder Name**: Must match the registered name.
+- **Supporting Document**:
+  - If you do not have a physical passbook, you can upload a **screenshot of account mutation** or the profile page from your **m-banking app** that shows the account number and owner name.
+
+Click **Next**.
+
+</Step>
+
+<Step>
+
+## Step 4: Additional Documents
+
+![Step 4 - Additional Documents](/img/verifications/step4-document.png)
+
+Upload any additional documents if requested, or complete the process if everything is set.
+
+</Step>
+
+</Steps>
+
+## Important Notes
+
+### Domain & IP Validation
+
+Ensure your website is ready. For further configuration regarding IP and domain whitelisting, you can access the Integration menu:
+
+- [Domain Validation](https://sandbox.ipaymu.com/domain)
+- [IP Validation](https://sandbox.ipaymu.com/ip)
+
+<Callout type="tip" title="Static IP">
+  It is recommended to use a **Static IP** for your server to ensure transaction security and
+  stability. If you do not have a Static IP, please contact our support team at
+  [support@ipaymu.com](mailto:support@ipaymu.com) to consult for alternative solutions.
+</Callout>
+
+### Common Errors
+
+- **NIK less than 16 digits**: Ensure the NIK entered is exactly 16 numbers.
+- **Blurry Photos**: Ensure ID and Selfie are clearly readable by the verification system.
+- **Mismatched Account Name**: The name on the bank account must match the account verification name.
