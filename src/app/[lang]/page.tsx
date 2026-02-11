@@ -345,7 +345,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
               <p className="text-blue-100 mb-8 max-w-xl mx-auto relative z-10">{t.support.desc}</p>
 
               <a
-                href="https://wa.me/6281234567890" /* Replace with actual WA link */
+                href="https://wa.me/6281936972473" /* Replace with actual WA link */
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-white text-primary rounded-full font-bold hover:bg-blue-50 transition-colors relative z-10 shadow-lg"
