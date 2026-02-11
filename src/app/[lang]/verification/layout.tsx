@@ -3,7 +3,7 @@ import { type ReactNode } from "react";
 import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import { baseOptions } from "@/lib/layout.shared";
 
-
+import { HorizontalNavbar } from "@/components/layout/horizontal-navbar";
 export default async function Layout({
   children,
   params,
@@ -18,6 +18,10 @@ export default async function Layout({
       {...baseOptions(lang)}
       // Enable i18n compatibility mode
       i18n
+      nav={{
+        ...baseOptions(lang).nav,
+        component: <HorizontalNavbar lang={lang} />,
+      }}
       sidebar={{
         enabled: true,
       }}

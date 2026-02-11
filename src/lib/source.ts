@@ -22,7 +22,7 @@ export const pluginsSource = loader({
 });
 
 export const verificationSource = loader({
-  baseUrl: '/verification',
+  baseUrl: '/docs/verification',
   source: verification.toFumadocsSource(),
   i18n: {
     defaultLanguage: 'id',
