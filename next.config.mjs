@@ -10,7 +10,7 @@ const config = {
   images: {
     unoptimized: true,
   },
-  basePath: process.env.NEXT_PUBLIC_BASE_PATH || '/',
+  basePath: process.env.BASE_PATH || '/',
   webpack: (config, { dev }) => {
     if (!dev) {
       config.plugins.push(utwm());
