@@ -66,7 +66,7 @@ export function Card({
   const content = (
     <div
       className={cn(
-        "p-5 bg-white dark:bg-[#151a20] border border-border transition-all group h-full flex flex-col rounded-sm",
+        "p-5 bg-white dark:bg-card-dark border border-border transition-all group h-full flex flex-col rounded-sm",
         hoverBorderColor,
         hoverShadowColor,
         className,

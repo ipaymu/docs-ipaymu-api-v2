@@ -46,7 +46,7 @@ export default async function Page(props: { params: Promise<{ slug?: string[]; l
         single: false,
       }}
     >
-      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between pt-12 gap-4 mb-4">
         <DocsTitle className="mb-0">{page.data.title}</DocsTitle>
         <PostmanButton className="shrink-0" />
       </div>

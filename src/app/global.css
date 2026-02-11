@@ -257,6 +257,7 @@ html {
   animation: fade-in 0.3s ease-out;
 }
 
-.animate-slide-in {
-  animation: slide-in-from-bottom 0.4s ease-out forwards;
+/* Sidebar Z-Index Override */
+#nd-sidebar-mobile {
+  z-index: 100 !important; /* Ensure it's above navbar (z-50) */
 }

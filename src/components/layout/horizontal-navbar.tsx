@@ -11,20 +11,34 @@ import { useRouter } from "next/navigation";
 
 interface HorizontalNavbarProps {
   lang: string;
+  showSidebarTrigger?: boolean;
 }
 
-export function HorizontalNavbar({ lang }: HorizontalNavbarProps) {
+export function HorizontalNavbar({ lang, showSidebarTrigger = true }: HorizontalNavbarProps) {
   const pathname = usePathname();
   const { open } = useSidebar();
 
   useEffect(() => {
-    if (open) {
+    // Only lock scroll on mobile/drawer mode
+    const isMobile = window.innerWidth < 768; // Simple check or use mode if available from context
+
+    if (open && isMobile) {
       document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden"; // Lock html too for some browsers
+      // @ts-ignore
+      window.lenis?.stop();
     } else {
       document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+      // @ts-ignore
+      window.lenis?.start();
     }
+
     return () => {
       document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+      // @ts-ignore
+      window.lenis?.start();
     };
   }, [open]);
 
@@ -32,9 +46,7 @@ export function HorizontalNavbar({ lang }: HorizontalNavbarProps) {
     { text: "Beranda", url: `/${lang}` },
     { text: "Dokumentasi", url: `/${lang}/docs` },
     { text: "Verifikasi", url: `/${lang}/verification` },
-    { text: "API Reference", url: `/${lang}/docs/api` },
-    { text: "Tutorial", url: `/${lang}/docs/tutorial` },
-    { text: "Support", url: `/${lang}/docs/support` },
+    { text: "Plugins", url: `/${lang}/docs-plugins` },
   ];
 
   return (
@@ -61,10 +73,11 @@ export function HorizontalNavbar({ lang }: HorizontalNavbarProps) {
               <Link
                 key={item.url}
                 href={item.url}
-                className={`text-sm font-medium transition-colors hover:text-primary ${pathname === item.url || pathname.startsWith(item.url + "/")
-                  ? "text-primary"
-                  : "text-muted-foreground"
-                  }`}
+                className={`text-sm font-medium transition-colors hover:text-primary ${
+                  pathname === item.url || pathname.startsWith(item.url + "/")
+                    ? "text-primary"
+                    : "text-muted-foreground"
+                }`}
               >
                 {item.text}
               </Link>
@@ -77,9 +90,11 @@ export function HorizontalNavbar({ lang }: HorizontalNavbarProps) {
             <ThemeToggle />
             {/* Mobile: Show SidebarTrigger */}
             <div className="md:hidden flex items-center">
-              <SidebarTrigger>
-                <Menu className="h-5 w-5" />
-              </SidebarTrigger>
+              {showSidebarTrigger && (
+                <SidebarTrigger>
+                  <Menu className="h-5 w-5" />
+                </SidebarTrigger>
+              )}
             </div>
           </div>
         </div>
