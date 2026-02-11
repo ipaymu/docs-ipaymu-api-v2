@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { HorizontalNavbar } from "@/components/layout/horizontal-navbar";
 import { SidebarProvider } from "fumadocs-ui/components/sidebar/base";
-import { ArrowRight, Code2, ShoppingBag, QrCode, Terminal, MessageCircle } from "lucide-react";
+import { ArrowRight, Code2, Terminal, ShieldCheck, Plug, MessageCircle } from "lucide-react";
 
 export function generateStaticParams() {
   return [{ lang: "id" }, { lang: "en" }];
@@ -11,25 +11,30 @@ const HOMEPAGE_TEXT = {
   id: {
     hero: {
       headline: "Dokumentasi Pembayaran",
-      headlineBreak: "untuk Semua.",
+      headlineBreak: "untuk Developer.",
       subheadline:
-        "Hub lengkap integrasi iPaymu. Mulai dari API canggih untuk developer hingga solusi tanpa koding untuk UMKM.",
+        "Hub lengkap integrasi iPaymu. API canggih, dokumentasi, dan tools untuk developer.",
       btnApi: "Mulai Integrasi API",
-      btnUmkm: "Panduan Tanpa Koding (UMKM)",
     },
     paths: {
-      title: "Pilih Jalur Anda",
+      title: "Dokumentasi Teknis",
       card1: {
-        title: "Developer & API",
-        desc: "Bangun aplikasi custom dengan API lengkap dan SDK kami. Dokumentasi teknis mendalam.",
+        title: "Docs Teknis",
+        desc: "Dokumentasi API lengkap untuk integrasi pembayaran custom.",
+        link: "/docs",
+        icon: Code2,
       },
       card2: {
-        title: "Pengguna CMS/Plugin",
-        desc: "Panduan integrasi untuk WooCommerce, Shopify, Magento, dan platform e-commerce lainnya.",
+        title: "Docs Verifikasi",
+        desc: "Panduan lengkap proses verifikasi akun dan merchant.",
+        link: "/docs/verification",
+        icon: ShieldCheck,
       },
       card3: {
-        title: "Penjual Medsos (UMKM)",
-        desc: "Terima pembayaran via WhatsApp/IG menggunakan Payment Link dan QRIS. Tanpa website.",
+        title: "Docs Plugin",
+        desc: "Panduan instalasi dan konfigurasi plugin CMS (WooCommerce, dll).",
+        link: "/docs-plugins",
+        icon: Plug,
       },
     },
     dev: {
@@ -44,12 +49,6 @@ const HOMEPAGE_TEXT = {
       ],
       link: "Lihat API Reference Lengkap",
     },
-    umkm: {
-      tag: "Bisnis & UMKM",
-      title: "Satu Integrasi untuk Semua Metode Pembayaran",
-      desc: "Tidak perlu memikirkan teknis bank. Cukup satu akun iPaymu, pelanggan Anda bisa membayar lewat Transfer Bank, QRIS, Indomaret, hingga Kartu Kredit.",
-      link: "Lihat daftar lengkap metode pembayaran",
-    },
     support: {
       title: "Bingung Memulai?",
       desc: "Tim support kami siap membantu Anda 24/7. Tanyakan apa saja mulai dari teknis integrasi hingga pendaftaran akun.",
@@ -59,25 +58,30 @@ const HOMEPAGE_TEXT = {
   en: {
     hero: {
       headline: "Payment Documentation",
-      headlineBreak: "for Everyone.",
+      headlineBreak: "for Developers.",
       subheadline:
-        "The complete iPaymu integration hub. From advanced APIs for developers to no-code solutions for MSMEs.",
+        "The complete iPaymu integration hub. Advanced APIs, documentation, and tools for developers.",
       btnApi: "Start API Integration",
-      btnUmkm: "No-Code Guide (MSME)",
     },
     paths: {
-      title: "Choose Your Path",
+      title: "Technical Documentation",
       card1: {
-        title: "Developer & API",
-        desc: "Build custom apps with our complete API and SDKs. In-depth technical documentation.",
+        title: "Technical Docs",
+        desc: "Complete API documentation for custom payment integration.",
+        link: "/docs",
+        icon: Code2,
       },
       card2: {
-        title: "CMS/Plugin Users",
-        desc: "Integration guides for WooCommerce, Shopify, Magento, and other e-commerce platforms.",
+        title: "Verification Docs",
+        desc: "Complete guide for account and merchant verification processes.",
+        link: "/docs/verification",
+        icon: ShieldCheck,
       },
       card3: {
-        title: "Social Sellers (MSME)",
-        desc: "Accept payments via WhatsApp/IG using Payment Links and QRIS. No website needed.",
+        title: "Plugin Docs",
+        desc: "Installation and configuration guides for CMS plugins (WooCommerce, etc).",
+        link: "/docs-plugins",
+        icon: Plug,
       },
     },
     dev: {
@@ -91,12 +95,6 @@ const HOMEPAGE_TEXT = {
         "Real-time Webhook Notifications",
       ],
       link: "View Complete API Reference",
-    },
-    umkm: {
-      tag: "Business & MSME",
-      title: "One Integration for All Payment Methods",
-      desc: "No need to worry about bank technicalities. With just one iPaymu account, your customers can pay via Bank Transfer, QRIS, Indomaret, to Credit Cards.",
-      link: "View full list of payment methods",
     },
     support: {
       title: "Confused Where to Start?",
@@ -137,12 +135,6 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
               >
                 {t.hero.btnApi} <Terminal className="w-5 h-5" />
               </Link>
-              <Link
-                href={`/${lang}/docs/tutorial`}
-                className="w-full sm:w-auto px-8 py-3 rounded-lg border-2 border-border hover:border-primary/50 hover:bg-accent transition-all font-medium flex items-center justify-center gap-2"
-              >
-                {t.hero.btnUmkm} <ShoppingBag className="w-5 h-5" />
-              </Link>
             </div>
           </div>
 
@@ -155,13 +147,13 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
           <div className="container mx-auto">
             <h2 className="text-2xl font-bold text-center mb-12">{t.paths.title}</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Card 1: Developer */}
+              {/* Card 1: Technical Docs */}
               <Link
-                href={`/${lang}/docs`}
+                href={`/${lang}${t.paths.card1.link}`}
                 className="group p-6 rounded-xl border bg-card hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
               >
                 <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Code2 className="w-6 h-6" />
+                  <t.paths.card1.icon className="w-6 h-6" />
                 </div>
                 <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
                   {t.paths.card1.title}
@@ -169,13 +161,13 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
                 <p className="text-muted-foreground text-sm">{t.paths.card1.desc}</p>
               </Link>
 
-              {/* Card 2: CMS/Plugin */}
+              {/* Card 2: Verification Docs */}
               <Link
-                href={`/${lang}/docs-plugins`}
+                href={`/${lang}${t.paths.card2.link}`}
                 className="group p-6 rounded-xl border bg-card hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
               >
-                <div className="w-12 h-12 rounded-lg bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <ShoppingBag className="w-6 h-6" />
+                <div className="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <t.paths.card2.icon className="w-6 h-6" />
                 </div>
                 <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
                   {t.paths.card2.title}
@@ -183,13 +175,13 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
                 <p className="text-muted-foreground text-sm">{t.paths.card2.desc}</p>
               </Link>
 
-              {/* Card 3: Social/UMKM */}
+              {/* Card 3: Plugin Docs */}
               <Link
-                href={`/${lang}/docs/tutorial`}
+                href={`/${lang}${t.paths.card3.link}`}
                 className="group p-6 rounded-xl border bg-card hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
               >
-                <div className="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <QrCode className="w-6 h-6" />
+                <div className="w-12 h-12 rounded-lg bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <t.paths.card3.icon className="w-6 h-6" />
                 </div>
                 <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
                   {t.paths.card3.title}
@@ -230,7 +222,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
               </ul>
 
               <Link
-                href={`/${lang}/docs/api`}
+                href={`/${lang}/docs`}
                 className="text-primary font-semibold hover:underline inline-flex items-center gap-1"
               >
                 {t.dev.link} <ArrowRight className="w-4 h-4" />
@@ -274,59 +266,6 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
                   </pre>
                 </div>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* UMKM HOOK (TRUST SIGNALS) */}
-        <section className="py-20 bg-primary/5 border-y border-border/50 px-4 md:px-6">
-          <div className="container mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-semibold mb-6">
-              <ShoppingBag className="w-3 h-3" /> {t.umkm.tag}
-            </div>
-            <h2 className="text-3xl font-bold mb-6">{t.umkm.title}</h2>
-            <p className="text-muted-foreground mb-12 max-w-2xl mx-auto">{t.umkm.desc}</p>
-
-            {/* Payment Logos Grid Placeholder */}
-            {/* Ideally replace these divs with actual img tags if assets exist */}
-            <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12 opacity-70 grayscale hover:grayscale-0 transition-all duration-500">
-              {/* Quick Mockups for logos */}
-              <div className="font-bold text-xl md:text-2xl text-slate-600 dark:text-slate-300">
-                QRIS
-              </div>
-              <div className="font-bold text-xl md:text-2xl text-slate-600 dark:text-slate-300">
-                BCA
-              </div>
-              <div className="font-bold text-xl md:text-2xl text-slate-600 dark:text-slate-300">
-                Mandiri
-              </div>
-              <div className="font-bold text-xl md:text-2xl text-slate-600 dark:text-slate-300">
-                BNI
-              </div>
-              <div className="font-bold text-xl md:text-2xl text-slate-600 dark:text-slate-300">
-                BRI
-              </div>
-              <div className="font-bold text-xl md:text-2xl text-slate-600 dark:text-slate-300">
-                Indomaret
-              </div>
-              <div className="font-bold text-xl md:text-2xl text-slate-600 dark:text-slate-300">
-                Alfamart
-              </div>
-              <div className="font-bold text-xl md:text-2xl text-slate-600 dark:text-slate-300">
-                OVO
-              </div>
-              <div className="font-bold text-xl md:text-2xl text-slate-600 dark:text-slate-300">
-                ShopeePay
-              </div>
-            </div>
-
-            <div className="mt-12">
-              <Link
-                href={`/${lang}/docs/tutorial`}
-                className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors border-b border-dashed border-muted-foreground/30 hover:border-primary"
-              >
-                {t.umkm.link} &rarr;
-              </Link>
             </div>
           </div>
         </section>

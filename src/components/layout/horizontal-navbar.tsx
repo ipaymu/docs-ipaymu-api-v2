@@ -9,6 +9,8 @@ import { Moon, Sun, Menu } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 
+import { baseOptions } from "@/lib/layout.shared";
+
 interface HorizontalNavbarProps {
   lang: string;
   showSidebarTrigger?: boolean;
@@ -42,12 +44,7 @@ export function HorizontalNavbar({ lang, showSidebarTrigger = true }: Horizontal
     };
   }, [open]);
 
-  const navItems = [
-    { text: "Beranda", url: `/${lang}` },
-    { text: "Dokumentasi", url: `/${lang}/docs` },
-    { text: "Verifikasi", url: `/${lang}/verification` },
-    { text: "Plugins", url: `/${lang}/docs-plugins` },
-  ];
+  const navItems = baseOptions(lang).links || [];
 
   return (
     <nav className="border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 fixed top-0 z-50 h-14 w-full">
@@ -69,15 +66,14 @@ export function HorizontalNavbar({ lang, showSidebarTrigger = true }: Horizontal
 
           {/* Center: Navigation Links - Desktop only */}
           <div className="hidden md:flex items-center justify-center flex-1 space-x-6">
-            {navItems.map((item) => (
+            {navItems.map((item: any) => (
               <Link
                 key={item.url}
                 href={item.url}
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  pathname === item.url || pathname.startsWith(item.url + "/")
+                className={`text-sm font-medium transition-colors hover:text-primary ${pathname === item.url || pathname.startsWith(item.url + "/")
                     ? "text-primary"
                     : "text-muted-foreground"
-                }`}
+                  }`}
               >
                 {item.text}
               </Link>
