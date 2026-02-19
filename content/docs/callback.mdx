@@ -23,6 +23,62 @@ Anda dapat mengatur tipe konten callback di dashboard iPaymu. Pilih format yang 
 - **Production:** [https://my.ipaymu.com/integration/setting](https://my.ipaymu.com/integration/setting)
 - **Sandbox:** [https://sandbox.ipaymu.com/integration/setting](https://sandbox.ipaymu.com/integration/setting)
 
+### Secret Key untuk Validasi Signature
+
+Untuk melakukan validasi signature pada callback, gunakan **Nomor VA (Virtual Account)** akun iPaymu Anda sebagai secret key.
+
+**Cara mendapatkan Secret Key:**
+1. Login ke Dashboard iPaymu
+2. Pilih menu **Integration** atau **Pengaturan**
+3. Klik **API Key** atau **Kunci API**
+4. Nomor VA Anda akan terlihat di bagian **API Key** atau **Merchant VA**
+
+**Contoh Secret Key:** `1179001234567890` (format: 16 digit angka)
+
+> ⚠️ **Penting:** Jangan pernah membagikan Nomor VA Anda atau menyimpannya di repositori publik. Gunakan environment variables untuk menyimpan secret key di production.
+
+---
+
+## Alur Proses Callback
+
+Berikut diagram alur lengkap proses callback dari iPaymu:
+
+```
+┌─────────────────┐
+│ 1. Pembayaran   │
+│    Selesai      │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ 2. iPaymu Kirim │
+│    Callback     │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐     ┌─────────────────┐
+│ 3. Terima Data  │────▶│ 4. Normalisasi  │
+│    (req.body)   │     │    Tipe Data    │
+└────────┬────────┘     └────────┬────────┘
+                                  │
+                                  ▼
+┌─────────────────┐     ┌─────────────────┐
+│ 6. Validasi     │◀────│ 5. Sort Key     │
+│    Signature    │     │    (A-Z)        │
+└────────┬────────┘     └─────────────────┘
+         │
+         ▼
+┌─────────────────┐
+│ 7. Response     │
+│    200 OK       │
+└─────────────────┘
+```
+
+**Catatan Penting:**
+- Jika signature tidak valid, jangan proses transaksi
+- Selalu response dengan HTTP 200 untuk menghentikan retry
+- Implementasikan idempotency untuk menghindari duplikasi
+
 ---
 
 ## Catatan Penting
@@ -49,6 +105,108 @@ Setiap request callback menyertakan headers berikut. `X-Signature` sangat pentin
 | `X-External-ID` | `20251111101052209120` | Identifier unik untuk request callback ini |
 | `X-Signature` | `c9594cc8...` | Signature HMAC-SHA256 untuk validasi |
 | `X-Timestamp` | `2025-11-11T10:10:52+07:00` | Timestamp ketika callback dibuat |
+
+---
+
+## Contoh Payload Lengkap
+
+Berikut adalah contoh payload lengkap yang dikirimkan oleh iPaymu:
+
+### Contoh x-www-form-urlencoded
+
+```
+POST /callback HTTP/1.1
+Host: your-domain.com
+Content-Type: application/x-www-form-urlencoded
+X-Signature: c9594cc8...
+X-Timestamp: 2025-11-11T10:10:52+07:00
+
+buyer_email=customer%40example.com&
+buyer_name=John%20Doe&
+buyer_phone=081234567890&
+created_at=2025-11-11%2010%3A00%3A00&
+expired_at=2025-11-11%2011%3A00%3A00&
+fee=1500&
+paid_at=2025-11-11%2010%3A10%3A52&
+reference_id=ORDER123456&
+sid=SESSION789&
+status=berhasil&
+status_code=1&
+status_desc=Success&
+channel=bca&
+paid_off=98500&
+product=Product%20Name&
+quantity=1&
+merchant=1179001234567890&
+merchant_name=Your%20Store&
+system_notes=Payment%20completed&
+trscode=TRX789012&
+trx_id=12345678&
+unique_code=0&
+via=va&
+payment_no=1234567890&
+va=1234567890&
+url=https%3A%2F%2Fyour-domain.com%2Fcallback&
+additional_info=%5B%5D&
+transaction_status_code=1&
+settlement_status=unsettle&
+settlement_date=null&
+expired_time=3600&
+expired_unix=1762842000&
+is_escrow=0&
+is_refund=0&
+is_sandbox=false&
+total=100000&
+amount=100000&
+sub_total=100000&
+referenceId=ORDER123456
+```
+
+### Contoh application/json
+
+```json
+{
+  "buyer_email": "customer@example.com",
+  "buyer_name": "John Doe",
+  "buyer_phone": "081234567890",
+  "created_at": "2025-11-11 10:00:00",
+  "expired_at": "2025-11-11 11:00:00",
+  "fee": "1500",
+  "paid_at": "2025-11-11 10:10:52",
+  "reference_id": "ORDER123456",
+  "sid": "SESSION789",
+  "status": "berhasil",
+  "status_code": "1",
+  "status_desc": "Success",
+  "channel": "bca",
+  "paid_off": "98500",
+  "product": "Product Name",
+  "quantity": "1",
+  "merchant": "1179001234567890",
+  "merchant_name": "Your Store",
+  "system_notes": "Payment completed",
+  "trscode": "TRX789012",
+  "trx_id": "12345678",
+  "unique_code": "0",
+  "via": "va",
+  "payment_no": "1234567890",
+  "va": "1234567890",
+  "url": "https://your-domain.com/callback",
+  "additional_info": [],
+  "transaction_status_code": "1",
+  "settlement_status": "unsettle",
+  "settlement_date": null,
+  "expired_time": "3600",
+  "expired_unix": "1762842000",
+  "is_escrow": "0",
+  "is_refund": "0",
+  "is_sandbox": "false",
+  "total": "100000",
+  "amount": "100000",
+  "sub_total": "100000",
+  "referenceId": "ORDER123456"
+}
+```
 
 ---
 
@@ -149,9 +307,14 @@ Untuk memastikan callback benar-benar berasal dari iPaymu, Anda harus memvalidas
 7. **Generate Hash** — Buat HMAC-SHA256 menggunakan string JSON dan secret key (nomor VA) Anda
 8. **Bandingkan** — Cocokkan hash yang Anda buat dengan header `X-Signature`
 
-### Contoh Kode
+### Contoh Kode Implementasi
+
+<Tabs items={["JavaScript", "PHP", "Go", "Rust", "Python"]}>
+
+<Tab value="JavaScript">
 
 <Tabs items={["x-www-form-urlencoded", "application/json"]}>
+
 <Tab value="x-www-form-urlencoded">
 
 ```javascript
@@ -196,28 +359,43 @@ function phpKsort(obj) {
 }
 
 app.post('/callback', (req, res) => {
-    const secretKey = '1179018174747171';
+    const secretKey = 'YOUR_VA_NUMBER_HERE'; // Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
     const receivedSignature = req.headers['x-signature'];
 
+    // Step 1 & 2: Ambil dan normalisasi data
     const normalizedData = normalizeData(req.body);
     if (normalizedData.signature) delete normalizedData.signature;
 
+    // Step 3 & 4: Sort key
     const sortedData = phpKsort(normalizedData);
+    
+    // Step 5 & 6: Konversi ke JSON dengan escape
     let jsonBody = JSON.stringify(sortedData);
     jsonBody = jsonBody.replace(/\//g, '\\/');
 
-    const calculatedSignature = crypto.createHmac('sha256', secretKey).update(jsonBody).digest('hex');
+    // Step 7: Generate hash
+    const calculatedSignature = crypto
+        .createHmac('sha256', secretKey)
+        .update(jsonBody)
+        .digest('hex');
 
+    // Step 8: Bandingkan signature
     if (calculatedSignature === receivedSignature) {
-        console.log('Valid (URL Encoded)');
+        console.log('✅ Signature valid');
+        
+        // TODO: Update status transaksi di database
+        // TODO: Pastikan idempotency - cek apakah sudah diproses sebelumnya
+        
         res.status(200).json({ status: 'OK' });
     } else {
-        console.log('Invalid (URL Encoded)');
+        console.log('❌ Signature tidak valid');
+        console.log('Expected:', receivedSignature);
+        console.log('Got:     ', calculatedSignature);
         res.status(400).send('Invalid Signature');
     }
 });
 
-app.listen(3000, () => console.log('Server ready'));
+app.listen(3000, () => console.log('Server ready on port 3000'));
 ```
 
 </Tab>
@@ -242,53 +420,1020 @@ function phpKsort(obj) {
 }
 
 app.post('/callback', (req, res) => {
-    const secretKey = '1179018174747171';
+    const secretKey = 'YOUR_VA_NUMBER_HERE'; // Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
     const receivedSignature = req.body.signature || req.headers['x-signature'];
 
+    // Step 1: Ambil data dan hapus signature
     let data = { ...req.body };
     delete data.signature;
 
+    // Step 2-4: Data sudah dalam tipe yang benar, langsung sort
     const sortedData = phpKsort(data);
+    
+    // Step 5 & 6: Konversi ke JSON dengan escape
     let jsonBody = JSON.stringify(sortedData);
     jsonBody = jsonBody.replace(/\//g, '\\/');
 
-    const calculatedSignature = crypto.createHmac('sha256', secretKey).update(jsonBody).digest('hex');
+    // Step 7: Generate hash
+    const calculatedSignature = crypto
+        .createHmac('sha256', secretKey)
+        .update(jsonBody)
+        .digest('hex');
 
+    // Step 8: Bandingkan signature
     if (calculatedSignature === receivedSignature) {
-        console.log('Valid (JSON)');
+        console.log('✅ Signature valid');
         res.status(200).json({ status: 'OK' });
     } else {
-        console.log('Invalid (JSON)');
+        console.log('❌ Signature tidak valid');
         res.status(400).send('Invalid Signature');
     }
 });
 
-app.listen(3000, () => console.log('Server ready'));
+app.listen(3000, () => console.log('Server ready on port 3000'));
 ```
 
 </Tab>
+
 </Tabs>
 
-### Contoh PHP Sederhana
+</Tab>
+
+<Tab value="PHP">
+
+<Tabs items={["x-www-form-urlencoded", "application/json"]}>
+
+<Tab value="x-www-form-urlencoded">
 
 ```php
-$secretKey = '117000xxxxxx';
-$input = file_get_contents('php://input');
-$data  = json_decode($input, true) ?? $_POST;
+<?php
+// callback.php
 
-$receivedSignature = $data['signature'] ?? '';
+$secretKey = 'YOUR_VA_NUMBER_HERE'; // Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
+
+// Ambil semua data dari POST (x-www-form-urlencoded)
+$data = $_POST;
+
+// Ambil signature dari header atau body
+$receivedSignature = $_SERVER['HTTP_X_SIGNATURE'] ?? $data['signature'] ?? '';
+
+// Hapus signature dari data jika ada di body
 unset($data['signature']);
 
+// Normalisasi tipe data
+foreach ($data as $key => &$val) {
+    if ($key === 'is_escrow') {
+        // Boolean: "0" -> false, "1" -> true
+        $val = ($val === '1' || $val === 'true' || $val === true);
+    } elseif (in_array($key, ['trx_id', 'status_code', 'transaction_status_code', 'paid_off'])) {
+        // Integer
+        $val = intval($val);
+    } elseif ($key === 'additional_info') {
+        // Array: konversi string "[]" menjadi array kosong
+        if ($val === '[]') {
+            $val = [];
+        }
+    } else {
+        // String
+        $val = strval($val);
+    }
+}
+unset($val);
+
+// Pastikan additional_info ada (untuk form data sering tidak dikirim)
+if (!isset($data['additional_info'])) {
+    $data['additional_info'] = [];
+}
+
+// Sort key secara ascending (A-Z)
 ksort($data);
+
+// Konversi ke JSON (dengan escape slash seperti json_encode PHP)
 $jsonBody = json_encode($data);
+
+// Generate HMAC-SHA256
 $calculatedSignature = hash_hmac('sha256', $jsonBody, $secretKey);
 
+// Validasi signature
 if (hash_equals($calculatedSignature, $receivedSignature)) {
-    echo json_encode(['status' => 'success']);
+    http_response_code(200);
+    echo json_encode(['status' => 'success', 'message' => 'OK']);
+    
+    // TODO: Update status transaksi di database
+    // TODO: Pastikan idempotency
+    
 } else {
     http_response_code(400);
+    echo json_encode([
+        'status' => 'error', 
+        'message' => 'Invalid Signature',
+        'debug' => [
+            'received' => $receivedSignature,
+            'calculated' => $calculatedSignature,
+            'json' => $jsonBody
+        ]
+    ]);
 }
 ```
+
+</Tab>
+
+<Tab value="application/json">
+
+```php
+<?php
+// callback.php
+
+$secretKey = 'YOUR_VA_NUMBER_HERE'; // Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
+
+// Ambil raw input JSON
+$input = file_get_contents('php://input');
+$data = json_decode($input, true);
+
+if (!$data) {
+    http_response_code(400);
+    echo json_encode(['status' => 'error', 'message' => 'Invalid JSON']);
+    exit;
+}
+
+// Ambil signature dari body atau header
+$receivedSignature = $data['signature'] ?? $_SERVER['HTTP_X_SIGNATURE'] ?? '';
+
+// Hapus signature dari data
+unset($data['signature']);
+
+// Sort key secara ascending (A-Z)
+ksort($data);
+
+// Konversi ke JSON
+$jsonBody = json_encode($data);
+
+// Generate HMAC-SHA256
+$calculatedSignature = hash_hmac('sha256', $jsonBody, $secretKey);
+
+// Validasi signature
+if (hash_equals($calculatedSignature, $receivedSignature)) {
+    http_response_code(200);
+    echo json_encode(['status' => 'success', 'message' => 'OK']);
+} else {
+    http_response_code(400);
+    echo json_encode([
+        'status' => 'error', 
+        'message' => 'Invalid Signature',
+        'debug' => [
+            'received' => $receivedSignature,
+            'calculated' => $calculatedSignature
+        ]
+    ]);
+}
+```
+
+</Tab>
+
+</Tabs>
+
+**Catatan Penting untuk PHP:**
+
+- `json_encode()` secara default akan meng-escape karakter `/` menjadi `\/` - ini adalah perilaku yang benar dan harus diikuti
+- Gunakan `hash_equals()` untuk perbandingan signature untuk mencegah timing attack
+- `ksort()` mengurutkan key dengan case-sensitive secara default
+
+</Tab>
+
+<Tab value="Go">
+
+<Tabs items={["x-www-form-urlencoded", "application/json"]}>
+
+<Tab value="x-www-form-urlencoded">
+
+```go
+package main
+
+import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"sort"
+	"strconv"
+	"strings"
+)
+
+const secretKey = "YOUR_VA_NUMBER_HERE" // Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
+
+func normalizeData(data map[string]interface{}) map[string]interface{} {
+	result := make(map[string]interface{})
+	
+	for key, val := range data {
+	switch key {
+	case "is_escrow":
+		// Boolean
+		switch v := val.(type) {
+		case string:
+			result[key] = v == "1" || v == "true"
+		case bool:
+			result[key] = v
+		default:
+			result[key] = false
+		}
+		
+	case "trx_id", "status_code", "transaction_status_code", "paid_off":
+		// Integer
+		switch v := val.(type) {
+		case string:
+			if i, err := strconv.Atoi(v); err == nil {
+				result[key] = i
+			} else {
+				result[key] = val
+			}
+		case float64:
+			result[key] = int(v)
+		default:
+			result[key] = val
+		}
+		
+	case "additional_info":
+		// Array
+		switch v := val.(type) {
+		case string:
+			if v == "[]" || v == "" {
+				result[key] = []interface{}{}
+			}
+		case []interface{}:
+			result[key] = v
+		default:
+			result[key] = []interface{}{}
+		}
+		
+	default:
+		// String
+		result[key] = fmt.Sprintf("%v", val)
+	}
+	}
+	
+	// Pastikan additional_info ada
+	if _, ok := result["additional_info"]; !ok {
+	result["additional_info"] = []interface{}{}
+	}
+	
+	return result
+}
+
+func phpKsort(data map[string]interface{}) map[string]interface{} {
+	// Ambil semua key dan sort
+	keys := make([]string, 0, len(data))
+	for k := range data {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys) // Ascending A-Z
+	
+	// Buat map baru dengan urutan sorted
+	sorted := make(map[string]interface{})
+	for _, k := range keys {
+		sorted[k] = data[k]
+	}
+	
+	return sorted
+}
+
+func generateSignature(data map[string]interface{}) string {
+	// Sort key
+	sortedData := phpKsort(data)
+	
+	// Convert to JSON
+	jsonBytes, _ := json.Marshal(sortedData)
+	jsonBody := string(jsonBytes)
+	
+	// Escape slashes seperti PHP
+	jsonBody = strings.ReplaceAll(jsonBody, "/", "\\/")
+	
+	// Generate HMAC-SHA256
+	h := hmac.New(sha256.New, []byte(secretKey))
+	h.Write([]byte(jsonBody))
+	
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+func callbackHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	
+	// Parse form data
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Invalid form data", http.StatusBadRequest)
+		return
+	}
+	
+	// Ambil signature dari header
+	receivedSignature := r.Header.Get("X-Signature")
+	
+	// Convert form data ke map
+	data := make(map[string]interface{})
+	for key, values := range r.Form {
+		if len(values) > 0 {
+			data[key] = values[0]
+		}
+	}
+	
+	// Hapus signature dari data
+	delete(data, "signature")
+	
+	// Normalisasi data
+	normalizedData := normalizeData(data)
+	
+	// Generate signature
+	calculatedSignature := generateSignature(normalizedData)
+	
+	// Validasi
+	if hmac.Equal([]byte(calculatedSignature), []byte(receivedSignature)) {
+		fmt.Println("✅ Signature valid")
+		
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{
+			"status": "OK",
+		})
+	} else {
+		fmt.Println("❌ Signature tidak valid")
+		fmt.Println("Expected:", receivedSignature)
+		fmt.Println("Got:     ", calculatedSignature)
+		
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"status":  "error",
+			"message": "Invalid Signature",
+		})
+	}
+}
+
+func main() {
+	http.HandleFunc("/callback", callbackHandler)
+	fmt.Println("Server running on :8080")
+	http.ListenAndServe(":8080", nil)
+}
+```
+
+</Tab>
+
+<Tab value="application/json">
+
+```go
+package main
+
+import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"sort"
+	"strings"
+)
+
+const secretKey = "YOUR_VA_NUMBER_HERE" // Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
+
+func phpKsort(data map[string]interface{}) map[string]interface{} {
+	keys := make([]string, 0, len(data))
+	for k := range data {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	
+	sorted := make(map[string]interface{})
+	for _, k := range keys {
+		sorted[k] = data[k]
+	}
+	
+	return sorted
+}
+
+func generateSignature(data map[string]interface{}) string {
+	sortedData := phpKsort(data)
+	jsonBytes, _ := json.Marshal(sortedData)
+	jsonBody := string(jsonBytes)
+	jsonBody = strings.ReplaceAll(jsonBody, "/", "\\/")
+	
+	h := hmac.New(sha256.New, []byte(secretKey))
+	h.Write([]byte(jsonBody))
+	
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+func callbackHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	
+	var data map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+	
+	// Ambil signature
+	receivedSignature := ""
+	if sig, ok := data["signature"].(string); ok {
+		receivedSignature = sig
+	} else {
+		receivedSignature = r.Header.Get("X-Signature")
+	}
+	
+	// Hapus signature
+	delete(data, "signature")
+	
+	calculatedSignature := generateSignature(data)
+	
+	if hmac.Equal([]byte(calculatedSignature), []byte(receivedSignature)) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{"status": "OK"})
+	} else {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"status":  "error",
+			"message": "Invalid Signature",
+		})
+	}
+}
+
+func main() {
+	http.HandleFunc("/callback", callbackHandler)
+	fmt.Println("Server running on :8080")
+	http.ListenAndServe(":8080", nil)
+}
+```
+
+</Tab>
+
+</Tabs>
+
+</Tab>
+
+<Tab value="Rust">
+
+<Tabs items={["x-www-form-urlencoded", "application/json"]}>
+
+<Tab value="x-www-form-urlencoded">
+
+```rust
+use actix_web::{web, App, HttpResponse, HttpServer, post, HttpRequest};
+use hmac::{Hmac, Mac};
+use sha2::Sha256;
+use serde_json::{Value, Map};
+use std::collections::BTreeMap;
+
+// Tipe untuk HMAC-SHA256
+type HmacSha256 = Hmac<Sha256>;
+
+const SECRET_KEY: &str = "YOUR_VA_NUMBER_HERE"; // Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
+
+fn normalize_data(data: &Map<String, Value>) -> Map<String, Value> {
+    let mut result = Map::new();
+    
+    for (key, val) in data.iter() {
+        let normalized_val = match key.as_str() {
+            "is_escrow" => {
+                match val {
+                    Value::String(s) => Value::Bool(s == "1" || s == "true"),
+                    Value::Bool(b) => Value::Bool(*b),
+                    _ => Value::Bool(false),
+                }
+            }
+            "trx_id" | "status_code" | "transaction_status_code" | "paid_off" => {
+                match val {
+                    Value::String(s) => {
+                        s.parse::<i64>().map(Value::Number)
+                            .unwrap_or_else(|_| val.clone())
+                    }
+                    Value::Number(n) => Value::Number(n.clone()),
+                    _ => val.clone(),
+                }
+            }
+            "additional_info" => {
+                match val {
+                    Value::String(s) if s == "[]" => Value::Array(vec![]),
+                    Value::Array(a) => Value::Array(a.clone()),
+                    _ => Value::Array(vec![]),
+                }
+            }
+            _ => Value::String(val.as_str().unwrap_or("").to_string()),
+        };
+        
+        result.insert(key.clone(), normalized_val);
+    }
+    
+    // Pastikan additional_info ada
+    if !result.contains_key("additional_info") {
+        result.insert("additional_info".to_string(), Value::Array(vec![]));
+    }
+    
+    result
+}
+
+fn php_ksort(data: &Map<String, Value>) -> BTreeMap<String, Value> {
+    // BTreeMap otomatis sorted berdasarkan key
+    let mut sorted = BTreeMap::new();
+    for (k, v) in data.iter() {
+        sorted.insert(k.clone(), v.clone());
+    }
+    sorted
+}
+
+fn generate_signature(data: &Map<String, Value>) -> String {
+    // Sort key
+    let sorted = php_ksort(data);
+    
+    // Convert to JSON
+    let json_body = serde_json::to_string(&sorted).unwrap();
+    
+    // Escape slashes seperti PHP
+    let json_body = json_body.replace("/", "\\/");
+    
+    // Generate HMAC-SHA256
+    let mut mac = HmacSha256::new_from_slice(SECRET_KEY.as_bytes())
+        .expect("HMAC can take key of any size");
+    mac.update(json_body.as_bytes());
+    
+    hex::encode(mac.finalize().into_bytes())
+}
+
+#[post("/callback")]
+async fn callback_handler(req: HttpRequest, body: web::Form<serde_json::Value>) -> HttpResponse {
+    // Ambil signature dari header
+    let received_sig = req.headers()
+        .get("X-Signature")
+        .and_then(|h| h.to_str().ok())
+        .unwrap_or("");
+    
+    // Convert form data ke Map
+    let mut data = Map::new();
+    if let Value::Object(map) = body.into_inner() {
+        for (k, v) in map {
+            if k != "signature" {
+                data.insert(k, v);
+            }
+        }
+    }
+    
+    // Normalisasi data
+    let normalized = normalize_data(&data);
+    
+    // Generate signature
+    let calculated_sig = generate_signature(&normalized);
+    
+    // Validasi
+    if calculated_sig == received_sig {
+        println!("✅ Signature valid");
+        HttpResponse::Ok().json(serde_json::json!({
+            "status": "OK"
+        }))
+    } else {
+        println!("❌ Signature tidak valid");
+        HttpResponse::BadRequest().json(serde_json::json!({
+            "status": "error",
+            "message": "Invalid Signature"
+        }))
+    }
+}
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    println!("Server running on :8080");
+    HttpServer::new(|| {
+        App::new().service(callback_handler)
+    })
+    .bind("127.0.0.1:8080")?
+    .run()
+    .await
+}
+```
+
+**Dependencies Cargo.toml:**
+
+```toml
+[dependencies]
+actix-web = "4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+hmac = "0.12"
+sha2 = "0.10"
+hex = "0.4"
+```
+
+</Tab>
+
+<Tab value="application/json">
+
+```rust
+use actix_web::{web, App, HttpResponse, HttpServer, post, HttpRequest};
+use hmac::{Hmac, Mac};
+use sha2::Sha256;
+use serde_json::{Value, Map};
+use std::collections::BTreeMap;
+
+type HmacSha256 = Hmac<Sha256>;
+const SECRET_KEY: &str = "1179000899";
+
+fn php_ksort(data: &Map<String, Value>) -> BTreeMap<String, Value> {
+    let mut sorted = BTreeMap::new();
+    for (k, v) in data.iter() {
+        sorted.insert(k.clone(), v.clone());
+    }
+    sorted
+}
+
+fn generate_signature(data: &Map<String, Value>) -> String {
+    let sorted = php_ksort(data);
+    let json_body = serde_json::to_string(&sorted).unwrap();
+    let json_body = json_body.replace("/", "\\/");
+    
+    let mut mac = HmacSha256::new_from_slice(SECRET_KEY.as_bytes())
+        .expect("HMAC can take key of any size");
+    mac.update(json_body.as_bytes());
+    
+    hex::encode(mac.finalize().into_bytes())
+}
+
+#[post("/callback")]
+async fn callback_handler(
+    req: HttpRequest, 
+    body: web::Json<Value>
+) -> HttpResponse {
+    let received_sig = req.headers()
+        .get("X-Signature")
+        .and_then(|h| h.to_str().ok())
+        .unwrap_or("");
+    
+    let mut data = Map::new();
+    if let Value::Object(map) = body.into_inner() {
+        for (k, v) in map {
+            if k != "signature" {
+                data.insert(k, v);
+            }
+        }
+    }
+    
+    let calculated_sig = generate_signature(&data);
+    
+    if calculated_sig == received_sig {
+        HttpResponse::Ok().json(serde_json::json!({ "status": "OK" }))
+    } else {
+        HttpResponse::BadRequest().json(serde_json::json!({
+            "status": "error",
+            "message": "Invalid Signature"
+        }))
+    }
+}
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    HttpServer::new(|| App::new().service(callback_handler))
+        .bind("127.0.0.1:8080")?
+        .run()
+        .await
+}
+```
+
+</Tab>
+
+</Tabs>
+
+</Tab>
+
+<Tab value="Python">
+
+<Tabs items={["x-www-form-urlencoded", "application/json"]}>
+
+<Tab value="x-www-form-urlencoded">
+
+```python
+from flask import Flask, request, jsonify
+import hmac
+import hashlib
+import json
+from collections import OrderedDict
+
+app = Flask(__name__)
+
+SECRET_KEY = 'YOUR_VA_NUMBER_HERE'  # Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
+
+
+def normalize_data(raw_data):
+    """Normalisasi tipe data dari form input"""
+    result = {}
+    
+    for key, val in raw_data.items():
+        if key == 'is_escrow':
+            # Boolean
+            result[key] = val in ('1', 'true', True, 1)
+        elif key in ['trx_id', 'status_code', 'transaction_status_code', 'paid_off']:
+            # Integer
+            try:
+                result[key] = int(val)
+            except (ValueError, TypeError):
+                result[key] = val
+        elif key == 'additional_info':
+            # Array
+            if val == '[]' or val == '':
+                result[key] = []
+            else:
+                result[key] = val
+        else:
+            # String
+            result[key] = str(val)
+    
+    # Pastikan additional_info ada
+    if 'additional_info' not in result:
+        result['additional_info'] = []
+    
+    return result
+
+
+def php_ksort(data):
+    """Sort dictionary keys seperti PHP ksort (ascending A-Z)"""
+    return OrderedDict(sorted(data.items(), key=lambda x: x[0]))
+
+
+def generate_signature(data):
+    """Generate HMAC-SHA256 signature"""
+    # Sort key
+    sorted_data = php_ksort(data)
+    
+    # Convert ke JSON dengan escape slash
+    json_body = json.dumps(sorted_data, separators=(',', ':'))
+    json_body = json_body.replace('/', '\\/')
+    
+    # Generate HMAC-SHA256
+    signature = hmac.new(
+        SECRET_KEY.encode('utf-8'),
+        json_body.encode('utf-8'),
+        hashlib.sha256
+    ).hexdigest()
+    
+    return signature
+
+
+@app.route('/callback', methods=['POST'])
+def callback_handler():
+    # Ambil signature dari header
+    received_signature = request.headers.get('X-Signature', '')
+    
+    # Ambil form data
+    raw_data = request.form.to_dict()
+    
+    # Hapus signature dari data jika ada
+    data = {k: v for k, v in raw_data.items() if k != 'signature'}
+    
+    # Normalisasi tipe data
+    normalized_data = normalize_data(data)
+    
+    # Generate signature
+    calculated_signature = generate_signature(normalized_data)
+    
+    # Validasi
+    if hmac.compare_digest(calculated_signature, received_signature):
+        print('✅ Signature valid')
+        
+        # TODO: Update status transaksi di database
+        # TODO: Pastikan idempotency
+        
+        return jsonify({'status': 'OK'}), 200
+    else:
+        print('❌ Signature tidak valid')
+        print(f'Expected: {received_signature}')
+        print(f'Got:      {calculated_signature}')
+        
+        return jsonify({
+            'status': 'error',
+            'message': 'Invalid Signature'
+        }), 400
+
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
+```
+
+</Tab>
+
+<Tab value="application/json">
+
+```python
+from flask import Flask, request, jsonify
+import hmac
+import hashlib
+import json
+from collections import OrderedDict
+
+app = Flask(__name__)
+
+SECRET_KEY = 'YOUR_VA_NUMBER_HERE'  # Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
+
+
+def php_ksort(data):
+    """Sort dictionary keys seperti PHP ksort"""
+    return OrderedDict(sorted(data.items(), key=lambda x: x[0]))
+
+
+def generate_signature(data):
+    """Generate HMAC-SHA256 signature"""
+    sorted_data = php_ksort(data)
+    json_body = json.dumps(sorted_data, separators=(',', ':'))
+    json_body = json_body.replace('/', '\\/')
+    
+    signature = hmac.new(
+        SECRET_KEY.encode('utf-8'),
+        json_body.encode('utf-8'),
+        hashlib.sha256
+    ).hexdigest()
+    
+    return signature
+
+
+@app.route('/callback', methods=['POST'])
+def callback_handler():
+    received_signature = request.headers.get('X-Signature', '')
+    
+    # Parse JSON
+    data = request.get_json() or {}
+    
+    # Ambil signature dari body jika ada
+    if 'signature' in data:
+        received_signature = data.pop('signature')
+    
+    # Generate signature
+    calculated_signature = generate_signature(data)
+    
+    # Validasi
+    if hmac.compare_digest(calculated_signature, received_signature):
+        print('✅ Signature valid')
+        return jsonify({'status': 'OK'}), 200
+    else:
+        print('❌ Signature tidak valid')
+        return jsonify({
+            'status': 'error',
+            'message': 'Invalid Signature'
+        }), 400
+
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
+```
+
+</Tab>
+
+</Tabs>
+
+</Tab>
+
+</Tabs>
+
+---
+
+## Panduan Debugging
+
+Jika signature validation selalu gagal, ikuti langkah-langkah debugging berikut:
+
+### 1. Log Semua Data
+
+```javascript
+// Tambahkan logging detail di callback handler
+app.post('/callback', (req, res) => {
+    console.log('=== CALLBACK DEBUG ===');
+    console.log('Headers:', JSON.stringify(req.headers, null, 2));
+    console.log('Body (raw):', req.body);
+    console.log('Content-Type:', req.headers['content-type']);
+    console.log('X-Signature:', req.headers['x-signature']);
+    
+    // Lanjutkan validasi...
+});
+```
+
+### 2. Periksa JSON Output
+
+```javascript
+// Print JSON yang digunakan untuk signature generation
+const sortedData = phpKsort(normalizedData);
+let jsonBody = JSON.stringify(sortedData);
+jsonBody = jsonBody.replace(/\//g, '\\/');
+
+console.log('JSON untuk signature:');
+console.log(jsonBody);
+// Output harus persis sama dengan yang diharapkan iPaymu
+```
+
+### 3. Bandingkan Byte per Byte
+
+```javascript
+// Jika signature tidak cocok, bandingkan karakter per karakter
+function compareSignatures(sig1, sig2) {
+    console.log('Signature comparison:');
+    console.log('Expected:', sig1);
+    console.log('Got:     ', sig2);
+    
+    for (let i = 0; i < Math.max(sig1.length, sig2.length); i++) {
+        const c1 = sig1[i] || 'N/A';
+        const c2 = sig2[i] || 'N/A';
+        if (c1 !== c2) {
+            console.log(`Mismatch at index ${i}: '${c1}' vs '${c2}'`);
+        }
+    }
+}
+```
+
+---
+
+## Kesalahan Umum
+
+Berikut adalah kesalahan yang sering terjadi saat implementasi callback:
+
+### 1. Tidak Mengkonversi Tipe Data
+
+**Salah:**
+```javascript
+const data = req.body; // Langsung pakai tanpa normalisasi
+```
+
+**Benar:**
+```javascript
+const normalizedData = normalizeData(req.body);
+// Pastikan trx_id, status_code, dll dalam tipe Integer
+```
+
+### 2. Key Sorting Tidak Sesuai
+
+**Salah:**
+```javascript
+const sorted = Object.keys(data).sort(); // Mungkin case-insensitive
+```
+
+**Benar:**
+```javascript
+const sorted = Object.keys(data).sort((a, b) => a.localeCompare(b));
+```
+
+### 3. Tidak Escape Slash di JSON
+
+**Salah:**
+```javascript
+const jsonBody = JSON.stringify(sortedData); // URL tetap http://...
+```
+
+**Benar:**
+```javascript
+let jsonBody = JSON.stringify(sortedData);
+jsonBody = jsonBody.replace(/\//g, '\\/'); // URL jadi http:\/\/...
+```
+
+### 4. Menghapam `additional_info`
+
+**Salah:**
+```javascript
+// Tidak menambahkan additional_info jika tidak ada di request
+```
+
+**Benar:**
+```javascript
+if (!result.hasOwnProperty('additional_info')) {
+    result['additional_info'] = [];
+}
+```
+
+### 5. Menggunakan Secret Key yang Salah
+
+**Salah:**
+```javascript
+const secretKey = 'api_key_atau_lainnya'; // Bukan VA Number
+```
+
+**Benar:**
+```javascript
+const secretKey = 'YOUR_VA_NUMBER_HERE'; // Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
+```
+
+---
+
+## Checklist Implementasi
+
+Sebelum go-live, pastikan Anda telah:
+
+- [ ] Mengkonfigurasi callback URL di dashboard iPaymu
+- [ ] Menggunakan VA Number sebagai secret key
+- [ ] Mengimplementasikan normalisasi tipe data dengan benar
+- [ ] Mengurutkan key secara ascending (A-Z)
+- [ ] Meng-escape garis miring dalam JSON
+- [ ] Merespons dengan HTTP 200 untuk request valid
+- [ ] Mengimplementasikan idempotency (cek duplikat)
+- [ ] Meng-log semua callback untuk debugging
+- [ ] Menguji dengan data dummy dari iPaymu
+- [ ] Memiliki fallback mechanism jika callback gagal
 
 ---
 

@@ -1,0 +1,20 @@
+{
+  "name": "ipaymu-callback-test-runner",
+  "version": "1.0.0",
+  "description": "Test runner untuk verifikasi implementasi callback iPaymu",
+  "main": "test-all.js",
+  "scripts": {
+    "test": "node test-all.js",
+    "test:url": "node lib/test-url-encoded.js",
+    "test:json": "node lib/test-json.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "crypto": "^1.0.1",
+    "chalk": "^4.1.2",
+    "cli-table3": "^0.6.3"
+  },
+  "keywords": ["ipaymu", "callback", "test"],
+  "author": "",
+  "license": "MIT"
+}

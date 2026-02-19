@@ -144,7 +144,7 @@ function phpKsort(obj) {
 }
 
 app.post('/callback', (req, res) => {
-    const secretKey = '1179018174747171'; // Ganti Nomor VA Anda
+    const secretKey = '1179000899'; // Ganti Nomor VA Anda
     
     // Ambil signature dari Header (iPaymu biasanya kirim di header)
     const receivedSignature = req.headers['x-signature'];
@@ -203,7 +203,7 @@ function phpKsort(obj) {
 }
 
 app.post('/callback', (req, res) => {
-    const secretKey = '1179018174747171'; // Ganti Nomor VA Anda
+    const secretKey = '1179000899'; // Ganti Nomor VA Anda
 
     // Ambil signature dari Body atau Header
     const receivedSignature = req.body.signature || req.headers['x-signature'];
