@@ -359,7 +359,7 @@ function phpKsort(obj) {
 }
 
 app.post('/callback', (req, res) => {
-    const secretKey = 'YOUR_VA_NUMBER_HERE'; // Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
+    const secretKey = '123456'; // Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
     const receivedSignature = req.headers['x-signature'];
 
     // Step 1 & 2: Ambil dan normalisasi data
@@ -420,7 +420,7 @@ function phpKsort(obj) {
 }
 
 app.post('/callback', (req, res) => {
-    const secretKey = 'YOUR_VA_NUMBER_HERE'; // Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
+    const secretKey = '123456'; // Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
     const receivedSignature = req.body.signature || req.headers['x-signature'];
 
     // Step 1: Ambil data dan hapus signature
@@ -469,7 +469,7 @@ app.listen(3000, () => console.log('Server ready on port 3000'));
 <?php
 // callback.php
 
-$secretKey = 'YOUR_VA_NUMBER_HERE'; // Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
+$secretKey = '123456'; // Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
 
 // Ambil semua data dari POST (x-www-form-urlencoded)
 $data = $_POST;
@@ -544,7 +544,7 @@ if (hash_equals($calculatedSignature, $receivedSignature)) {
 <?php
 // callback.php
 
-$secretKey = 'YOUR_VA_NUMBER_HERE'; // Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
+$secretKey = '123456'; // Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
 
 // Ambil raw input JSON
 $input = file_get_contents('php://input');
@@ -621,7 +621,7 @@ import (
 	"strings"
 )
 
-const secretKey = "YOUR_VA_NUMBER_HERE" // Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
+const secretKey = "123456" // Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
 
 func normalizeData(data map[string]interface{}) map[string]interface{} {
 	result := make(map[string]interface{})
@@ -796,7 +796,7 @@ import (
 	"strings"
 )
 
-const secretKey = "YOUR_VA_NUMBER_HERE" // Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
+const secretKey = "123456" // Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
 
 func phpKsort(data map[string]interface{}) map[string]interface{} {
 	keys := make([]string, 0, len(data))
@@ -893,7 +893,7 @@ use std::collections::BTreeMap;
 // Tipe untuk HMAC-SHA256
 type HmacSha256 = Hmac<Sha256>;
 
-const SECRET_KEY: &str = "YOUR_VA_NUMBER_HERE"; // Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
+const SECRET_KEY: &str = "123456"; // Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
 
 fn normalize_data(data: &Map<String, Value>) -> Map<String, Value> {
     let mut result = Map::new();
@@ -1123,7 +1123,7 @@ from collections import OrderedDict
 
 app = Flask(__name__)
 
-SECRET_KEY = 'YOUR_VA_NUMBER_HERE'  # Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
+SECRET_KEY = '123456'  # Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
 
 
 def normalize_data(raw_data):
@@ -1234,7 +1234,7 @@ from collections import OrderedDict
 
 app = Flask(__name__)
 
-SECRET_KEY = 'YOUR_VA_NUMBER_HERE'  # Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
+SECRET_KEY = '123456'  # Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
 
 
 def php_ksort(data):
@@ -1415,7 +1415,7 @@ const secretKey = 'api_key_atau_lainnya'; // Bukan VA Number
 
 **Benar:**
 ```javascript
-const secretKey = 'YOUR_VA_NUMBER_HERE'; // Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
+const secretKey = '123456'; // Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
 ```
 
 ---

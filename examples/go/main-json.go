@@ -8,10 +8,6 @@ package main
  *
  * Cara menjalankan:
  *   go run main-json.go
- *
- * Atau build dahulu:
- *   go build -o callback-json main-json.go
- *   ./callback-json
  */
 
 import (
@@ -23,22 +19,86 @@ import (
 	"net/http"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 )
 
-// Secret Key - Ganti dengan Nomor VA Anda!
-var secretKey = getEnv("SECRET_KEY", "YOUR_VA_NUMBER_HERE")
-
-func getEnv(key, defaultValue string) string {
-	if value := os.Getenv(key); value != "" {
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
 		return value
 	}
-	return defaultValue
+	return fallback
 }
 
-/**
- * Sort keys seperti PHP ksort (ascending A-Z)
- */
+var secretKey = getEnv("SECRET_KEY", "123456")
+
+func normalizeData(data map[string]interface{}) map[string]interface{} {
+	result := make(map[string]interface{})
+
+	for key, val := range data {
+		switch key {
+		case "is_escrow":
+			switch v := val.(type) {
+			case string:
+				if v == "1" || strings.ToLower(v) == "true" {
+					result[key] = 1
+				} else {
+					result[key] = 0
+				}
+			case bool:
+				if v {
+					result[key] = 1
+				} else {
+					result[key] = 0
+				}
+			case float64, int, int64:
+				result[key] = v
+			default:
+				result[key] = 0
+			}
+		case "trx_id", "status_code", "transaction_status_code", "paid_off", "sub_total", "total", "amount", "fee":
+			switch v := val.(type) {
+			case string:
+				if i, err := strconv.Atoi(v); err == nil {
+					result[key] = i
+				} else {
+					result[key] = val
+				}
+			case float64:
+				result[key] = int(v)
+			default:
+				result[key] = val
+			}
+		case "additional_info":
+			switch v := val.(type) {
+			case string:
+				if v == "[]" || v == "" {
+					result[key] = []interface{}{}
+				} else {
+					var arr []interface{}
+					if err := json.Unmarshal([]byte(v), &arr); err == nil {
+						result[key] = arr
+					} else {
+						result[key] = []interface{}{}
+					}
+				}
+			case []interface{}:
+				result[key] = v
+			default:
+				result[key] = []interface{}{}
+			}
+		default:
+			result[key] = val
+		}
+	}
+
+	if _, ok := result["additional_info"]; !ok {
+		result["additional_info"] = []interface{}{}
+	}
+
+	return result
+}
+
 func phpKsort(data map[string]interface{}) map[string]interface{} {
 	keys := make([]string, 0, len(data))
 	for k := range data {
@@ -54,11 +114,13 @@ func phpKsort(data map[string]interface{}) map[string]interface{} {
 	return sorted
 }
 
-/**
- * Generate HMAC-SHA256 signature
- */
 func generateSignature(data map[string]interface{}) string {
-	sortedData := phpKsort(data)
+	normalizedData := normalizeData(data)
+	if _, ok := normalizedData["signature"]; ok {
+		delete(normalizedData, "signature")
+	}
+
+	sortedData := phpKsort(normalizedData)
 	jsonBytes, _ := json.Marshal(sortedData)
 	jsonBody := string(jsonBytes)
 	jsonBody = strings.ReplaceAll(jsonBody, "/", "\\/")
@@ -69,15 +131,12 @@ func generateSignature(data map[string]interface{}) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-// Handler untuk endpoint callback
 func callbackHandler(w http.ResponseWriter, r *http.Request) {
-	// Hanya terima POST
 	if r.Method != http.MethodPost {
 		http.Error(w, `{"status":"error","message":"Method Not Allowed"}`, http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Parse JSON body
 	var data map[string]interface{}
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		w.Header().Set("Content-Type", "application/json")
@@ -89,7 +148,6 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Ambil signature dari body atau header
 	receivedSignature := ""
 	if sig, ok := data["signature"].(string); ok && sig != "" {
 		receivedSignature = sig
@@ -102,30 +160,23 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{
 			"status":  "error",
-			"message": "Missing signature",
+			"message": "Missing X-Signature header",
 		})
 		return
 	}
 
-	// Hapus signature dari data
-	delete(data, "signature")
-
-	// Generate signature
 	calculatedSignature := generateSignature(data)
 
-	// Validasi signature
 	w.Header().Set("Content-Type", "application/json")
-
 	if hmac.Equal([]byte(calculatedSignature), []byte(receivedSignature)) {
-		// TODO: Update status transaksi di database
-		// TODO: Pastikan idempotency
-
+		fmt.Println("✅ Signature valid!")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]string{
 			"status":  "OK",
 			"message": "Callback processed successfully",
 		})
 	} else {
+		fmt.Printf("❌ Invalid signature! Expected: %s, Got: %s\n", receivedSignature, calculatedSignature)
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"status":  "error",
@@ -138,39 +189,17 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Health check handler
-func healthHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
-		"status":  "OK",
-		"service": "iPaymu Callback (JSON)",
-	})
-}
-
 func main() {
 	port := getEnv("PORT", "8081")
 
 	http.HandleFunc("/callback", callbackHandler)
-	http.HandleFunc("/health", healthHandler)
 
 	fmt.Println("═══════════════════════════════════════════════════")
 	fmt.Println("  iPaymu Callback Handler - JSON (Go)")
 	fmt.Println("═══════════════════════════════════════════════════")
 	fmt.Printf("  Server running on http://localhost:%s\n", port)
 	fmt.Printf("  Endpoint: POST http://localhost:%s/callback\n", port)
-	fmt.Printf("  Health Check: GET http://localhost:%s/health\n", port)
 	fmt.Println("═══════════════════════════════════════════════════")
-	fmt.Println()
-	fmt.Println("⚠️  PENTING:")
-	fmt.Println("   Ganti SECRET_KEY dengan Nomor VA Anda!")
-	if secretKey == "YOUR_VA_NUMBER_HERE" {
-		fmt.Println("   Secret Key saat ini: ❌ BELUM DIGANTI")
-	} else {
-		fmt.Println("   Secret Key saat ini: ✅ OK")
-	}
-	fmt.Println()
-	fmt.Println("   Atau set via environment variable:")
-	fmt.Printf("   SECRET_KEY=1179001234567890 go run main-json.go\n\n")
 
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		fmt.Printf("Server error: %v\n", err)

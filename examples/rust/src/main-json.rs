@@ -3,34 +3,14 @@ use hmac::{Hmac, Mac};
 use sha2::Sha256;
 use serde_json::{Value, Map};
 use std::collections::BTreeMap;
-use std::env;
 
-/**
- * iPaymu Callback Handler - Rust/Actix-web (JSON)
- *
- * Server berjalan di port 8083
- * Format: application/json
- *
- * Cara menjalankan:
- *     cargo run --bin callback-json
- *
- * Atau build dahulu:
- *     cargo build --release --bin callback-json
- *     ./target/release/callback-json
- */
-
-// Type untuk HMAC-SHA256
+// Tipe untuk HMAC-SHA256
 type HmacSha256 = Hmac<Sha256>;
 
-fn get_secret_key() -> String {
-    env::var("SECRET_KEY").unwrap_or_else(|_| "YOUR_VA_NUMBER_HERE".to_string())
-}
+const SECRET_KEY: &str = "123456"; // Nomor VA akun iPaymu Anda (lihat di Dashboard > Integration > API Key)
 
-/**
- * Sort keys seperti PHP ksort (ascending A-Z)
- * Menggunakan BTreeMap yang otomatis sorted
- */
 fn php_ksort(data: &Map<String, Value>) -> BTreeMap<String, Value> {
+    // BTreeMap otomatis sorted berdasarkan key
     let mut sorted = BTreeMap::new();
     for (k, v) in data.iter() {
         sorted.insert(k.clone(), v.clone());
@@ -38,17 +18,18 @@ fn php_ksort(data: &Map<String, Value>) -> BTreeMap<String, Value> {
     sorted
 }
 
-/**
- * Generate HMAC-SHA256 signature
- */
 fn generate_signature(data: &Map<String, Value>) -> String {
-    let secret_key = get_secret_key();
-    
+    // Sort key
     let sorted = php_ksort(data);
+    
+    // Convert to JSON
     let json_body = serde_json::to_string(&sorted).unwrap();
+    
+    // Escape slashes seperti PHP
     let json_body = json_body.replace("/", "\\/");
     
-    let mut mac = HmacSha256::new_from_slice(secret_key.as_bytes())
+    // Generate HMAC-SHA256
+    let mut mac = HmacSha256::new_from_slice(SECRET_KEY.as_bytes())
         .expect("HMAC can take key of any size");
     mac.update(json_body.as_bytes());
     
@@ -56,27 +37,14 @@ fn generate_signature(data: &Map<String, Value>) -> String {
 }
 
 #[post("/callback")]
-async fn callback_handler(
-    req: HttpRequest, 
-    body: web::Json<Value>
-) -> HttpResponse {
-    println!("\n📥 Callback received");
-    
+async fn callback_handler(req: HttpRequest, body: web::Json<serde_json::Value>) -> HttpResponse {
+    // Ambil signature dari header
     let received_sig = req.headers()
         .get("X-Signature")
         .and_then(|h| h.to_str().ok())
         .unwrap_or("");
     
-    if received_sig.is_empty() {
-        println!("❌ Missing X-Signature header");
-        return HttpResponse::BadRequest().json(serde_json::json!({
-            "status": "error",
-            "message": "Missing X-Signature header"
-        }));
-    }
-    
-    println!("Received Signature: {}", received_sig);
-    
+    // Convert JSON data ke Map
     let mut data = Map::new();
     if let Value::Object(map) = body.into_inner() {
         for (k, v) in map {
@@ -86,67 +54,31 @@ async fn callback_handler(
         }
     }
     
+    // Generate signature
     let calculated_sig = generate_signature(&data);
-    println!("Calculated Signature: {}", calculated_sig);
     
+    // Validasi
     if calculated_sig == received_sig {
-        println!("✅ Signature valid!");
-        
-        HttpResponse::Ok().json(serde_json::json!({ 
-            "status": "OK",
-            "message": "Callback processed successfully"
+        println!("✅ Signature valid");
+        HttpResponse::Ok().json(serde_json::json!({
+            "status": "OK"
         }))
     } else {
-        println!("❌ Invalid signature!");
+        println!("❌ Signature tidak valid");
         HttpResponse::BadRequest().json(serde_json::json!({
             "status": "error",
-            "message": "Invalid Signature",
-            "debug": {
-                "received": received_sig,
-                "calculated": calculated_sig
-            }
+            "message": "Invalid Signature"
         }))
     }
-}
-
-#[actix_web::get("/health")]
-async fn health_check() -> HttpResponse {
-    HttpResponse::Ok().json(serde_json::json!({
-        "status": "OK",
-        "service": "iPaymu Callback (JSON)"
-    }))
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let port = env::var("PORT").unwrap_or_else(|_| "8083".to_string());
-    let secret_key = get_secret_key();
-    
-    println!("═══════════════════════════════════════════════════");
-    println!("  iPaymu Callback Handler - JSON (Rust)");
-    println!("═══════════════════════════════════════════════════");
-    println!("  Server running on http://localhost:{}", port);
-    println!("  Endpoint: POST http://localhost:{}/callback", port);
-    println!("  Health Check: GET http://localhost:{}/health", port);
-    println!("═══════════════════════════════════════════════════");
-    println!();
-    println!("⚠️  PENTING:");
-    println!("   Ganti SECRET_KEY dengan Nomor VA Anda!");
-    if secret_key == "YOUR_VA_NUMBER_HERE" {
-        println!("   Secret Key saat ini: ❌ BELUM DIGANTI");
-    } else {
-        println!("   Secret Key saat ini: ✅ OK");
-    }
-    println!();
-    println!("   Atau set via environment variable:");
-    println!("   SECRET_KEY=1179001234567890 cargo run --bin callback-json\n");
-    
+    println!("Server running on :8080");
     HttpServer::new(|| {
-        App::new()
-            .service(callback_handler)
-            .service(health_check)
+        App::new().service(callback_handler)
     })
-    .bind(format!("127.0.0.1:{}", port))?
+    .bind("127.0.0.1:8080")?
     .run()
     .await
 }

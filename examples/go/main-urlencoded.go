@@ -8,10 +8,6 @@ package main
  *
  * Cara menjalankan:
  *   go run main-urlencoded.go
- *
- * Atau build dahulu:
- *   go build -o callback-urlencoded main-urlencoded.go
- *   ./callback-urlencoded
  */
 
 import (
@@ -27,38 +23,40 @@ import (
 	"strings"
 )
 
-// Secret Key - Ganti dengan Nomor VA Anda!
-var secretKey = getEnv("SECRET_KEY", "YOUR_VA_NUMBER_HERE")
-
-func getEnv(key, defaultValue string) string {
-	if value := os.Getenv(key); value != "" {
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
 		return value
 	}
-	return defaultValue
+	return fallback
 }
 
-/**
- * Normalisasi data dari form input
- * Mengkonversi tipe data ke format yang benar
- */
+var secretKey = getEnv("SECRET_KEY", "123456")
+
 func normalizeData(data map[string]interface{}) map[string]interface{} {
 	result := make(map[string]interface{})
 
 	for key, val := range data {
 		switch key {
 		case "is_escrow":
-			// Boolean
 			switch v := val.(type) {
 			case string:
-				result[key] = v == "1" || v == "true"
+				if v == "1" || strings.ToLower(v) == "true" {
+					result[key] = 1
+				} else {
+					result[key] = 0
+				}
 			case bool:
+				if v {
+					result[key] = 1
+				} else {
+					result[key] = 0
+				}
+			case float64, int, int64:
 				result[key] = v
 			default:
-				result[key] = false
+				result[key] = 0
 			}
-
-		case "trx_id", "status_code", "transaction_status_code", "paid_off":
-			// Integer
+		case "trx_id", "status_code", "transaction_status_code", "paid_off", "sub_total", "total", "amount", "fee":
 			switch v := val.(type) {
 			case string:
 				if i, err := strconv.Atoi(v); err == nil {
@@ -71,27 +69,29 @@ func normalizeData(data map[string]interface{}) map[string]interface{} {
 			default:
 				result[key] = val
 			}
-
 		case "additional_info":
-			// Array
 			switch v := val.(type) {
 			case string:
 				if v == "[]" || v == "" {
 					result[key] = []interface{}{}
+				} else {
+					var arr []interface{}
+					if err := json.Unmarshal([]byte(v), &arr); err == nil {
+						result[key] = arr
+					} else {
+						result[key] = []interface{}{}
+					}
 				}
 			case []interface{}:
 				result[key] = v
 			default:
 				result[key] = []interface{}{}
 			}
-
 		default:
-			// String
 			result[key] = fmt.Sprintf("%v", val)
 		}
 	}
 
-	// Pastikan additional_info ada
 	if _, ok := result["additional_info"]; !ok {
 		result["additional_info"] = []interface{}{}
 	}
@@ -99,18 +99,13 @@ func normalizeData(data map[string]interface{}) map[string]interface{} {
 	return result
 }
 
-/**
- * Sort keys seperti PHP ksort (ascending A-Z)
- */
 func phpKsort(data map[string]interface{}) map[string]interface{} {
-	// Ambil semua key dan sort
 	keys := make([]string, 0, len(data))
 	for k := range data {
 		keys = append(keys, k)
 	}
-	sort.Strings(keys) // Ascending A-Z
+	sort.Strings(keys)
 
-	// Buat map baru dengan urutan sorted
 	sorted := make(map[string]interface{})
 	for _, k := range keys {
 		sorted[k] = data[k]
@@ -119,43 +114,39 @@ func phpKsort(data map[string]interface{}) map[string]interface{} {
 	return sorted
 }
 
-/**
- * Generate HMAC-SHA256 signature
- */
 func generateSignature(data map[string]interface{}) string {
-	// Sort key
-	sortedData := phpKsort(data)
+	normalizedData := normalizeData(data)
+	if _, ok := normalizedData["signature"]; ok {
+		delete(normalizedData, "signature")
+	}
 
-	// Convert to JSON
+	sortedData := phpKsort(normalizedData)
 	jsonBytes, _ := json.Marshal(sortedData)
 	jsonBody := string(jsonBytes)
-
-	// Escape slashes seperti PHP
 	jsonBody = strings.ReplaceAll(jsonBody, "/", "\\/")
 
-	// Generate HMAC-SHA256
 	h := hmac.New(sha256.New, []byte(secretKey))
 	h.Write([]byte(jsonBody))
 
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-// Handler untuk endpoint callback
 func callbackHandler(w http.ResponseWriter, r *http.Request) {
-	// Hanya terima POST
 	if r.Method != http.MethodPost {
 		http.Error(w, `{"status":"error","message":"Method Not Allowed"}`, http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Parse form data
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, `{"status":"error","message":"Invalid form data"}`, http.StatusBadRequest)
 		return
 	}
 
-	// Ambil signature dari header
 	receivedSignature := r.Header.Get("X-Signature")
+	if receivedSignature == "" {
+		receivedSignature = r.FormValue("signature")
+	}
+
 	if receivedSignature == "" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
@@ -166,7 +157,6 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Convert form data ke map
 	data := make(map[string]interface{})
 	for key, values := range r.Form {
 		if len(values) > 0 {
@@ -174,28 +164,18 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Hapus signature dari data
-	delete(data, "signature")
+	calculatedSignature := generateSignature(data)
 
-	// Normalisasi data
-	normalizedData := normalizeData(data)
-
-	// Generate signature
-	calculatedSignature := generateSignature(normalizedData)
-
-	// Validasi signature
 	w.Header().Set("Content-Type", "application/json")
-
 	if hmac.Equal([]byte(calculatedSignature), []byte(receivedSignature)) {
-		// TODO: Update status transaksi di database
-		// TODO: Pastikan idempotency
-
+		fmt.Println("✅ Signature valid!")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]string{
 			"status":  "OK",
 			"message": "Callback processed successfully",
 		})
 	} else {
+		fmt.Printf("❌ Invalid signature! Expected: %s, Got: %s\n", receivedSignature, calculatedSignature)
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"status":  "error",
@@ -208,39 +188,17 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Health check handler
-func healthHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
-		"status":  "OK",
-		"service": "iPaymu Callback (URL-encoded)",
-	})
-}
-
 func main() {
 	port := getEnv("PORT", "8080")
 
 	http.HandleFunc("/callback", callbackHandler)
-	http.HandleFunc("/health", healthHandler)
 
 	fmt.Println("═══════════════════════════════════════════════════")
 	fmt.Println("  iPaymu Callback Handler - URL-encoded (Go)")
 	fmt.Println("═══════════════════════════════════════════════════")
 	fmt.Printf("  Server running on http://localhost:%s\n", port)
 	fmt.Printf("  Endpoint: POST http://localhost:%s/callback\n", port)
-	fmt.Printf("  Health Check: GET http://localhost:%s/health\n", port)
 	fmt.Println("═══════════════════════════════════════════════════")
-	fmt.Println()
-	fmt.Println("⚠️  PENTING:")
-	fmt.Println("   Ganti SECRET_KEY dengan Nomor VA Anda!")
-	if secretKey == "YOUR_VA_NUMBER_HERE" {
-		fmt.Println("   Secret Key saat ini: ❌ BELUM DIGANTI")
-	} else {
-		fmt.Println("   Secret Key saat ini: ✅ OK")
-	}
-	fmt.Println()
-	fmt.Println("   Atau set via environment variable:")
-	fmt.Printf("   SECRET_KEY=1179001234567890 go run main-urlencoded.go\n\n")
 
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		fmt.Printf("Server error: %v\n", err)

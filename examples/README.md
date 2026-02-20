@@ -65,16 +65,18 @@ npm run test:json        # Test JSON only
 
 ### Secret Key
 
-Semua contoh menggunakan placeholder `YOUR_VA_NUMBER_HERE`. Ganti dengan Nomor VA Anda:
+Semua contoh menggunakan placeholder `123456`. Ganti dengan Nomor VA Anda:
 
 **Opsi 1:** Edit langsung di file
+
 ```javascript
-const SECRET_KEY = 'YOUR_VA_NUMBER_HERE';
+const SECRET_KEY = '123456';
 // Ganti menjadi:
 const SECRET_KEY = '1179001234567890';
 ```
 
 **Opsi 2:** Gunakan Environment Variable
+
 ```bash
 # Linux/Mac
 export SECRET_KEY=1179001234567890
@@ -99,6 +101,7 @@ Default port untuk setiap bahasa:
 | Rust | 8082 | 8083 |
 
 Ubah port dengan environment variable:
+
 ```bash
 PORT=9000 node callback-urlencoded.js
 ```
@@ -159,6 +162,7 @@ Setiap folder bahasa memiliki README.md dengan detail implementasi spesifik.
 1. Pastikan server sudah berjalan di port yang benar
 2. Periksa firewall tidak memblok port
 3. Coba akses health check endpoint:
+
    ```bash
    curl http://localhost:3000/health
    ```
