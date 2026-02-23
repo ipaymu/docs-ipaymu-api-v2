@@ -3,7 +3,7 @@ title: Callback
 description: Parameter dan struktur notifikasi callback.
 ---
 
-import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/mdx/tabs";
 
 # Callback
 
@@ -33,7 +33,7 @@ Untuk melakukan validasi signature pada callback, gunakan **Nomor VA (Virtual Ac
 3. Klik **API Key** atau **Kunci API**
 4. Nomor VA Anda akan terlihat di bagian **API Key** atau **Merchant VA**
 
-**Contoh Secret Key:** `1179001234567890` (format: 16 digit angka)
+**Contoh Secret Key:** `1179001234567890`
 
 > ⚠️ **Penting:** Jangan pernah membagikan Nomor VA Anda atau menyimpannya di repositori publik. Gunakan environment variables untuk menyimpan secret key di production.
 
@@ -43,35 +43,14 @@ Untuk melakukan validasi signature pada callback, gunakan **Nomor VA (Virtual Ac
 
 Berikut diagram alur lengkap proses callback dari iPaymu:
 
-```
-┌─────────────────┐
-│ 1. Pembayaran   │
-│    Selesai      │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│ 2. iPaymu Kirim │
-│    Callback     │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐     ┌─────────────────┐
-│ 3. Terima Data  │────▶│ 4. Normalisasi  │
-│    (req.body)   │     │    Tipe Data    │
-└────────┬────────┘     └────────┬────────┘
-                                  │
-                                  ▼
-┌─────────────────┐     ┌─────────────────┐
-│ 6. Validasi     │◀────│ 5. Sort Key     │
-│    Signature    │     │    (A-Z)        │
-└────────┬────────┘     └─────────────────┘
-         │
-         ▼
-┌─────────────────┐
-│ 7. Response     │
-│    200 OK       │
-└─────────────────┘
+```mermaid
+flowchart LR
+    A["1. Pembayaran Selesai"] --> B["2. iPaymu Kirim Callback"]
+    B --> C["3. Terima Data (req.body)"]
+    C --> D["4. Normalisasi Tipe Data"]
+    D --> E["5. Sort Key (A-Z)"]
+    E --> F["6. Validasi Signature"]
+    F --> G["7. Response 200 OK"]
 ```
 
 **Catatan Penting:**
@@ -309,13 +288,23 @@ Untuk memastikan callback benar-benar berasal dari iPaymu, Anda harus memvalidas
 
 ### Contoh Kode Implementasi
 
-<Tabs items={["JavaScript", "PHP", "Go", "Rust", "Python"]}>
+<Tabs defaultValue="js" groupId="language">
+  <TabsList>
+    <TabsTrigger value="js">JavaScript</TabsTrigger>
+    <TabsTrigger value="php">PHP</TabsTrigger>
+    <TabsTrigger value="go">Go</TabsTrigger>
+    <TabsTrigger value="rust">Rust</TabsTrigger>
+    <TabsTrigger value="python">Python</TabsTrigger>
+  </TabsList>
 
-<Tab value="JavaScript">
+  <TabsContent value="js" className="p-0">
+    <Tabs defaultValue="urlencoded">
+      <TabsList>
+        <TabsTrigger value="urlencoded">x-www-form-urlencoded</TabsTrigger>
+        <TabsTrigger value="json">application/json</TabsTrigger>
+      </TabsList>
 
-<Tabs items={["x-www-form-urlencoded", "application/json"]}>
-
-<Tab value="x-www-form-urlencoded">
+      <TabsContent value="urlencoded">
 
 ```javascript
 import crypto from 'crypto';
@@ -395,12 +384,19 @@ app.post('/callback', (req, res) => {
     }
 });
 
-app.listen(3000, () => console.log('Server ready on port 3000'));
+app.listen(PORT, () => {
+  console.log('═══════════════════════════════════════════════════');
+  console.log('  iPaymu Callback Handler - URL-encoded');
+  console.log('═══════════════════════════════════════════════════');
+  console.log(`  Server running on http://localhost:${PORT}`);
+  console.log(`  Endpoint: POST http://localhost:${PORT}/callback`);
+  console.log('═══════════════════════════════════════════════════');
+});
 ```
 
-</Tab>
+      </TabsContent>
 
-<Tab value="application/json">
+      <TabsContent value="json">
 
 ```javascript
 import crypto from 'crypto';
@@ -450,20 +446,28 @@ app.post('/callback', (req, res) => {
     }
 });
 
-app.listen(3000, () => console.log('Server ready on port 3000'));
+app.listen(PORT, () => {
+  console.log('═══════════════════════════════════════════════════');
+  console.log('  iPaymu Callback Handler - JSON');
+  console.log('═══════════════════════════════════════════════════');
+  console.log(`  Server running on http://localhost:${PORT}`);
+  console.log(`  Endpoint: POST http://localhost:${PORT}/callback`);
+  console.log('═══════════════════════════════════════════════════');
+});
 ```
 
-</Tab>
+      </TabsContent>
+    </Tabs>
+  </TabsContent>
 
-</Tabs>
+  <TabsContent value="php" className="p-0">
+    <Tabs defaultValue="urlencoded">
+      <TabsList>
+        <TabsTrigger value="urlencoded">x-www-form-urlencoded</TabsTrigger>
+        <TabsTrigger value="json">application/json</TabsTrigger>
+      </TabsList>
 
-</Tab>
-
-<Tab value="PHP">
-
-<Tabs items={["x-www-form-urlencoded", "application/json"]}>
-
-<Tab value="x-www-form-urlencoded">
+      <TabsContent value="urlencoded">
 
 ```php
 <?php
@@ -523,22 +527,22 @@ if (hash_equals($calculatedSignature, $receivedSignature)) {
     // TODO: Pastikan idempotency
     
 } else {
+    error_log("❌ Invalid signature! Expected: $receivedSignature, Got: $calculatedSignature");
     http_response_code(400);
     echo json_encode([
-        'status' => 'error', 
+        'status' => 'error',
         'message' => 'Invalid Signature',
         'debug' => [
             'received' => $receivedSignature,
-            'calculated' => $calculatedSignature,
-            'json' => $jsonBody
+            'calculated' => $calculatedSignature
         ]
     ]);
 }
 ```
 
-</Tab>
+      </TabsContent>
 
-<Tab value="application/json">
+      <TabsContent value="json">
 
 ```php
 <?php
@@ -576,9 +580,10 @@ if (hash_equals($calculatedSignature, $receivedSignature)) {
     http_response_code(200);
     echo json_encode(['status' => 'success', 'message' => 'OK']);
 } else {
+    error_log("❌ Invalid signature! Expected: $receivedSignature, Got: $calculatedSignature");
     http_response_code(400);
     echo json_encode([
-        'status' => 'error', 
+        'status' => 'error',
         'message' => 'Invalid Signature',
         'debug' => [
             'received' => $receivedSignature,
@@ -588,23 +593,24 @@ if (hash_equals($calculatedSignature, $receivedSignature)) {
 }
 ```
 
-</Tab>
+      </TabsContent>
+    </Tabs>
 
-</Tabs>
+    **Catatan Penting untuk PHP:**
 
-**Catatan Penting untuk PHP:**
+    - `json_encode()` secara default akan meng-escape karakter `/` menjadi `\/` - ini adalah perilaku yang benar dan harus diikuti
+    - Gunakan `hash_equals()` untuk perbandingan signature untuk mencegah timing attack
+    - `ksort()` mengurutkan key dengan case-sensitive secara default
+  </TabsContent>
 
-- `json_encode()` secara default akan meng-escape karakter `/` menjadi `\/` - ini adalah perilaku yang benar dan harus diikuti
-- Gunakan `hash_equals()` untuk perbandingan signature untuk mencegah timing attack
-- `ksort()` mengurutkan key dengan case-sensitive secara default
+  <TabsContent value="go" className="p-0">
+    <Tabs defaultValue="urlencoded">
+      <TabsList>
+        <TabsTrigger value="urlencoded">x-www-form-urlencoded</TabsTrigger>
+        <TabsTrigger value="json">application/json</TabsTrigger>
+      </TabsList>
 
-</Tab>
-
-<Tab value="Go">
-
-<Tabs items={["x-www-form-urlencoded", "application/json"]}>
-
-<Tab value="x-www-form-urlencoded">
+      <TabsContent value="urlencoded">
 
 ```go
 package main
@@ -772,15 +778,15 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/callback", callbackHandler)
-	fmt.Println("Server running on :8080")
-	http.ListenAndServe(":8080", nil)
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
+		fmt.Printf("Server error: %v\n", err)
+	}
 }
 ```
 
-</Tab>
+      </TabsContent>
 
-<Tab value="application/json">
+      <TabsContent value="json">
 
 ```go
 package main
@@ -865,23 +871,24 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/callback", callbackHandler)
-	fmt.Println("Server running on :8080")
-	http.ListenAndServe(":8080", nil)
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
+		fmt.Printf("Server error: %v\n", err)
+	}
 }
 ```
 
-</Tab>
+      </TabsContent>
+    </Tabs>
+  </TabsContent>
 
-</Tabs>
+  <TabsContent value="rust" className="p-0">
+    <Tabs defaultValue="urlencoded">
+      <TabsList>
+        <TabsTrigger value="urlencoded">x-www-form-urlencoded</TabsTrigger>
+        <TabsTrigger value="json">application/json</TabsTrigger>
+      </TabsList>
 
-</Tab>
-
-<Tab value="Rust">
-
-<Tabs items={["x-www-form-urlencoded", "application/json"]}>
-
-<Tab value="x-www-form-urlencoded">
+      <TabsContent value="urlencoded">
 
 ```rust
 use actix_web::{web, App, HttpResponse, HttpServer, post, HttpRequest};
@@ -1028,9 +1035,9 @@ sha2 = "0.10"
 hex = "0.4"
 ```
 
-</Tab>
+      </TabsContent>
 
-<Tab value="application/json">
+      <TabsContent value="json">
 
 ```rust
 use actix_web::{web, App, HttpResponse, HttpServer, post, HttpRequest};
@@ -1102,17 +1109,18 @@ async fn main() -> std::io::Result<()> {
 }
 ```
 
-</Tab>
+      </TabsContent>
+    </Tabs>
+  </TabsContent>
 
-</Tabs>
+  <TabsContent value="python" className="p-0">
+    <Tabs defaultValue="urlencoded">
+      <TabsList>
+        <TabsTrigger value="urlencoded">x-www-form-urlencoded</TabsTrigger>
+        <TabsTrigger value="json">application/json</TabsTrigger>
+      </TabsList>
 
-</Tab>
-
-<Tab value="Python">
-
-<Tabs items={["x-www-form-urlencoded", "application/json"]}>
-
-<Tab value="x-www-form-urlencoded">
+      <TabsContent value="urlencoded">
 
 ```python
 from flask import Flask, request, jsonify
@@ -1218,12 +1226,19 @@ def callback_handler():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    port = int(os.getenv('PORT', 5000))
+    print('═══════════════════════════════════════════════════')
+    print('  iPaymu Callback Handler - URL-encoded (Python)')
+    print('═══════════════════════════════════════════════════')
+    print(f'  Server running on http://localhost:{port}')
+    print(f'  Endpoint: POST http://localhost:{port}/callback')
+    print('═══════════════════════════════════════════════════')
+    app.run(debug=True, host='0.0.0.0', port=port)
 ```
 
-</Tab>
+      </TabsContent>
 
-<Tab value="application/json">
+      <TabsContent value="json">
 
 ```python
 from flask import Flask, request, jsonify
@@ -1284,15 +1299,19 @@ def callback_handler():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    port = int(os.getenv('PORT', 5001))
+    print('═══════════════════════════════════════════════════')
+    print('  iPaymu Callback Handler - JSON (Python)')
+    print('═══════════════════════════════════════════════════')
+    print(f'  Server running on http://localhost:{port}')
+    print(f'  Endpoint: POST http://localhost:{port}/callback')
+    print('═══════════════════════════════════════════════════')
+    app.run(debug=True, host='0.0.0.0', port=port)
 ```
 
-</Tab>
-
-</Tabs>
-
-</Tab>
-
+      </TabsContent>
+    </Tabs>
+  </TabsContent>
 </Tabs>
 
 ---

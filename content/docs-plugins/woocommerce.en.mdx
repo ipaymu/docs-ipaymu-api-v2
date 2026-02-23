@@ -1,0 +1,98 @@
+---
+title: Official WooCommerce Plugin
+description: How to install and configure iPaymu Payment Gateway for WooCommerce.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+This documentation explains the steps to install and use the official **iPaymu Payment Gateway for WooCommerce** plugin.
+
+<Callout type="warn" title="Production Requirements">
+  In Production mode, ensure your server uses a **Static IP** and your domain is registered.
+  See [IP & Domain Validation](/en/docs/ip-domain-validation).
+</Callout>
+
+---
+
+## Step 1: Set Callback Type to JSON
+
+The first step is to ensure that iPaymu sends Webhook Callbacks to your WooCommerce store in JSON format.
+
+1. Open the iPaymu dashboard and click the **Settings (Gear)** icon.
+![iPaymu Settings](/img/woocommerce-plugin/wp-1.png)
+2. On the settings page, navigate to the **Integration** tab (or open [https://sandbox.ipaymu.com/integration/setting](https://sandbox.ipaymu.com/integration/setting) for Sandbox).
+3. Under the **Integration Settings** section, locate the **Callback Notification** input.
+4. Change the type from `application/x-www-form-urlencoded (legacy)` to **`application/json`**.
+5. Save the settings.
+
+![iPaymu Webhook Settings](/img/woocommerce-plugin/wp-2.png)
+
+---
+
+## Step 2: Install the WooCommerce Plugin
+
+1. Log into your **WP Admin** dashboard (ensure you have the latest version of WooCommerce installed and set up).
+2. Go to the menu **Plugins -> Add New**.
+3. Search using the keyword `iPaymu Payment Gateway for WooCommerce by iPaymu`.
+![Search iPaymu Plugin](/img/woocommerce-plugin/wp-3.png)
+4. Click **Install**, then click **Activate** to enable the plugin.
+![Installed iPaymu Plugin](/img/woocommerce-plugin/wp-4.png)
+
+---
+
+## Step 3: Configure Credentials
+
+1. Navigate to the **WooCommerce -> Settings** menu.
+![WooCommerce Settings](/img/woocommerce-plugin/wp-5.png)
+
+2. Select the **Payments** tab.
+![WooCommerce Payments](/img/woocommerce-plugin/wp-6.png)
+
+3. Look for **iPaymu Payment Gateway**, enable its toggle, then click **Manage**.
+
+4. On this settings page, you can enter the **VA** and **API Key** of your iPaymu account. There are 4 fields: 2 for *Production* and 2 for *Sandbox*.
+5. If you want to test payments first, check the **Test mode / Sandbox** option.
+
+![API Key Settings](/img/woocommerce-plugin/wp-7.png)
+
+<Callout type="info" title="Status Completed After Payment">
+If this option is checked, the order status in WooCommerce will automatically change to **Completed** after the customer successfully makes a payment.
+*(By default, the order status is Processing)*
+</Callout>
+
+6. Click **Save changes** at the bottom.
+
+---
+
+## Step 4: Test Payment (Checkout)
+
+If you have configured the sandbox credentials and enabled Test mode, you can try creating a payment.
+
+
+1. Make a purchase in the store like a regular customer.
+2. On the Checkout page, select the **iPaymu Payment** method.
+![Test Payment](/img/woocommerce-plugin/wp-8.png)
+
+3. Click **Place Order / Checkout**, and you will be redirected to the iPaymu payment page.
+
+![Select iPaymu at Checkout](/img/woocommerce-plugin/wp-9.png)
+
+---
+
+## Step 5: Test Webhooks in Sandbox
+
+To try testing a successful payment *Callback* in Sandbox mode:
+
+1. Copy the **Transaction ID** or **Ref ID** (the example in the image is `196984`).
+![Webhook Request](/img/woocommerce-plugin/wp-10.png)
+
+2. Visit the page [https://sandbox.ipaymu.com/notify](https://sandbox.ipaymu.com/notify).
+
+3. Paste the *Ref ID* into the column labeled *iPaymu Transaction ID / Merchant Ref ID / Session ID*.
+![Webhook Payload Body](/img/woocommerce-plugin/wp-11.png)
+
+4. Click **Submit**.
+
+You will then see the **Request Header** and **Request Body** that the iPaymu server attempted to send to your WooCommerce site.
+You can inspect this JSON Response and Body if there are communication errors. You can also use this *mock* payload to manually hit your localhost server via *Postman*.
+

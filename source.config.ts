@@ -41,8 +41,10 @@ export const verification = defineDocs({
   },
 });
 
+import remarkMermaid from "remark-mermaid-dataurl";
+
 export default defineConfig({
   mdxOptions: {
-    // MDX options
+    remarkPlugins: [remarkMermaid],
   },
 });
