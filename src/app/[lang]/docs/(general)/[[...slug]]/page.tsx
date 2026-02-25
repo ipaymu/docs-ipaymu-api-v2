@@ -48,7 +48,10 @@ export default async function Page(props: { params: Promise<{ slug?: string[]; l
     >
       <div className="flex flex-col md:flex-row md:items-start md:justify-between pt-12 gap-4 mb-4">
         <DocsTitle className="mb-0">{page.data.title}</DocsTitle>
-        <PostmanButton className="shrink-0" />
+        <PostmanButton
+          className="shrink-0"
+          url={(page.data.postman as string) || "https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest"}
+        />
       </div>
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>

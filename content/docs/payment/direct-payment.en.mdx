@@ -1,6 +1,7 @@
 ---
 title: Direct Payment
 description: This endpoint is used to process direct payments.
+postman: https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#005ef6ea-96e4-47f7-9282-afd1ce5a2904
 ---
 
 import { Callout } from "fumadocs-ui/components/callout";
@@ -28,28 +29,49 @@ This endpoint is used to process direct payments.
 
 ## Body Parameters
 
-| Parameter         | Type     | Description                   |
-| :---------------- | :------- | :---------------------------- |
-| `name`            | `string` | Customer name                 |
-| `phone`           | `string` | Customer phone number         |
-| `email`           | `string` | Customer email                |
-| `amount`          | `number` | Payment amount                |
-| `notifyUrl`       | `string` | URL for callback notification |
-| `expired`         | `number` | Expiry time                   |
-| `expiredType`     | `string` | Expiry type (e.g., "hours")   |
-| `comments`        | `string` | Transaction comments          |
-| `referenceId`     | `string` | Unique reference ID           |
-| `paymentMethod`   | `string` | Payment method (e.g., "va")   |
-| `paymentChannel`  | `string` | Payment channel (e.g., "bca") |
-| `product`         | `array`  | List of products              |
-| `qty`             | `array`  | List of quantities            |
-| `price`           | `array`  | List of prices                |
-| `weight`          | `array`  | List of weights               |
-| `width`           | `array`  | List of widths                |
-| `height`          | `array`  | List of heights               |
-| `length`          | `array`  | List of lengths               |
-| `deliveryArea`    | `string` | Delivery area code            |
-| `deliveryAddress` | `string` | Delivery address              |
+| Parameter         | Type     | Required    | Description                         |
+| :---------------- | :------- | :---------- | :---------------------------------- |
+| `name`            | `string` | Yes         | Buyer name. |
+| `phone`           | `string` | Yes         | Buyer phone. |
+| `email`           | `string` | Yes         | Buyer email. |
+| `amount`          | `number` | Yes         | Total price. |
+| `notifyUrl`       | `string` | Yes         | Notify URL for receiving webhooks from iPaymu. (iPaymu will send POST params to this URL when a buyer makes a payment). |
+| `referenceId`     | `string` | Yes         | Reference/transaction ID from merchant. |
+| `paymentMethod`   | `string` | Yes         | Payment method. Value: `va`, `cstore`, `cod`, `qris`, `cc`, `paylater`. |
+| `paymentChannel`  | `string` | Yes         | Payment channel of the payment method. See details below the table. |
+| `expired`         | `number` | No          | Custom expired payment code in hours. **Note:** <br/>- BSI VA max 3 hours <br/>- BRI VA max 2 hours <br/>- BCA VA can't be customized (default 12 hours) <br/>- Alfamart can't be customized (default 24 hours) <br/>- QRIS can't be customized (default 5 minutes) |
+| `comments`        | `string` | No          | Transaction notes. |
+| `feeDirection`    | `string` | No          | Custom fee direction: `MERCHANT` (fee charged to merchant) or `BUYER` (fee charged to buyer). |
+| `escrow`          | `string` | No          | Activation escrow (`true` or `false`). |
+| `product[]`       | `array`  | Conditional | Product details (for COD payment). |
+| `qty[]`           | `array`  | Conditional | Quantity of product (for COD payment). |
+| `price[]`         | `array`  | Conditional | Price of product (for COD payment). |
+| `weight[]`        | `array`  | Conditional | Weight in kg (for COD payment). |
+| `width[]`         | `array`  | Conditional | Width in cm (for COD payment). |
+| `height[]`        | `array`  | Conditional | Height in cm (for COD payment) (optional). |
+| `length[]`        | `array`  | Conditional | Length in cm (for COD payment). |
+| `deliveryArea`    | `string` | Conditional | Delivery postal code (for COD payment). |
+| `deliveryAddress` | `string` | Conditional | Delivery address (for COD payment). |
+| `shipping`        | `string` | Conditional | Shipping name from API Shipping Calculate (for COD payment). |
+| `shippingService` | `string` | Conditional | Service name from API Shipping Calculate (for COD payment). |
+| `pickupArea`      | `string` | Conditional | Pickup area postal code (for COD payment). |
+| `account`         | `string` | No          | VA child account ID. |
+| `successUrl`      | `string` | No          | Success URL after payment (for cases of redirect payment like Akulaku & Credit Card). |
+| `cancelUrl`       | `string` | No          | Cancel URL for failed payment (for cases of redirect payment like Akulaku & Credit Card). |
+
+<details>
+<summary>Available <code>paymentChannel</code> lists by <code>paymentMethod</code></summary>
+<div className="pt-4">
+| Payment Method (`paymentMethod`) | Payment Channels (`paymentChannel`) |
+| :------------------------------- | :---------------------------------- |
+| **Virtual Account (`va`)**       | `bag`, `bca`, `bpd_bali`, `bni`, `cimb`, `mandiri`, `bmi`, `bri`, `bsi`, `permata`, `danamon` |
+| **Convenience Store (`cstore`)** | `alfamart`, `indomaret`             |
+| **Cash On Delivery (`cod`)**     | `rpx` (RPX Courier)                 |
+| **QRIS (`qris`)**                | `mpm`                               |
+| **Credit Card (`cc`)**           | `cc`                                |
+| **Pay Later (`paylater`)**       | `akulaku`                           |
+</div>
+</details>
 
 ## Example Request
 

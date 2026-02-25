@@ -1,9 +1,11 @@
 import { cn } from "@/lib/utils";
 
-export function PostmanButton({ className }: { className?: string }) {
+export function PostmanButton({ className, url }: { className?: string, url?: string }) {
+    if (!url) return null;
+
     return (
         <a
-            href="#"
+            href={url}
             target="_blank"
             rel="noopener noreferrer"
             className={cn(

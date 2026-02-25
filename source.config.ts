@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { defineConfig, defineDocs, frontmatterSchema, metaSchema } from 'fumadocs-mdx/config';
 
 // You can customise Zod schemas for frontmatter and `meta.json` here
@@ -5,7 +6,9 @@ import { defineConfig, defineDocs, frontmatterSchema, metaSchema } from 'fumadoc
 export const docs = defineDocs({
   dir: 'content/docs',
   docs: {
-    schema: frontmatterSchema,
+    schema: frontmatterSchema.extend({
+      postman: z.string().optional(),
+    }),
     postprocess: {
       includeProcessedMarkdown: true,
     },
