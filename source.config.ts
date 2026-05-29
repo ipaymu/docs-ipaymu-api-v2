@@ -48,6 +48,17 @@ import remarkMermaid from "remark-mermaid-dataurl";
 
 export default defineConfig({
   mdxOptions: {
-    remarkPlugins: [remarkMermaid],
+    remarkPlugins: [
+      [
+        remarkMermaid,
+        {
+          mermaidCli: {
+            puppeteerConfigFile: {
+              args: ["--no-sandbox", "--disable-setuid-sandbox"],
+            },
+          },
+        },
+      ],
+    ],
   },
 });
