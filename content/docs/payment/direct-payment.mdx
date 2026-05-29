@@ -1,6 +1,7 @@
 ---
 title: Pembayaran Langsung (Direct)
 description: Endpoint ini digunakan untuk memproses pembayaran langsung.
+postman: https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#005ef6ea-96e4-47f7-9282-afd1ce5a2904
 ---
 
 import { Callout } from "fumadocs-ui/components/callout";
@@ -28,28 +29,49 @@ Endpoint ini digunakan untuk memproses pembayaran langsung (Direct Payment).
 
 ## Parameter Body
 
-| Parameter         | Tipe     | Deskripsi                         |
-| :---------------- | :------- | :-------------------------------- |
-| `name`            | `string` | Nama pelanggan                    |
-| `phone`           | `string` | Nomor telepon pelanggan           |
-| `email`           | `string` | Email pelanggan                   |
-| `amount`          | `number` | Jumlah pembayaran                 |
-| `notifyUrl`       | `string` | URL untuk notifikasi callback     |
-| `expired`         | `number` | Waktu kedaluwarsa                 |
-| `expiredType`     | `string` | Tipe kedaluwarsa (misal: "hours") |
-| `comments`        | `string` | Komentar transaksi                |
-| `referenceId`     | `string` | ID referensi unik                 |
-| `paymentMethod`   | `string` | Metode pembayaran (misal: "va")   |
-| `paymentChannel`  | `string` | Saluran pembayaran (misal: "bca") |
-| `product`         | `array`  | Daftar produk                     |
-| `qty`             | `array`  | Daftar kuantitas                  |
-| `price`           | `array`  | Daftar harga                      |
-| `weight`          | `array`  | Daftar berat                      |
-| `width`           | `array`  | Daftar lebar                      |
-| `height`          | `array`  | Daftar tinggi                     |
-| `length`          | `array`  | Daftar panjang                    |
-| `deliveryArea`    | `string` | Kode area pengiriman              |
-| `deliveryAddress` | `string` | Alamat pengiriman                 |
+| Parameter         | Tipe     | Wajib       | Deskripsi                         |
+| :---------------- | :------- | :---------- | :-------------------------------- |
+| `name`            | `string` | Ya          | Nama pembeli.                     |
+| `phone`           | `string` | Ya          | No telepon pembeli.               |
+| `email`           | `string` | Ya          | Email pembeli.                    |
+| `amount`          | `number` | Ya          | Harga total.                      |
+| `notifyUrl`       | `string` | Ya          | URL Notifikasi untuk menerima webhook dari iPaymu. (iPaymu akan mengirimkan parameter status dalam method POST ke URL ini ketika pengguna berhasil melakukan pembayaran). |
+| `referenceId`     | `string` | Ya          | ID Referensi atau Nomor Transaksi merchant. |
+| `paymentMethod`   | `string` | Ya          | Metode pembayaran. Nilai: `va`, `cstore`, `cod`, `qris`, `cc`, `paylater`. |
+| `paymentChannel`  | `string` | Ya          | Saluran berdasarkan metode pembayaran. Lihat rinciannya di bawah tabel. |
+| `expired`         | `number` | Tidak       | Kustom masa berlaku dalam jam. **Catatan:** <br/>- BSI VA maks 3 jam <br/>- BRI VA maks 2 jam <br/>- BCA VA default 12 jam (tidak dikenakan custom) <br/>- Alfamart default 24 jam (tidak dikenakan custom) <br/>- QRIS default 5 menit (tidak dikenakan custom) |
+| `comments`        | `string` | Tidak       | Catatan tambahan transaksi.       |
+| `feeDirection`    | `string` | Tidak       | Kustom pengaturan pembebanan biaya: `MERCHANT` (admin fee ditanggung merchant) atau `BUYER` (ditanggung pembeli). |
+| `escrow`          | `string` | Tidak       | Aktivasi layanan escrow dompet bersama (`true` / `false`). |
+| `product[]`       | `array`  | Kondisional | Produk (wajib jika COD).          |
+| `qty[]`           | `array`  | Kondisional | Kuantitas (wajib jika COD).       |
+| `price[]`         | `array`  | Kondisional | Harga produk (wajib jika COD).    |
+| `weight[]`        | `array`  | Kondisional | Berat barang dalam Kg (wajib jika COD). |
+| `width[]`         | `array`  | Kondisional | Lebar dimensi barang dalam cm (wajib jika COD). |
+| `height[]`        | `array`  | Kondisional | Tinggi dimensi barang dalam cm (opsional jika COD). |
+| `length[]`        | `array`  | Kondisional | Panjang barang dalam cm (wajib jika COD). |
+| `deliveryArea`    | `string` | Kondisional | Kode pos pengiriman (wajib jika COD). |
+| `deliveryAddress` | `string` | Kondisional | Alamat pengiriman (wajib jika COD). |
+| `shipping`        | `string` | Kondisional | Nama ekspedisi dari API Ongkir (wajib jika COD). |
+| `shippingService` | `string` | Kondisional | Servis ekspedisi dari API Ongkir (wajib jika COD). |
+| `pickupArea`      | `string` | Kondisional | Kode pos area penjemputan (wajib jika COD). |
+| `account`         | `string` | Tidak       | ID Child account VA (opsional).   |
+| `successUrl`      | `string` | Tidak       | URL rute sukes (URL *redirect* khusus Akulaku & Credit Card). |
+| `cancelUrl`       | `string` | Tidak       | URL rute gagal (URL *redirect* khusus Akulaku & Credit Card). |
+
+<details>
+<summary>Daftar <code>paymentChannel</code> yang tersedia berdasarkan <code>paymentMethod</code></summary>
+<div className="pt-4">
+| Metode Pembayaran (`paymentMethod`) | Daftar Saluran (`paymentChannel`) |
+| :---------------------------------- | :-------------------------------- |
+| **Virtual Account (`va`)**          | `bag`, `bca`, `bpd_bali`, `bni`, `cimb`, `mandiri`, `bmi`, `bri`, `bsi`, `permata`, `danamon` |
+| **Convenience Store (`cstore`)**    | `alfamart`, `indomaret`           |
+| **Cash On Delivery (`cod`)**        | `rpx` (Kurir RPX)                 |
+| **QRIS (`qris`)**                   | `mpm`                             |
+| **Credit Card (`cc`)**              | `cc`                              |
+| **Pay Later (`paylater`)**          | `akulaku`                         |
+</div>
+</details>
 
 ## Contoh Request
 

@@ -13,6 +13,15 @@ export function SmoothScroll() {
       smoothWheel: true,
       wheelMultiplier: 1,
       touchMultiplier: 2,
+      prevent: (node) => {
+        return (
+          node.nodeName === "ASIDE" ||
+          node.hasAttribute("data-lenis-prevent") ||
+          (node.closest &&
+            (node.closest("aside") !== null ||
+              node.closest(".overflow-y-auto") !== null))
+        );
+      },
     });
 
     // @ts-ignore

@@ -30,18 +30,24 @@ export async function generateMetadata(props: {
   const lang = params.lang;
 
   return {
+    metadataBase: new URL(
+      process.env.NEXT_PUBLIC_BASE_PATH
+        ? `https://ipaymu.github.io${process.env.NEXT_PUBLIC_BASE_PATH}`
+        : "http://localhost:3000"
+    ),
     title: {
       template:
         lang === "en" ? "%s | Documentations iPaymu" : "%s | iPaymu Dokumentasi",
       default: lang === "en" ? "Documentations iPaymu" : "iPaymu Dokumentasi",
     },
     icons: {
-      icon: "/img/favicon.ico",
+      icon: withBasePath("/img/favicon.ico"),
     },
   };
 }
 
 import { SmoothScroll } from "@/components/smooth-scroll";
+import { withBasePath } from "@/lib/utils";
 
 export default async function Layout({
   children,

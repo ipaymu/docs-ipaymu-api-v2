@@ -8,11 +8,11 @@ import {
   type ComponentPropsWithoutRef,
 } from "react";
 import { cn } from "@/lib/utils";
-import { Copy } from "lucide-react";
 
 const TabsContext = createContext<{
   activeTab: string;
   setActiveTab: (value: string) => void;
+  depth: number;
 } | null>(null);
 
 export function Tabs({
@@ -31,41 +31,43 @@ export function Tabs({
 } & ComponentPropsWithoutRef<"div">) {
   const [activeTab, setActiveTab] = useState(defaultValue);
 
-  /* 
-     Heuristic: proper Tabs always have a defaultValue. 
-     If no defaultValue is present, it's likely being used as a simple styled container (text-only),
-     so we apply standard padding.
-  */
-  const isTabGroup = defaultValue !== undefined;
+  const context = useContext(TabsContext);
+  const depth = context ? context.depth + 1 : 0;
+  const isNested = depth > 0;
 
   return (
-    <TabsContext.Provider value={{ activeTab, setActiveTab }}>
+    <TabsContext.Provider value={{ activeTab, setActiveTab, depth }}>
       <div
         className={cn(
-          "border-2 border-black dark:border-white shadow-brutal dark:shadow-[4px_4px_0px_0px_#ffffff] bg-background rounded-none overflow-hidden my-6 transition-all",
+          !isNested && "border-2 border-black dark:border-white shadow-brutal dark:shadow-[4px_4px_0px_0px_#ffffff] my-6",
+          isNested && "border-none my-0",
+          "bg-background rounded-none overflow-hidden transition-all flex flex-col",
           className,
         )}
         {...props}
       >
-        {isTabGroup ? children : <div className="p-6">{children}</div>}
+        {children}
       </div>
     </TabsContext.Provider>
   );
 }
 
 export function TabsList({ children, className, ...props }: ComponentPropsWithoutRef<"div">) {
+  const context = useContext(TabsContext);
+  const isNested = context ? context.depth > 0 : false;
+
   return (
     <div
       className={cn(
         "bg-secondary/20 dark:bg-zinc-900/50 px-4 py-3 flex items-center justify-between border-b-2 border-black dark:border-white",
+        isNested && "bg-secondary/10 dark:bg-zinc-900/30",
         className,
       )}
       {...props}
     >
-      <div className="flex gap-4 text-xs font-semibold text-muted-foreground uppercase overflow-x-auto no-scrollbar">
+      <div className="flex gap-4 text-xs font-semibold text-muted-foreground uppercase overflow-x-auto no-scrollbar w-full">
         {children}
       </div>
-      <Copy className="w-4 h-4 cursor-pointer text-muted-foreground hover:text-foreground transition-colors" />
     </div>
   );
 }
@@ -120,12 +122,16 @@ export function TabsContent({
   return (
     <div
       className={cn(
-        "tabs-content bg-background text-sm overflow-x-auto rounded-none animate-fade-in",
+        "tabs-content bg-background text-sm rounded-none animate-fade-in outline-none",
+        "[&_.mdx-pre-wrapper]:my-0 [&_.mdx-pre-wrapper]:border-0 [&_.mdx-pre-wrapper]:shadow-none",
+        "[&_.mdx-table-wrapper]:my-0 [&_.mdx-table-wrapper]:border-0 [&_.mdx-table-wrapper]:shadow-none",
         className,
       )}
       {...props}
     >
-      <div className="p-6 font-mono min-w-full w-fit">{children}</div>
+      <div className={cn("w-full overflow-x-auto", !className?.includes("p-") && "p-6")}>
+        {children}
+      </div>
     </div>
   );
 }

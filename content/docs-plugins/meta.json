@@ -1,1 +1,7 @@
-{"title": "Plugins"}
+{
+    "title": "Plugins",
+    "pages": [
+        "index",
+        "woocommerce"
+    ]
+}

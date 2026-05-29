@@ -1,0 +1,96 @@
+---
+title: Official WooCommerce Plugin
+description: Cara install dan konfigurasi iPaymu Payment Gateway for WooCommerce.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+Dokumentasi ini menjelaskan langkah-langkah untuk menginstal dan menggunakan plugin resmi **iPaymu Payment Gateway for WooCommerce**.
+
+<Callout type="warn" title="Persyaratan Production">
+  Dalam mode Production, pastikan server Anda menggunakan **IP Statis** dan domain Anda terdaftar.
+  Lihat [Validasi IP & Domain](/docs/ip-domain-validation).
+</Callout>
+
+---
+
+## Step 1: Set Callback Type ke JSON
+
+Langkah pertama adalah memastikan bahwa iPaymu mengirimkan Webhook Callback ke toko WooCommerce Anda dalam format JSON.
+
+1. Buka dashboard iPaymu dan klik ikon **Pengaturan (Settings)**.
+![Pengaturan iPaymu](/img/woocommerce-plugin/wp-1.png)
+2. Di halaman pengaturan, pilih tab **Integrasi** (atau buka [https://sandbox.ipaymu.com/integration/setting](https://sandbox.ipaymu.com/integration/setting) untuk Sandbox).
+3. Pada bagian **Pengaturan Integrasi**, cari input **Callback Notifikasi**.
+4. Ubah tipe dari `application/x-www-form-urlencoded (legacy)` menjadi **`application/json`**.
+5. Simpan pengaturan.
+
+![Pengaturan Webhook iPaymu](/img/woocommerce-plugin/wp-2.png)
+
+---
+
+## Step 2: Install Plugin WooCommerce
+
+1. Masuk ke halaman **WP Admin** Anda (pastikan WooCommerce versi terbaru sudah terinstal dan ter-setup).
+2. Pergi ke menu **Plugins -> Tambah Baru (Add New)**.
+3. Cari menggunakan kata kunci `iPaymu Payment Gateway for WooCommerce by iPaymu`.
+![Cari Plugin iPaymu](/img/woocommerce-plugin/wp-3.png)
+4. Klik **Install**, lalu klik **Activate** untuk mengaktifkan plugin.
+![Plugin Aktif](/img/woocommerce-plugin/wp-4.png)
+
+---
+
+## Step 3: Konfigurasi Credentials
+
+1. Buka menu **WooCommerce -> Settings**.
+![Pengaturan WooCommerce](/img/woocommerce-plugin/wp-5.png)
+
+2. Pilih tab **Payments**.
+![Pembayaran WooCommerce](/img/woocommerce-plugin/wp-6.png)
+
+3. Cari **iPaymu Payment Gateway**, aktifkan toggle-nya, lalu klik **Manage** (atau kelola).
+
+4. Di halaman pengaturan ini, Anda bisa memasukkan **VA** dan **API Key** akun iPaymu Anda. Tersedia 4 field: 2 untuk *Production* dan 2 untuk *Sandbox*.
+5. Jika Anda ingin mengetes pembayaran terlebih dahulu, centang opsi **Test mode / Sandbox**.
+
+![Pengaturan API Key](/img/woocommerce-plugin/wp-7.png)
+
+<Callout type="info" title="Status Completed After Payment">
+Jika opsi ini diaktifkan (dicentang), status pesanan di WooCommerce akan otomatis berubah menjadi **Completed** setelah pelanggan berhasil melakukan pembayaran.
+*(Secara default status pesanan adalah Processing)*
+</Callout>
+
+6. Klik **Save changes** di paling bawah.
+
+---
+
+## Step 4: Test Pembayaran (Checkout)
+
+Jika Anda sudah mengatur kredensial sandbox dan mengaktifkan Test mode, Anda bisa mencoba membuat pembayaran.
+
+1. Lakukan pembelian di toko seperti pelanggan biasa.
+2. Pada halaman Checkout, pilih metode pembayaran **iPaymu Payment**.
+![Test Pembayaran](/img/woocommerce-plugin/wp-8.png)
+
+3. Klik **Place Order / Checkout**, Anda akan diteruskan (redirect) ke halaman pembayaran iPaymu.
+
+![Pilih iPaymu di Checkout](/img/woocommerce-plugin/wp-9.png)
+
+---
+
+## Step 5: Test Webhook di Sandbox
+
+Untuk mencoba tes *Callback* pembayaran sukses pada mode Sandbox:
+
+1. Copy **Transaction ID** atau **Ref ID** (contoh di gambar adalah `196984`).
+![Webhook Request](/img/woocommerce-plugin/wp-10.png)
+
+2. Kunjungi halaman [https://sandbox.ipaymu.com/notify](https://sandbox.ipaymu.com/notify).
+
+3. Paste *Ref ID* pada kolom yang bertuliskan *iPaymu Transaction ID / Merchant Ref ID / Session ID*.
+![Webhook Payload Body](/img/woocommerce-plugin/wp-11.png)
+
+4. Klik **Submit**.
+
+Nanti akan muncul tampilan **Request Header** dan **Request Body** yang dicoba dikirimkan server iPaymu ke situs WooCommerce Anda. 
+Response dan Body JSON ini bisa Anda periksa jika terjadi error komunikasi. Anda juga dapat menggunakan Payload *mock* ini untuk di-hit manual ke localhost melalui *Postman*.
