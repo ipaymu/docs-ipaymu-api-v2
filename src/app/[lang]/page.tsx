@@ -2,6 +2,7 @@ import Link from "next/link";
 import { HorizontalNavbar } from "@/components/layout/horizontal-navbar";
 import { SidebarProvider } from "fumadocs-ui/components/sidebar/base";
 import { ArrowRight, Code2, Terminal, ShieldCheck, Plug, MessageCircle } from "lucide-react";
+import { withBasePath } from "@/lib/utils";
 
 export function generateStaticParams() {
   return [{ lang: "id" }, { lang: "en" }];
@@ -130,7 +131,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
               style={{ animationDelay: "100ms" }}
             >
               <Link
-                href={`/${lang}/docs`}
+                href={withBasePath(`/${lang}/docs`)}
                 className="w-full sm:w-auto px-8 py-3 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/25"
               >
                 {t.hero.btnApi} <Terminal className="w-5 h-5" />
@@ -149,7 +150,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Card 1: Technical Docs */}
               <Link
-                href={`/${lang}${t.paths.card1.link}`}
+                href={withBasePath(`/${lang}${t.paths.card1.link}`)}
                 className="group p-6 rounded-xl border bg-card hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
               >
                 <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -163,7 +164,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
 
               {/* Card 2: Verification Docs */}
               <Link
-                href={`/${lang}${t.paths.card2.link}`}
+                href={withBasePath(`/${lang}${t.paths.card2.link}`)}
                 className="group p-6 rounded-xl border bg-card hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
               >
                 <div className="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -177,7 +178,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
 
               {/* Card 3: Plugin Docs */}
               <Link
-                href={`/${lang}${t.paths.card3.link}`}
+                href={withBasePath(`/${lang}${t.paths.card3.link}`)}
                 className="group p-6 rounded-xl border bg-card hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
               >
                 <div className="w-12 h-12 rounded-lg bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -222,7 +223,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
               </ul>
 
               <Link
-                href={`/${lang}/docs`}
+                href={withBasePath(`/${lang}/docs`)}
                 className="text-primary font-semibold hover:underline inline-flex items-center gap-1"
               >
                 {t.dev.link} <ArrowRight className="w-4 h-4" />

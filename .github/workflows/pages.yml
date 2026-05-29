@@ -19,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       BASE_PATH: ${{ vars.BASE_PATH }}
+      NEXT_PUBLIC_BASE_PATH: ${{ vars.BASE_PATH }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4

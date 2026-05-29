@@ -10,6 +10,7 @@ import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 
 import { baseOptions } from "@/lib/layout.shared";
+import { withBasePath } from "@/lib/utils";
 
 interface HorizontalNavbarProps {
   lang: string;
@@ -52,9 +53,9 @@ export function HorizontalNavbar({ lang, showSidebarTrigger = true }: Horizontal
         <div className="flex h-14 items-center justify-between">
           {/* Left: Logo */}
           <div className="flex items-center gap-2 shrink-0">
-            <Link href={`/${lang}`} className="flex items-center space-x-2">
+            <Link href={withBasePath(`/${lang}`)} className="flex items-center space-x-2">
               <Image
-                src="/img/ipaymu-header.webp"
+                src={withBasePath("/img/ipaymu-header.webp")}
                 alt="iPaymu API V2"
                 width={120}
                 height={32}
