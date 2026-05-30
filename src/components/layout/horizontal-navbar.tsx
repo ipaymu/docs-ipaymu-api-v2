@@ -53,7 +53,7 @@ export function HorizontalNavbar({ lang, showSidebarTrigger = true }: Horizontal
         <div className="flex h-14 items-center justify-between">
           {/* Left: Logo */}
           <div className="flex items-center gap-2 shrink-0">
-            <Link href={withBasePath(`/${lang}`)} className="flex items-center space-x-2">
+            <Link href={`/${lang}`} className="flex items-center space-x-2">
               <Image
                 src={withBasePath("/img/ipaymu-header.webp")}
                 alt="iPaymu API V2"

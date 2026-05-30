@@ -1,5 +1,4 @@
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
-import { withBasePath } from "@/lib/utils";
 
 export function baseOptions(lang: string): BaseLayoutProps {
   const t = {
@@ -26,22 +25,22 @@ export function baseOptions(lang: string): BaseLayoutProps {
     links: [
       {
         text: t.home,
-        url: withBasePath(`/${lang}`),
+        url: `/${lang}`,
         active: "nested-url",
       },
       {
         text: t.docs,
-        url: withBasePath(`/${lang}/docs`),
+        url: `/${lang}/docs`,
         active: "nested-url",
       },
       {
         text: t.verification,
-        url: withBasePath(`/${lang}/docs/verification`),
+        url: `/${lang}/docs/verification`,
         active: "nested-url",
       },
       {
         text: t.plugin,
-        url: withBasePath(`/${lang}/docs-plugins`),
+        url: `/${lang}/docs-plugins`,
         active: "nested-url",
       },
     ],
