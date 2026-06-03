@@ -91,7 +91,12 @@ export function AIChatButton({ className }: { className?: string }) {
       }, 3000);
     } catch {}
 
-    window.open(provider.url, "_blank", "noopener,noreferrer");
+    const encodedPrompt = encodeURIComponent(PROMPT);
+    const targetUrl = provider.id === "chatgpt"
+      ? `${provider.url}?prompt=${encodedPrompt}`
+      : `${provider.url}?q=${encodedPrompt}`;
+
+    window.open(targetUrl, "_blank", "noopener,noreferrer");
     setOpen(false);
   }
 
@@ -186,7 +191,7 @@ export function AIChatButton({ className }: { className?: string }) {
         onClick={() => setOpen((v) => !v)}
         className={cn(
           "inline-flex w-fit items-center justify-center px-4 py-2 text-xs font-bold",
-          "text-white bg-blue-600 hover:bg-blue-600/90",
+          "text-white bg-primary hover:bg-primary/90",
           "border-2 border-black dark:border-white",
           "shadow-brutal dark:shadow-[3px_3px_0px_0px_#ffffff]",
           "hover:translate-y-px hover:translate-x-px",
