@@ -1,6 +1,6 @@
 ---
 title: Plugin Installation
-description: Documentation on how to install iPaymu plugins for WooCommerce, OpenCart, and Prestashop.
+description: Documentation on how to install iPaymu plugins for WooCommerce, OpenCart, Prestashop, WHMCS, and Moodle.
 ---
 
 ## Download Plugin
@@ -9,7 +9,7 @@ Visit the official iPaymu website at [https://ipaymu.com/](https://ipaymu.com/),
 
 ![Download Plugin](/img/plugins/image1.jpeg)
 
-Choose your iPaymu plugin according to what you need. At iPaymu, we provide plugins for **WP WooCommerce**, **OpenCart 3.x**, and **Prestashop 1.x**.
+Choose your iPaymu plugin according to what you need. At iPaymu, we provide plugins for **WP WooCommerce**, **OpenCart 3.x**, **Prestashop 1.x**, **WHMCS**, and **Moodle**.
 
 ![Choose Plugin](/img/plugins/image2.jpeg)
 
@@ -107,3 +107,73 @@ Follow the steps below to install the WP WooCommerce plugin:
 4. If successfully installed, a success message will appear. Click **Configure**.
 
 5. Fill the form with your username and Api Key on your iPaymu account dashboard. Then click **Save**.
+
+---
+
+## WHMCS
+
+**WHMCS** (Web Host Manager Complete Solution) is a hosting business automation platform widely used by Hosting Providers, Domain Registrars, Web Agencies, and Developers.
+
+1. Download the WHMCS plugin from the [iPaymu Plugin page](https://ipaymu.com/id/plugin-download/).
+
+![Download WHMCS Plugin](/img/plugins/whmcs/image1.webp)
+
+2. After extracting, copy the `callback/` folder to `/modules/gateways/callback/` and the `ipaymu/` folder and `ipaymu.php` file to `/modules/gateways/`.
+
+3. Go to **Settings** → **Apps & Integrations**, select **Browse** → **Payments**.
+
+![Settings Apps & Integrations](/img/plugins/whmcs/image2.webp)
+
+![Browse Payments](/img/plugins/whmcs/image3.webp)
+
+4. Find **iPaymu Direct Payment**, click **Activate**. Once active, click **Manage**.
+
+![Activate iPaymu Direct Payment](/img/plugins/whmcs/image4.webp)
+
+![Module Active Status](/img/plugins/whmcs/image5.webp)
+
+5. Enter **Environment** (`Sandbox` or `Production`), **VA Number**, and **API Key**. Click **Save Changes**.
+
+![iPaymu Environment Settings](/img/plugins/whmcs/image6.webp)
+
+6. Set up **Product Group**, **Product**, and **Pricing** as needed.
+
+![Product Group and Product](/img/plugins/whmcs/image8.webp)
+
+7. Customer selects a product → **Order Now** → **Checkout** → choose **iPaymu Direct Payment** → **Complete Order**.
+
+![Payment Method Selection](/img/plugins/whmcs/image12.webp)
+
+8. Customer is redirected to the iPaymu payment page. After successful payment, the invoice status changes to **PAID**.
+
+![Invoice Status PAID](/img/plugins/whmcs/image16.webp)
+
+For the complete guide, visit the [WHMCS Plugin](/en/docs-plugins/whmcs) page.
+
+---
+
+## Moodle
+
+The **Moodle Plugin** is an add-on component for the Moodle e-learning platform that enables course payment integration via iPaymu.
+
+1. Download the Moodle plugin from the [iPaymu Plugin page](https://ipaymu.com/id/plugin-download/).
+
+2. Log in as **Admin** to your Moodle site, go to **Site administration** → **Plugins** → **Install plugins**.
+
+3. Upload the plugin `.zip` file, click **Install plugin from the ZIP file**, then click **Continue**.
+
+4. Click **Upgrade Moodle database now**. Once finished, set the **Environment** (`Sandbox` or `Production`), enter your **API Key** and **VA Number**.
+
+5. Enable the **iPaymu Payment Enrolment Plugin**. Make sure the plugin is active with the **eye** icon glowing blue.
+
+6. Create a new course via **New Course**, fill in the description, then click **Save and display**.
+
+7. Click the **Participants** tab → **Enrolment methods** → **Add method** → select **iPaymu Payment**.
+
+8. Fill in the description and course price, then click **Add method**.
+
+9. When a user accesses the course, a payment page will appear. Click **Pay via iPaymu**.
+
+10. After successful payment, the user can immediately access the course content.
+
+For the complete guide, visit the [Moodle Plugin](/en/docs-plugins/moodle) page.

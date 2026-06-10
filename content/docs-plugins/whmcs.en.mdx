@@ -1,0 +1,217 @@
+---
+title: WHMCS Plugin
+description: How to install and configure iPaymu Direct Payment for WHMCS.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+## Introduction
+
+### What is WHMCS?
+
+**WHMCS** (Web Host Manager Complete Solution) is a hosting business automation platform widely used by:
+
+- Hosting Providers
+- Domain Registrars
+- Web Agencies
+- IT Professionals
+- Developers
+
+### Key Features of WHMCS
+
+- Billing Management
+- Payment Management
+- Order Management
+- Customer Support
+- Reporting
+- Domain Registration
+- Hosting Provisioning
+- Fraud Protection
+- Customer Account Management
+
+Beyond hosting, WHMCS can also be used for other products such as **VPS**, **VPN**, **Email Hosting**, **Game Server**, **Domain Service**, and other digital products.
+
+---
+
+## Requirements
+
+<Callout type="warn" title="Pre-Installation Requirements">
+  Before getting started, make sure:
+
+  - WHMCS is installed
+  - You have an iPaymu account
+  - You have your **API Key** and **VA Number**
+  - You have **FTP** or **SSH** access to your server
+</Callout>
+
+---
+
+## Step 1: Download the Plugin
+
+Download the WHMCS plugin from the [iPaymu Plugin page](https://ipaymu.com/id/plugin-download/).
+
+![Download WHMCS Plugin](/img/plugins/whmcs/image1.webp)
+
+---
+
+## Step 2: Manual Installation
+
+### File Structure
+
+After extracting the plugin, you will find the following files and folders:
+
+```
+callback/
+ipaymu/
+ipaymu.php
+```
+
+### Installation Steps
+
+1. Copy the entire contents of the `callback/` folder to:
+
+```
+/modules/gateways/callback/
+```
+
+2. Copy the following files and folders:
+
+```
+ipaymu/
+ipaymu.php
+```
+
+to:
+
+```
+/modules/gateways/
+```
+
+---
+
+## Step 3: Activate the Module in WHMCS
+
+1. Go to **Settings** → **Apps & Integrations**.
+
+![Settings Apps & Integrations](/img/plugins/whmcs/image2.webp)
+
+2. Select **Browse** → **Payments**.
+
+![Browse Payments](/img/plugins/whmcs/image3.webp)
+
+3. Find **iPaymu Direct Payment**, then click **Activate**.
+
+![Activate iPaymu Direct Payment](/img/plugins/whmcs/image4.webp)
+
+4. Once activated, the **Active** status will appear. Click **Manage**.
+
+![Module Active Status](/img/plugins/whmcs/image5.webp)
+
+---
+
+## Step 4: Configure iPaymu
+
+1. Enter the following configuration:
+
+| Field | Value |
+|---|---|
+| **Environment** | `Sandbox` or `Production` |
+| **VA Number** | Your iPaymu account VA Number |
+| **API Key** | Your iPaymu account API Key |
+
+2. Click **Save Changes**.
+
+![iPaymu Environment Settings](/img/plugins/whmcs/image6.webp)
+
+<Callout type="info" title="Sandbox Mode">
+  Use **Sandbox** mode for testing before switching to **Production** mode.
+</Callout>
+
+---
+
+## Step 5: Configure Products
+
+1. Set up the **Product Name**, **Description**, and **Product Display**.
+
+![Product Settings](/img/plugins/whmcs/image7.webp)
+
+2. Create a **Product Group**, then add a **Product**.
+
+![Product Group and Product](/img/plugins/whmcs/image8.webp)
+
+3. Configure **Product Pricing** as needed, for example:
+   - Monthly
+   - Quarterly
+   - Semi Annually
+   - Annually
+
+![Product Pricing](/img/plugins/whmcs/image9.webp)
+
+---
+
+## Step 6: Purchase Simulation
+
+1. The customer selects a product, then clicks **Order Now**.
+
+![Order Now](/img/plugins/whmcs/image10.webp)
+
+2. The customer proceeds to **Checkout**.
+
+![Checkout Page](/img/plugins/whmcs/image11.webp)
+
+3. Under **Payment Details**, select **iPaymu Direct Payment**, then click **Complete Order**.
+
+![Payment Method Selection](/img/plugins/whmcs/image12.webp)
+
+---
+
+## Step 7: Invoice Payment
+
+1. The invoice is created and the **Pay** button appears.
+
+![Invoice with Pay Button](/img/plugins/whmcs/image13.webp)
+
+2. The customer is redirected to the iPaymu payment page.
+
+![iPaymu Payment Page](/img/plugins/whmcs/image14.webp)
+
+---
+
+## Step 8: Payment Status
+
+1. After successful payment, the invoice shows a success status.
+
+![Successful Invoice](/img/plugins/whmcs/image15.webp)
+
+2. The invoice status changes to **PAID**.
+
+![Invoice Status PAID](/img/plugins/whmcs/image16.webp)
+
+---
+
+## Error Handling
+
+If the invoice amount does not meet the requirements or there is a configuration error, the system will display an error message.
+
+![Error Message Example](/img/plugins/whmcs/image17.webp)
+
+<Callout type="info" title="Troubleshooting Tips">
+  - Make sure your **API Key** and **VA Number** are correct.
+  - Ensure the **Environment** is set correctly (Sandbox for testing, Production for live).
+  - Verify that the callback URL is accessible from the iPaymu server.
+</Callout>
+
+---
+
+## Integration Flow
+
+```mermaid
+graph TB
+    A[Customer] --> B[WHMCS Order]
+    B --> C[Invoice Generated]
+    C --> D[iPaymu Direct Payment]
+    D --> E[Customer Payment]
+    E --> F[iPaymu Callback]
+    F --> G[WHMCS Update Invoice]
+    G --> H[Invoice PAID]
+```

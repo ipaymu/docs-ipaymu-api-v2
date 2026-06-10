@@ -1,6 +1,6 @@
 ---
 title: Installasi Plugin
-description: Dokumentasi cara install plugin iPaymu untuk WooCommerce, OpenCart, dan Prestashop.
+description: Dokumentasi cara install plugin iPaymu untuk WooCommerce, OpenCart, Prestashop, WHMCS, dan Moodle.
 ---
 
 ## Download Plugin
@@ -9,7 +9,7 @@ Kunjungi website resmi iPaymu di [https://ipaymu.com/](https://ipaymu.com/), lal
 
 ![Download Plugin](/img/plugins/image1.jpeg)
 
-Pilih plugin iPaymu sesuai yang anda butuhkan. Di iPaymu, kami menyediakan plugin untuk **WP WooCommerce**, **OpenCart 3.x**, dan **Prestashop 1.x**.
+Pilih plugin iPaymu sesuai yang anda butuhkan. Di iPaymu, kami menyediakan plugin untuk **WP WooCommerce**, **OpenCart 3.x**, **Prestashop 1.x**, **WHMCS**, dan **Moodle**.
 
 ![Pilih Plugin](/img/plugins/image2.jpeg)
 
@@ -107,3 +107,73 @@ Ikuti cara dibawah untuk install plugin WP WooCommerce:
 4. Jika plugin berhasil terpasang, akan muncul pesan sukses. Klik **Configure**.
 
 5. Isi form dengan username dan Api Key yang ada di dashboard akun iPaymu anda. Lalu klik **Save**.
+
+---
+
+## WHMCS
+
+**WHMCS** (Web Host Manager Complete Solution) adalah platform otomatisasi bisnis hosting yang banyak digunakan oleh Hosting Provider, Domain Registrar, Web Agency, dan Developer.
+
+1. Download plugin WHMCS dari halaman [Plugin iPaymu](https://ipaymu.com/id/plugin-download/).
+
+![Download Plugin WHMCS](/img/plugins/whmcs/image1.webp)
+
+2. Setelah diekstrak, copy folder `callback/` ke `/modules/gateways/callback/` dan file `ipaymu/` serta `ipaymu.php` ke `/modules/gateways/`.
+
+3. Masuk ke **Settings** → **Apps & Integrations**, pilih **Browse** → **Payments**.
+
+![Settings Apps & Integrations](/img/plugins/whmcs/image2.webp)
+
+![Browse Payments](/img/plugins/whmcs/image3.webp)
+
+4. Cari **iPaymu Direct Payment**, klik **Activate**. Setelah aktif, klik **Manage**.
+
+![Aktivasi iPaymu Direct Payment](/img/plugins/whmcs/image4.webp)
+
+![Status Module Aktif](/img/plugins/whmcs/image5.webp)
+
+5. Masukkan **Environment** (`Sandbox` atau `Production`), **VA Number**, dan **API Key**. Klik **Save Changes**.
+
+![Pengaturan Environment iPaymu](/img/plugins/whmcs/image6.webp)
+
+6. Atur **Product Group**, **Product**, dan **Pricing** sesuai kebutuhan.
+
+![Product Group dan Product](/img/plugins/whmcs/image8.webp)
+
+7. Customer memilih produk → **Order Now** → **Checkout** → pilih **iPaymu Direct Payment** → **Complete Order**.
+
+![Pemilihan Metode Pembayaran](/img/plugins/whmcs/image12.webp)
+
+8. Customer diarahkan ke halaman pembayaran iPaymu. Setelah sukses, status invoice menjadi **PAID**.
+
+![Status Invoice PAID](/img/plugins/whmcs/image16.webp)
+
+Untuk panduan lengkap, kunjungi halaman [Plugin WHMCS](/docs-plugins/whmcs).
+
+---
+
+## Moodle
+
+**Plugin Moodle** adalah komponen tambahan untuk platform e-learning Moodle yang memungkinkan integrasi pembayaran kursus melalui iPaymu.
+
+1. Download plugin Moodle dari halaman [Plugin iPaymu](https://ipaymu.com/id/plugin-download/).
+
+2. Login sebagai **Admin** ke situs Moodle, buka **Site administration** → **Plugins** → **Install plugins**.
+
+3. Upload file `.zip` plugin, klik **Install plugin from the ZIP file**, lalu klik **Continue**.
+
+4. Klik **Upgrade Moodle database now**. Setelah selesai, atur **Environment** (`Sandbox` atau `Production`), masukkan **API Key** dan **VA Number**.
+
+5. Aktifkan **Plugin Enrolment** iPaymu Payment. Pastikan plugin aktif dengan ikon **mata** yang menyala biru.
+
+6. Buat course baru melalui **New Course**, isi keterangan, lalu klik **Save and display**.
+
+7. Klik tab **Participants** → **Enrolment methods** → **Add method** → pilih **iPaymu Payment**.
+
+8. Isi deskripsi dan harga course, lalu klik **Add method**.
+
+9. Ketika user mengakses course, akan muncul halaman pembayaran. Klik **Pay via iPaymu**.
+
+10. Setelah pembayaran berhasil, user dapat langsung mengakses isi materi course.
+
+Untuk panduan lengkap, kunjungi halaman [Plugin Moodle](/docs-plugins/moodle).
