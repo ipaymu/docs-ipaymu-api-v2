@@ -67,6 +67,7 @@
 
   html {
     scroll-padding-top: var(--fd-nav-height);
+    overflow-x: hidden;
   }
 
   .dark {
@@ -103,12 +104,22 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
+    overflow-x: hidden;
   }
 }
 
 @layer utilities {
   .neo-brutalism-border {
     @apply border border-black dark:border-zinc-700 shadow-brutal dark:shadow-none;
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 }
 

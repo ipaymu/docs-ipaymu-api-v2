@@ -44,10 +44,11 @@ export function AIChatButton({ className }: { className?: string }) {
   const updatePosition = useCallback(() => {
     if (!buttonRef.current) return;
     const rect = buttonRef.current.getBoundingClientRect();
+    const clampedLeft = Math.max(8, Math.min(rect.right - 200, window.innerWidth - 208));
     setDropdownStyle({
       position: "fixed",
       top: rect.bottom + 8,
-      left: rect.right - 200,
+      left: clampedLeft,
       width: 200,
     });
   }, []);

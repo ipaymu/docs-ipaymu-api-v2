@@ -6,12 +6,12 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     ...defaultMdxComponents,
     ...components,
     pre: ({ ref: _ref, ...props }) => (
-      <div className="mdx-pre-wrapper border-2 border-black dark:border-white shadow-brutal dark:shadow-[4px_4px_0px_0px_#ffffff] bg-background rounded-none overflow-hidden my-6 transition-all [&_pre]:bg-transparent! [&_figure]:bg-transparent! [&_figure]:m-0!">
+      <div className="mdx-pre-wrapper border-2 border-black dark:border-white shadow-brutal dark:shadow-[4px_4px_0px_0px_#ffffff] bg-background rounded-none overflow-hidden my-6 transition-all w-full [&_.fd-scroll-container]:w-full [&_pre]:bg-transparent! [&_figure]:bg-transparent! [&_figure]:m-0!">
         <defaultMdxComponents.pre {...props} />
       </div>
     ),
     table: ({ ref: _ref, ...props }) => (
-      <div className="mdx-table-wrapper border-2 border-black dark:border-white shadow-brutal dark:shadow-[4px_4px_0px_0px_#ffffff] bg-background rounded-none overflow-hidden my-6 transition-all w-full overflow-x-auto">
+      <div className="mdx-table-wrapper border-2 border-black dark:border-white shadow-brutal dark:shadow-[4px_4px_0px_0px_#ffffff] bg-background rounded-none my-6 transition-all w-full overflow-x-auto">
         <table className="w-full text-left text-sm m-0!" {...props} />
       </div>
     ),

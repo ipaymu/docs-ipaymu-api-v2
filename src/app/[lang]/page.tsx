@@ -230,7 +230,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
             </div>
 
             {/* Code Block Mockup */}
-            <div className="relative group">
+            <div className="relative group min-w-0">
               <div className="absolute -inset-1 bg-linear-to-r from-primary to-blue-600 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
               <div className="relative rounded-xl overflow-hidden bg-[#1e1e1e] shadow-2xl border border-white/10">
                 <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10 bg-[#252526]">
@@ -242,26 +242,18 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
                   <div className="ml-2 text-xs text-white/40 font-mono">bash</div>
                 </div>
                 <div className="p-4 overflow-x-auto">
-                  <pre className="font-mono text-sm leading-relaxed">
+                  <pre className="font-mono text-sm leading-relaxed whitespace-pre">
                     <code className="language-bash">
                       <span className="text-purple-400">curl</span>{" "}
-                      <span className="text-green-400">-X</span> POST
-                      https://my.ipaymu.com/api/v2/payment/direct \{`\n`}
-                      <span className="text-white/50 pl-4"> -H </span>
-                      <span className="text-amber-300">"Content-Type: application/json"</span> \
-                      {`\n`}
-                      <span className="text-white/50 pl-4"> -H </span>
-                      <span className="text-amber-300">"va: YOUR_VA"</span> \{`\n`}
-                      <span className="text-white/50 pl-4"> -H </span>
-                      <span className="text-amber-300">"signature: YOUR_SIGNATURE"</span> \{`\n`}
-                      <span className="text-white/50 pl-4"> -d </span>
-                      <span className="text-amber-300">{`'
-                        "name": "Buyer",
-                        "phone": "08123456789",
-                        "email": "buyer@mail.com",
-                        "amount": 100000,
-                        "paymentMethod": "qris"
-                      }'`}</span>
+                      <span className="text-green-400">-X</span>{" POST https://my.ipaymu.com/api/v2/payment/direct \\\n"}
+                      <span className="text-white/50">{"  -H "}</span>
+                      <span className="text-amber-300">{"\"Content-Type: application/json\""}</span>{" \\\n"}
+                      <span className="text-white/50">{"  -H "}</span>
+                      <span className="text-amber-300">{"\"va: YOUR_VA\""}</span>{" \\\n"}
+                      <span className="text-white/50">{"  -H "}</span>
+                      <span className="text-amber-300">{"\"signature: YOUR_SIGNATURE\""}</span>{" \\\n"}
+                      <span className="text-white/50">{"  -d "}</span>
+                      <span className="text-amber-300">{"'{\n  \"name\": \"Buyer\",\n  \"phone\": \"08123456789\",\n  \"email\": \"buyer@mail.com\",\n  \"amount\": 100000,\n  \"paymentMethod\": \"qris\"\n}'"}</span>
                     </code>
                   </pre>
                 </div>
