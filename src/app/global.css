@@ -67,7 +67,6 @@
 
   html {
     scroll-padding-top: var(--fd-nav-height);
-    overflow-x: hidden;
   }
 
   .dark {

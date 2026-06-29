@@ -2,9 +2,55 @@ import Link from "next/link";
 import { HorizontalNavbar } from "@/components/layout/horizontal-navbar";
 import { SidebarProvider } from "fumadocs-ui/components/sidebar/base";
 import { ArrowRight, Code2, Terminal, ShieldCheck, Plug, MessageCircle } from "lucide-react";
+import type { Metadata } from "next";
+import { withBasePath } from "@/lib/utils";
 
 export function generateStaticParams() {
   return [{ lang: "id" }, { lang: "en" }];
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}): Promise<Metadata> {
+  const { lang } = await params;
+  const isEN = lang === "en";
+
+  const title = isEN ? "iPaymu API Documentation" : "Dokumentasi API iPaymu";
+  const description = isEN
+    ? "Complete integration hub for iPaymu payment gateway. API documentation, verification guides, and CMS plugin manuals for developers."
+    : "Hub integrasi lengkap payment gateway iPaymu. Dokumentasi API, panduan verifikasi, dan manual plugin CMS untuk developer.";
+  const url = `https://ipaymu.github.io${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/${lang}`;
+
+  return {
+    title,
+    description,
+    keywords: isEN
+      ? ["iPaymu", "payment gateway", "API documentation", "Indonesia payment", "integration guide"]
+      : ["iPaymu", "payment gateway", "dokumentasi API", "pembayaran Indonesia", "panduan integrasi"],
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: "iPaymu Documentation",
+      type: "website",
+      images: [
+        {
+          url: withBasePath("/img/ipaymu.webp"),
+          width: 800,
+          height: 400,
+          alt: "iPaymu API Documentation",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [withBasePath("/img/ipaymu.webp")],
+    },
+  };
 }
 
 const HOMEPAGE_TEXT = {
