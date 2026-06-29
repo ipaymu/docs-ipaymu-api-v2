@@ -1,0 +1,328 @@
+---
+title: Area API
+description: Endpoint pencarian baca-saja (read-only) untuk wilayah administratif Indonesia (Provinsi, Kota, Kecamatan, Kelurahan).
+---
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/mdx/tabs";
+
+Endpoint pencarian baca-saja (read-only) untuk wilayah administratif Indonesia: **Provinsi → Kota/Kabupaten → Kecamatan → Kelurahan/Desa**. Biasanya digunakan untuk mengisi dropdown bertingkat (misalnya formulir alamat, verifikasi, pengiriman).
+
+Daftar ini bersifat hierarkis: pilih provinsi untuk mendapatkan kota/kabupatennya, pilih kota/kabupaten untuk mendapatkan kecamatannya, dan seterusnya. Setiap endpoint mengembalikan kode wilayah (`code`) yang digunakan sebagai parameter untuk tingkat berikutnya di bawahnya.
+
+---
+
+## Base URL
+
+| Lingkungan (Environment) | Base URL |
+|-------------|----------|
+| Production  | `https://my.ipaymu.com/api` |
+| Sandbox     | `https://sandbox.ipaymu.com/api` |
+
+<Callout type="info">
+  Sesuaikan dengan deployment Anda. Secara lokal ini dipetakan ke `{APP_URL}/api`.
+</Callout>
+
+Semua endpoint Area berada di bawah prefiks `/areas`.
+
+---
+
+## Autentikasi
+
+Setiap permintaan harus ditandatangani. Middleware tanda tangan (`signaturecheck`) memerlukan header HTTP berikut:
+
+| Header      | Wajib | Deskripsi |
+|-------------|----------|-------------|
+| `va`        | ✅ Ya   | Nomor Virtual Account iPaymu Anda (nomor akun `baccount`). |
+| `signature` | ✅ Ya   | Tanda tangan HMAC-SHA256 dari permintaan (lihat di bawah). |
+| `timestamp` | Direkomendasikan | Timestamp permintaan, format `YYYYMMDDHHmmss`. |
+| `Content-Type` | ✅ Ya | `application/json` |
+
+Akun yang terikat dengan `va` harus **aktif** dan memiliki kunci API (**API key**).
+
+### Pembuatan Tanda Tangan (Signature)
+
+```
+requestBody  = lowercase( sha256( <raw request body> ) )
+stringToSign = <HTTP_METHOD> + ":" + <VA> + ":" + requestBody + ":" + <API_KEY>
+signature    = hmac_sha256( stringToSign, <API_KEY> )
+```
+
+Catatan:
+- `<HTTP_METHOD>` harus berhuruf besar (`GET`).
+- Untuk permintaan tanpa body (semua endpoint GET Area), gunakan objek JSON kosong `{}` sebagai body saat melakukan hash — yaitu `requestBody = sha256("{}")`.
+- `<API_KEY>` digunakan baik sebagai bagian dari `stringToSign` maupun sebagai kunci rahasia HMAC.
+
+#### Contoh Kode Pembuatan Signature
+
+<Tabs defaultValue="js" groupId="language">
+  <TabsList>
+    <TabsTrigger value="js">Node.js</TabsTrigger>
+    <TabsTrigger value="php">PHP</TabsTrigger>
+  </TabsList>
+
+  <TabsContent value="js">
+    ```javascript
+    const crypto = require('crypto');
+
+    const va = '0000001234567890';
+    const apiKey = 'YOUR_API_KEY';
+    const method = 'GET';
+
+    const body = '{}';
+    const requestBody = crypto.createHash('sha256').update(body).digest('hex').toLowerCase();
+    const stringToSign = `${method}:${va}:${requestBody}:${apiKey}`;
+    const signature = crypto.createHmac('sha256', apiKey).update(stringToSign).digest('hex');
+    const timestamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
+    ```
+  </TabsContent>
+
+  <TabsContent value="php">
+    ```php
+    <?php
+    $va     = '0000001234567890';
+    $apiKey = 'YOUR_API_KEY';
+    $method = 'GET';
+
+    $body        = '{}'; // tidak ada request body untuk endpoint Area
+    $requestBody = strtolower(hash('sha256', $body));
+    $stringToSign = $method . ':' . $va . ':' . $requestBody . ':' . $apiKey;
+    $signature   = hash_hmac('sha256', $stringToSign, $apiKey);
+    $timestamp   = date('YmdHis');
+    ?>
+    ```
+  </TabsContent>
+</Tabs>
+
+---
+
+## Struktur Respon (Response Envelope)
+
+Semua respon menggunakan wrapper yang sama:
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Success",
+  "Data": []
+}
+```
+
+| Field     | Tipe    | Deskripsi |
+|-----------|---------|-------------|
+| `Status`  | integer | Kode status HTTP, dicerminkan dalam body. |
+| `Success` | boolean | `true` jika berhasil, `false` jika terjadi kesalahan. |
+| `Message` | string  | Pesan yang dapat dibaca manusia. |
+| `Data`    | array \| null | Payload hasil (array objek wilayah). |
+
+---
+
+## Endpoint
+
+### 1. Dapatkan Provinsi (Get Provinces)
+
+Mengembalikan semua provinsi, diurutkan berdasarkan nama (A→Z).
+
+```http
+GET /areas/province
+```
+
+**Parameter:** tidak ada
+
+**Contoh permintaan**
+
+```bash
+curl --location 'https://my.ipaymu.com/api/areas/province' \
+  --header 'Content-Type: application/json' \
+  --header 'va: 0000001234567890' \
+  --header 'signature: <generated-signature>' \
+  --header 'timestamp: 20260629103000'
+```
+
+**Contoh respon** `200 OK`
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Success",
+  "Data": [
+    { "code": "11", "name": "ACEH" },
+    { "code": "51", "name": "BALI" },
+    { "code": "36", "name": "BANTEN" }
+  ]
+}
+```
+
+---
+
+### 2. Dapatkan Kota berdasarkan Provinsi (Get Cities by Province)
+
+Mengembalikan kota/kabupaten milik suatu provinsi.
+
+```http
+GET /areas/city/{province}
+```
+
+**Parameter path**
+
+| Parameter  | Tipe   | Deskripsi |
+|------------|--------|-------------|
+| `province` | string | Kode provinsi (`code` dari endpoint Provinsi). |
+
+**Contoh permintaan**
+
+```bash
+curl --location 'https://my.ipaymu.com/api/areas/city/51' \
+  --header 'Content-Type: application/json' \
+  --header 'va: 0000001234567890' \
+  --header 'signature: <generated-signature>' \
+  --header 'timestamp: 20260629103000'
+```
+
+**Contoh respon** `200 OK`
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Success",
+  "Data": [
+    { "code": "5171", "name": "KOTA DENPASAR" },
+    { "code": "5103", "name": "KABUPATEN BADUNG" }
+  ]
+}
+```
+
+---
+
+### 3. Dapatkan Kecamatan berdasarkan Kota (Get Districts by City)
+
+Mengembalikan kecamatan milik suatu kota/kabupaten.
+
+```http
+GET /areas/district/{city}
+```
+
+**Parameter path**
+
+| Parameter | Tipe   | Deskripsi |
+|-----------|--------|-------------|
+| `city`    | string | Kode kota/kabupaten (`code` dari endpoint Kota/Kabupaten). |
+
+**Contoh permintaan**
+
+```bash
+curl --location 'https://my.ipaymu.com/api/areas/district/5171' \
+  --header 'Content-Type: application/json' \
+  --header 'va: 0000001234567890' \
+  --header 'signature: <generated-signature>' \
+  --header 'timestamp: 20260629103000'
+```
+
+**Contoh respon** `200 OK`
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Success",
+  "Data": [
+    { "code": "517101", "name": "DENPASAR SELATAN" },
+    { "code": "517102", "name": "DENPASAR TIMUR" }
+  ]
+}
+```
+
+---
+
+### 4. Dapatkan Kelurahan berdasarkan Kecamatan (Get Villages by District)
+
+Mengembalikan kelurahan/desa milik suatu kecamatan. Objek kelurahan/desa juga menyertakan kode pos.
+
+```http
+GET /areas/village/{district}
+```
+
+**Parameter path**
+
+| Parameter  | Tipe   | Deskripsi |
+|------------|--------|-------------|
+| `district` | string | Kode kecamatan (`code` dari endpoint Kecamatan). |
+
+**Contoh permintaan**
+
+```bash
+curl --location 'https://my.ipaymu.com/api/areas/village/517101' \
+  --header 'Content-Type: application/json' \
+  --header 'va: 0000001234567890' \
+  --header 'signature: <generated-signature>' \
+  --header 'timestamp: 20260629103000'
+```
+
+**Contoh respon** `200 OK`
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Success",
+  "Data": [
+    { "code": "5171011001", "name": "SANUR", "postal_code": "80227" },
+    { "code": "5171011002", "name": "RENON", "postal_code": "80226" }
+  ]
+}
+```
+
+---
+
+## Referensi Field
+
+**Provinsi / Kota / Kecamatan**
+
+| Field  | Tipe   | Deskripsi |
+|--------|--------|-------------|
+| `code` | string | Kode wilayah. Gunakan sebagai parameter path untuk tingkat berikutnya. |
+| `name` | string | Nama wilayah. |
+
+**Kelurahan / Desa** (sama seperti di atas, ditambah)
+
+| Field         | Tipe           | Deskripsi |
+|---------------|----------------|-------------|
+| `postal_code` | string \| null | Kode pos (`null` jika tidak tersedia). |
+
+---
+
+## Respon Error
+
+Pada kegagalan autentikasi, permintaan ditolak sebelum mencapai kontroler:
+
+| Status | Pesan | Penyebab |
+|--------|---------|-------|
+| `401`  | `invalid header param - va is required` | Header `va` tidak ditemukan. |
+| `401`  | `invalid header param - signature is required` | Header `signature` tidak ditemukan. |
+| `401`  | `unauthorized credential` | `va` tidak ditemukan, akun tidak aktif, atau tidak ada kunci API. |
+| `401`  | `unauthorized signature` | Signature tidak cocok. |
+
+**Contoh respon error**
+
+```json
+{
+  "Status": 401,
+  "Success": false,
+  "Message": "unauthorized signature",
+  "Data": null
+}
+```
+
+<Callout type="info">
+  Permintaan yang valid untuk kode yang tidak memiliki anak (atau kode yang tidak dikenal) mengembalikan `200` dengan array `Data` kosong (`[]`).
+</Callout>
+
+---
+
+## Catatan
+
+- **Metode:** Didokumentasikan sebagai `GET`. Rute menerima metode HTTP apa pun, tetapi gunakan `GET` secara konsisten agar cocok dengan metode yang digunakan dalam tanda tangan (signature) Anda.
+- **Caching:** Data wilayah bersifat statis; lakukan caching respon pada klien untuk mengurangi panggilan.
+- **Pengurutan:** Provinsi dikembalikan A→Z berdasarkan nama. Kota, kecamatan, dan kelurahan dikembalikan dalam urutan alami database.

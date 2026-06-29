@@ -9,6 +9,7 @@
         "balance",
         "transaction",
         "verification",
-        "ip-domain-validation"
+        "ip-domain-validation",
+        "area-api"
     ]
 }
