@@ -1,0 +1,80 @@
+---
+title: Split Payment (Transfer VA)
+description: Transfer funds between iPaymu members using iPaymu balance without using the dashboard.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+The Split Payment API is used to transfer funds between iPaymu members using iPaymu balance, without
+going through the iPaymu web/dashboard.
+
+## Endpoint
+
+**URL**: `{{baseUrl}}/api/v2/transferva`
+**Method**: `POST`
+
+| Environment | URL                                            |
+| :---------- | :--------------------------------------------- |
+| Sandbox     | `https://sandbox.ipaymu.com/api/v2/transferva` |
+| Production  | `https://my.ipaymu.com/api/v2/transferva`      |
+
+## Request Headers
+
+See the [headers & signature](/close-api) that every Close API request must include.
+
+## Request Body
+
+| Parameter     | Type   | Required | Description                                       |
+| :------------ | :----- | :------- | :------------------------------------------------ |
+| `sender`      | string | Yes      | Sender's iPaymu VA.                              |
+| `receiver`    | string | Yes      | Receiver's iPaymu VA.                            |
+| `amount`      | number | Yes      | Amount to transfer.                              |
+| `relatedId`   | string | No       | iPaymu transaction ID reference to be split.     |
+| `referenceId` | string | No       | Merchant reference ID.                           |
+| `notes`       | string | No       | Notes/remarks.                                   |
+
+## Example Request
+
+```json
+{
+  "sender": "1179000899",
+  "receiver": "1179000900",
+  "amount": 100,
+  "referenceId": "337001",
+  "notes": "candy purchase payment"
+}
+```
+
+## Example Response
+
+```json
+{
+  "Status": 200,
+  "Data": {
+    "TransactionId": 473615,
+    "ReferenceId": "337001",
+    "Amount": "100",
+    "Fee": 0,
+    "Sender": "demo",
+    "Receiver": "demo@gmail.com",
+    "Notes": "candy purchase payment"
+  },
+  "Message": "success"
+}
+```
+
+## Response Parameters
+
+| Field                | Description                     |
+| :------------------- | :------------------------------ |
+| `Status`             | `200` = Success, `400` = Error. |
+| `Message`            | Response message.               |
+| `Data.TransactionId` | iPaymu transaction ID.          |
+| `Data.ReferenceId`   | Merchant reference ID.          |
+| `Data.Amount`        | Amount.                         |
+| `Data.Fee`           | Fee.                            |
+| `Data.Notes`         | Notes/remarks.                  |
+
+<Callout type="warn">
+  Save the `TransactionId` of every successful transaction for reconciliation purposes.
+</Callout>

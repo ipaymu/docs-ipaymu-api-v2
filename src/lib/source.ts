@@ -1,4 +1,4 @@
-import { docs, plugins, verification } from 'fumadocs-mdx:collections/server';
+import { docs, plugins, verification, closeApi } from 'fumadocs-mdx:collections/server';
 import { type InferPageType, loader } from 'fumadocs-core/source';
 
 // See https://fumadocs.dev/docs/headless/source-api for more info
@@ -24,6 +24,16 @@ export const pluginsSource = loader({
 export const verificationSource = loader({
   baseUrl: '/docs/verification',
   source: verification.toFumadocsSource(),
+  i18n: {
+    defaultLanguage: 'id',
+    languages: ['id', 'en'],
+  },
+});
+
+// Close API docs (private build only). Served behind ipaymu-core access control.
+export const closeApiSource = loader({
+  baseUrl: '/close-api',
+  source: closeApi.toFumadocsSource(),
   i18n: {
     defaultLanguage: 'id',
     languages: ['id', 'en'],

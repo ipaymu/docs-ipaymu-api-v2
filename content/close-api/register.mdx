@@ -1,0 +1,73 @@
+---
+title: Register (Single Sign On)
+description: Mendaftarkan akun/member iPaymu baru secara terprogram.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+API Register berfungsi untuk melakukan proses pendaftaran akun/member iPaymu secara terprogram
+(Single Sign On).
+
+## Endpoint
+
+**URL**: `{{baseUrl}}/api/v2/register`
+**Method**: `POST`
+
+| Lingkungan | URL                                          |
+| :--------- | :------------------------------------------- |
+| Sandbox    | `https://sandbox.ipaymu.com/api/v2/register` |
+| Production | `https://my.ipaymu.com/api/v2/register`      |
+
+## Request Header
+
+Lihat [header & signature](/close-api) yang wajib disertakan pada setiap request Close API.
+
+## Request Body
+
+| Parameter     | Tipe   | Wajib | Deskripsi                                                                 |
+| :------------ | :----- | :---- | :----------------------------------------------------------------------- |
+| `name`        | string | Ya    | Nama user.                                                                |
+| `email`       | string | Ya    | Email user.                                                               |
+| `phone`       | string | Ya    | No. HP user.                                                              |
+| `password`    | string | Ya    | Password (minimal 8 karakter).                                            |
+| `website_url` | string | Tidak | URL website (untuk registrasi sebagai merchant, contoh: `http://demo.ipaymu.com`). |
+| `website_ip`  | string | Tidak | IP website (untuk registrasi sebagai merchant, contoh: `127.0.0.1`).     |
+
+## Contoh Request
+
+```json
+{
+  "name": "Demo iPaymu",
+  "email": "demo@ipaymu.com",
+  "phone": "081234567890",
+  "password": "rahasia123"
+}
+```
+
+## Contoh Response
+
+```json
+{
+  "Status": 200,
+  "Message": "success",
+  "Data": {
+    "Email": "demo@ipaymu.com",
+    "Va": "117900089912390",
+    "VaName": "IPAYMU - demo"
+  }
+}
+```
+
+## Keterangan Parameter Response
+
+| Field         | Deskripsi                                |
+| :------------ | :--------------------------------------- |
+| `Status`      | `200` = Sukses, `400` = Error.           |
+| `Message`     | Keterangan respon.                       |
+| `Data.Email`  | Email yang terdaftar di iPaymu.          |
+| `Data.Va`     | Nomor Virtual Account.                   |
+| `Data.VaName` | Nama Virtual Account.                    |
+
+<Callout type="info">
+  Pada kondisi error, parameter `Data` tidak dikembalikan dan `Message` berisi keterangan error.
+</Callout>

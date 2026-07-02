@@ -44,6 +44,23 @@ export const verification = defineDocs({
   },
 });
 
+// Close API (private). Only emitted in the private build (PRIVATE_BUILD=1)
+// and served behind ipaymu-core's access control. See INTEGRATION-close-api.md.
+export const closeApi = defineDocs({
+  dir: 'content/close-api',
+  docs: {
+    schema: frontmatterSchema.extend({
+      postman: z.string().optional(),
+    }),
+    postprocess: {
+      includeProcessedMarkdown: true,
+    },
+  },
+  meta: {
+    schema: metaSchema,
+  },
+});
+
 import remarkMermaid from "remark-mermaid-dataurl";
 
 export default defineConfig({

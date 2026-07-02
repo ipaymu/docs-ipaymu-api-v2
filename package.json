@@ -3,9 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "next build",
+    "build": "node ./scripts/clean-staged.mjs && next build",
+    "build:private": "node ./scripts/with-close-api.mjs build",
     "build:pages": "bun ./scripts/build-pages.mjs",
     "dev": "next dev",
+    "dev:private": "node ./scripts/with-close-api.mjs dev",
     "preview:pages": "bun ./scripts/preview-pages.mjs",
     "start": "serve out",
     "prepare": "tw-patch install",

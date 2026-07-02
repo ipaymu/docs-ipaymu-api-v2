@@ -37,7 +37,7 @@ Endpoint ini digunakan untuk memproses pembayaran langsung (Direct Payment).
 | `amount`          | `number` | Ya          | Harga total.                      |
 | `notifyUrl`       | `string` | Ya          | URL Notifikasi untuk menerima webhook dari iPaymu. (iPaymu akan mengirimkan parameter status dalam method POST ke URL ini ketika pengguna berhasil melakukan pembayaran). |
 | `referenceId`     | `string` | Ya          | ID Referensi atau Nomor Transaksi merchant. |
-| `paymentMethod`   | `string` | Ya          | Metode pembayaran. Nilai: `va`, `cstore`, `cod`, `qris`, `cc`, `paylater`. |
+| `paymentMethod`   | `string` | Ya          | Metode pembayaran. Nilai: `va`, `cstore`, `cod`, `qris`, `cc`, `paylater`, `ewallet`. |
 | `paymentChannel`  | `string` | Ya          | Saluran berdasarkan metode pembayaran. Lihat rinciannya di bawah tabel. |
 | `expired`         | `number` | Tidak       | Kustom masa berlaku dalam jam. **Catatan:** <br/>- BSI VA maks 3 jam <br/>- BRI VA maks 2 jam <br/>- BCA VA default 12 jam (tidak dikenakan custom) <br/>- Alfamart default 24 jam (tidak dikenakan custom) <br/>- QRIS default 5 menit (tidak dikenakan custom) |
 | `comments`        | `string` | Tidak       | Catatan tambahan transaksi.       |
@@ -64,12 +64,13 @@ Endpoint ini digunakan untuk memproses pembayaran langsung (Direct Payment).
 <div className="pt-4">
 | Metode Pembayaran (`paymentMethod`) | Daftar Saluran (`paymentChannel`) |
 | :---------------------------------- | :-------------------------------- |
-| **Virtual Account (`va`)**          | `bag`, `bca`, `bpd_bali`, `bni`, `cimb`, `mandiri`, `bmi`, `bri`, `bsi`, `permata`, `danamon` |
+| **Virtual Account (`va`)**          | `bag`, `bca`, `bpd_bali`, `bni`, `cimb`, `mandiri`, `bmi`, `bri`, `bsi`, `permata`, `danamon`,`btn` |
 | **Convenience Store (`cstore`)**    | `alfamart`, `indomaret`           |
 | **Cash On Delivery (`cod`)**        | `rpx` (Kurir RPX)                 |
 | **QRIS (`qris`)**                   | `mpm`                             |
 | **Credit Card (`cc`)**              | `cc`                              |
 | **Pay Later (`paylater`)**          | `akulaku`                         |
+| **e-Wallet (`ewallet`)**            | `shopeepay`                       |
 </div>
 </details>
 

@@ -1,0 +1,80 @@
+---
+title: Split Payment (Transfer VA)
+description: Transfer dana antar member iPaymu menggunakan saldo iPaymu tanpa melalui dashboard.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+API Split Payment berfungsi untuk melakukan transaksi transfer antar member iPaymu menggunakan saldo
+iPaymu, tanpa melalui web/dashboard iPaymu.
+
+## Endpoint
+
+**URL**: `{{baseUrl}}/api/v2/transferva`
+**Method**: `POST`
+
+| Lingkungan | URL                                            |
+| :--------- | :--------------------------------------------- |
+| Sandbox    | `https://sandbox.ipaymu.com/api/v2/transferva` |
+| Production | `https://my.ipaymu.com/api/v2/transferva`      |
+
+## Request Header
+
+Lihat [header & signature](/close-api) yang wajib disertakan pada setiap request Close API.
+
+## Request Body
+
+| Parameter     | Tipe   | Wajib | Deskripsi                                       |
+| :------------ | :----- | :---- | :---------------------------------------------- |
+| `sender`      | string | Ya    | VA iPaymu pengirim.                             |
+| `receiver`    | string | Ya    | VA iPaymu penerima.                            |
+| `amount`      | number | Ya    | Jumlah dana yang akan ditransfer.              |
+| `relatedId`   | string | Tidak | Referensi ID transaksi iPaymu yang akan di-split. |
+| `referenceId` | string | Tidak | Referensi ID dari merchant.                    |
+| `notes`       | string | Tidak | Keterangan/catatan.                            |
+
+## Contoh Request
+
+```json
+{
+  "sender": "1179000899",
+  "receiver": "1179000900",
+  "amount": 100,
+  "referenceId": "337001",
+  "notes": "pembayaran pembelian permen"
+}
+```
+
+## Contoh Response
+
+```json
+{
+  "Status": 200,
+  "Data": {
+    "TransactionId": 473615,
+    "ReferenceId": "337001",
+    "Amount": "100",
+    "Fee": 0,
+    "Sender": "demo",
+    "Receiver": "demo@gmail.com",
+    "Notes": "pembayaran pembelian permen"
+  },
+  "Message": "success"
+}
+```
+
+## Keterangan Parameter Response
+
+| Field                | Deskripsi                       |
+| :------------------- | :------------------------------ |
+| `Status`             | `200` = Sukses, `400` = Error.  |
+| `Message`            | Keterangan respon.              |
+| `Data.TransactionId` | ID Transaksi iPaymu.            |
+| `Data.ReferenceId`   | Referensi ID dari merchant.     |
+| `Data.Amount`        | Nominal.                        |
+| `Data.Fee`           | Biaya.                          |
+| `Data.Notes`         | Catatan/keterangan.             |
+
+<Callout type="warn">
+  Simpan `TransactionId` dari setiap transaksi yang berhasil untuk kebutuhan rekonsiliasi.
+</Callout>

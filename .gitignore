@@ -8,6 +8,7 @@
 /coverage
 /.next/
 /out/
+/out-private/
 /.local-pages/
 /build
 *.tsbuildinfo

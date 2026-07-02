@@ -1,0 +1,145 @@
+---
+title: Close API iPaymu
+description: Dokumentasi privat untuk Close API iPaymu — kumpulan endpoint yang hanya dapat diakses oleh akun yang telah diberi izin oleh iPaymu.
+---
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/mdx/tabs";
+import { Callout } from "fumadocs-ui/components/callout";
+
+<Callout type="warn" title="Dokumentasi Privat">
+  Close API adalah API tertutup. Akses ke setiap endpoint diberikan **per akun** oleh iPaymu
+  melalui sistem internal (ipaymu-core). Sebuah akun hanya dapat memanggil endpoint Close API yang
+  telah ditetapkan untuknya. Jika akun Anda mencoba mengakses layanan yang tidak diberikan, server
+  akan mengembalikan status `403`.
+</Callout>
+
+Close API iPaymu adalah sekumpulan endpoint privat untuk kebutuhan integrasi tingkat lanjut seperti
+pendaftaran akun (Single Sign On), split payment antar member, pengambilan profil, dan verifikasi
+akun. Berbeda dengan API publik, **akses Close API diatur secara ketat** dan harus diaktifkan
+terlebih dahulu oleh iPaymu.
+
+## Base URL
+
+| Lingkungan | URL                              |
+| :--------- | :------------------------------- |
+| Sandbox    | `https://sandbox.ipaymu.com`     |
+| Production | `https://my.ipaymu.com`          |
+
+Seluruh endpoint berada di bawah path `/api/v2/...`.
+
+## Request Header
+
+Setiap request Close API iPaymu **wajib** menyertakan header berikut.
+
+| Parameter      | Nilai              | Deskripsi                                                          |
+| :------------- | :----------------- | :---------------------------------------------------------------- |
+| `Content-Type` | `application/json` | Untuk endpoint dengan upload file, gunakan `multipart/form-data`. |
+| `va`           | `{{va}}`           | Nomor VA iPaymu (didapat dari dashboard iPaymu).                  |
+| `signature`    | `{{signature}}`    | Signature request. Lihat cara pembuatannya di bawah.             |
+| `timestamp`    | `{{timestamp}}`    | Format `YYYYMMDDhhmmss` (1 Februari 2015 12:10:45 → `20150201121045`). |
+
+## Signature
+
+Signature dibuat menggunakan **HMAC-SHA256** dengan **API Key** akun iPaymu Anda dan sebuah
+`StringToSign`.
+
+```
+Signature = HMAC-SHA256(StringToSign, ApiKey)
+```
+
+### Cara membuat StringToSign
+
+```
+StringToSign = HTTPMethod:VaNumber:Lowercase(SHA-256(RequestBody)):ApiKey
+```
+
+Keterangan komponen:
+
+- **HTTPMethod** — Method HTTP (`GET`, `POST`, `PUT`, `PATCH`, `DELETE`). Harus **UPPERCASE**.
+- **VaNumber** — Nomor VA iPaymu (dari dashboard iPaymu).
+- **RequestBody** — Body request berupa JSON, di-hash dengan **SHA-256**, hasilnya **lowercase**.
+- **ApiKey** — API Key iPaymu (dari dashboard iPaymu).
+
+### Contoh implementasi
+
+<Tabs defaultValue="js" groupId="language">
+  <TabsList>
+    <TabsTrigger value="js">Node.js</TabsTrigger>
+    <TabsTrigger value="php">PHP</TabsTrigger>
+  </TabsList>
+
+  <TabsContent value="js">
+    ```javascript
+    const crypto = require('crypto-js');
+
+    const apiKey = 'YOUR_API_KEY';
+    const va = 'YOUR_VA';
+    const method = 'POST';
+
+    const body = { account: '1179000899' };
+
+    // 1. Stringify body
+    const bodyJson = JSON.stringify(body);
+
+    // 2. Hash body (SHA-256), lowercase
+    const bodyHash = crypto.SHA256(bodyJson).toString(crypto.enc.Hex);
+
+    // 3. Susun StringToSign
+    const stringToSign = `${method}:${va}:${bodyHash}:${apiKey}`;
+
+    // 4. Generate signature (HMAC-SHA256)
+    const signature = crypto.HmacSHA256(stringToSign, apiKey).toString(crypto.enc.Hex);
+
+    console.log('Signature:', signature);
+    ```
+
+  </TabsContent>
+
+  <TabsContent value="php">
+    ```php
+    <?php
+
+    $apiKey = 'YOUR_API_KEY';
+    $va = 'YOUR_VA';
+    $method = 'POST';
+
+    $body = ['account' => '1179000899'];
+
+    $jsonBody = json_encode($body, JSON_UNESCAPED_SLASHES);
+    $requestBody = strtolower(hash('sha256', $jsonBody));
+
+    $stringToSign = strtoupper($method) . ':' . $va . ':' . $requestBody . ':' . $apiKey;
+    $signature = hash_hmac('sha256', $stringToSign, $apiKey);
+
+    echo 'Signature: ' . $signature;
+    ?>
+    ```
+
+  </TabsContent>
+</Tabs>
+
+### Response jika signature tidak valid
+
+```json
+{
+  "Status": 401,
+  "Message": "unauthorized"
+}
+```
+
+## Catatan Penting
+
+<Callout type="warn">
+  1. Tambahkan **filter callback** — hanya status `"SUKSES"` yang dianggap **VALID**, selain itu
+     diabaikan.
+  2. **ID Transaksi iPaymu wajib disimpan.**
+</Callout>
+
+## Daftar Status Response
+
+| Status | Keterangan                                                |
+| :----- | :-------------------------------------------------------- |
+| `200`  | Sukses.                                                   |
+| `400`  | Invalid request — terdapat request yang tidak valid.     |
+| `401`  | Unauthorized — kesalahan credential atau signature.      |
+| `403`  | Service not found — akun tidak memiliki akses ke layanan. |
