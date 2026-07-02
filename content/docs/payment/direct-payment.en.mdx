@@ -37,7 +37,7 @@ This endpoint is used to process direct payments.
 | `amount`          | `number` | Yes         | Total price. |
 | `notifyUrl`       | `string` | Yes         | Notify URL for receiving webhooks from iPaymu. (iPaymu will send POST params to this URL when a buyer makes a payment). |
 | `referenceId`     | `string` | Yes         | Reference/transaction ID from merchant. |
-| `paymentMethod`   | `string` | Yes         | Payment method. Value: `va`, `cstore`, `cod`, `qris`, `cc`, `paylater`. |
+| `paymentMethod`   | `string` | Yes         | Payment method. Value: `va`, `cstore`, `cod`, `qris`, `cc`, `paylater`,`ewallet`. |
 | `paymentChannel`  | `string` | Yes         | Payment channel of the payment method. See details below the table. |
 | `expired`         | `number` | No          | Custom expired payment code in hours. **Note:** <br/>- BSI VA max 3 hours <br/>- BRI VA max 2 hours <br/>- BCA VA can't be customized (default 12 hours) <br/>- Alfamart can't be customized (default 24 hours) <br/>- QRIS can't be customized (default 5 minutes) |
 | `comments`        | `string` | No          | Transaction notes. |
@@ -64,12 +64,13 @@ This endpoint is used to process direct payments.
 <div className="pt-4">
 | Payment Method (`paymentMethod`) | Payment Channels (`paymentChannel`) |
 | :------------------------------- | :---------------------------------- |
-| **Virtual Account (`va`)**       | `bag`, `bca`, `bpd_bali`, `bni`, `cimb`, `mandiri`, `bmi`, `bri`, `bsi`, `permata`, `danamon` |
+| **Virtual Account (`va`)**       | `bag`, `bca`, `bpd_bali`, `bni`, `cimb`, `mandiri`, `bmi`, `bri`, `bsi`, `permata`, `danamon`,`btn` |
 | **Convenience Store (`cstore`)** | `alfamart`, `indomaret`             |
 | **Cash On Delivery (`cod`)**     | `rpx` (RPX Courier)                 |
 | **QRIS (`qris`)**                | `mpm`                               |
 | **Credit Card (`cc`)**           | `cc`                                |
 | **Pay Later (`paylater`)**       | `akulaku`                           |
+| **e-Wallet (`ewallet`)**         | `shopeepay`                         |
 </div>
 </details>
 

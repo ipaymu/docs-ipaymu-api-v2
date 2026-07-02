@@ -1,0 +1,85 @@
+---
+title: Member Verification
+description: Submit an iPaymu account verification as a member.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+The Member Verification API submits an iPaymu account verification request as a **member**.
+
+## Endpoint
+
+**URL**: `{{baseUrl}}/api/v2/member-verification`
+**Method**: `POST`
+
+| Environment | URL                                                     |
+| :---------- | :------------------------------------------------------ |
+| Sandbox     | `https://sandbox.ipaymu.com/api/v2/member-verification` |
+| Production  | `https://my.ipaymu.com/api/v2/member-verification`      |
+
+## Request Headers
+
+This endpoint uploads files, so use `Content-Type: multipart/form-data`. The `va`, `signature`, and
+`timestamp` headers are still required — see [headers & signature](/close-api).
+
+| Header         | Value                 |
+| :------------- | :-------------------- |
+| `Content-Type` | `multipart/form-data` |
+| `va`           | `{{va}}`              |
+| `signature`    | `{{signature}}`       |
+| `timestamp`    | `{{timestamp}}`       |
+
+## Request Body (multipart/form-data)
+
+| Parameter                | Type | Required | Description                                                    |
+| :----------------------- | :--- | :------- | :------------------------------------------------------------ |
+| `account`                | text | Yes      | iPaymu VA number to verify.                                   |
+| `birthday`               | text | Yes      | Date of birth (format `YYYY-mm-dd`).                         |
+| `birthplace`             | text | Yes      | Place of birth.                                               |
+| `gender`                 | text | Yes      | `L` = Male, `P` = Female.                                     |
+| `national_id`            | text | Yes      | National ID (KTP) number.                                    |
+| `province`               | text | Yes      | Province (from the [Area API](/docs/area-api)).             |
+| `city`                   | text | Yes      | City/Regency (from the Area API).                           |
+| `district`               | text | Yes      | District (from the Area API).                                |
+| `village`                | text | Yes      | Village (from the Area API).                                  |
+| `postal_code`            | text | Yes      | Postal code.                                                  |
+| `address`                | text | Yes      | Address (max. 200 characters).                              |
+| `bank_code`              | text | Yes      | Bank code (from the [Bank List](/close-api/bank-list)).     |
+| `bank_number`            | text | Yes      | Bank account number.                                         |
+| `bank_account`           | text | Yes      | Account holder name (must match the account name).          |
+| `npwp_no`                | text | Yes      | Tax ID (NPWP) number.                                        |
+| `national_id_photo`      | file | Yes      | KTP file (`.png`/`.jpg`/`.jpeg`, max. 2MB).                  |
+| `selfie_photo`           | file | Yes      | Selfie holding the KTP (max. 2MB).                          |
+| `passbook_photo`         | file | Yes      | Photo/scan of the bank passbook (max. 2MB).                 |
+| `business_license_photo` | file | No       | Business license scan (`.png`/`.jpg`/`.jpeg`, max. 2MB).    |
+
+## Example Response
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Verification success",
+  "Data": {
+    "VerificationId": 22567,
+    "VerificationStatus": {
+      "Code": -2,
+      "Desc": "PROCESSING"
+    }
+  }
+}
+```
+
+## Verification Status
+
+| Code | Desc          | Description                                               |
+| :--- | :------------ | :------------------------------------------------------- |
+| `-2` | `PROCESSING`  | Account is being verified.                               |
+| `-1` | `UNCOMPLETED` | Verification rejected — incomplete/invalid documents.    |
+| `1`  | `VERIFIED`    | Account is verified.                                     |
+| `0`  | `BASIC`       | Account is not yet verified.                             |
+
+<Callout type="info">
+  The `province`, `city`, `district`, and `village` values must come from the [Area API](/docs/area-api),
+  and `bank_code` from the [Bank List](/close-api/bank-list).
+</Callout>

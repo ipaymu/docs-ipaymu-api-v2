@@ -1,0 +1,144 @@
+---
+title: iPaymu Close API
+description: Private documentation for the iPaymu Close API — a set of endpoints accessible only by accounts that iPaymu has explicitly granted access to.
+---
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/mdx/tabs";
+import { Callout } from "fumadocs-ui/components/callout";
+
+<Callout type="warn" title="Private documentation">
+  The Close API is a closed API. Access to each endpoint is granted **per account** by iPaymu through
+  an internal system (ipaymu-core). An account may only call the Close API endpoints assigned to it.
+  If your account tries to access a service it was not granted, the server returns status `403`.
+</Callout>
+
+The iPaymu Close API is a set of private endpoints for advanced integration needs such as account
+registration (Single Sign On), split payment between members, profile retrieval, and account
+verification. Unlike the public API, **Close API access is strictly controlled** and must be enabled
+by iPaymu first.
+
+## Base URL
+
+| Environment | URL                          |
+| :---------- | :--------------------------- |
+| Sandbox     | `https://sandbox.ipaymu.com` |
+| Production  | `https://my.ipaymu.com`      |
+
+All endpoints live under the `/api/v2/...` path.
+
+## Request Headers
+
+Every iPaymu Close API request **must** include the following headers.
+
+| Parameter      | Value              | Description                                                        |
+| :------------- | :----------------- | :---------------------------------------------------------------- |
+| `Content-Type` | `application/json` | For endpoints that upload files, use `multipart/form-data`.        |
+| `va`           | `{{va}}`           | iPaymu VA number (from your iPaymu dashboard).                    |
+| `signature`    | `{{signature}}`    | Request signature. See how to generate it below.                 |
+| `timestamp`    | `{{timestamp}}`    | Format `YYYYMMDDhhmmss` (1 February 2015 12:10:45 → `20150201121045`). |
+
+## Signature
+
+The signature is generated using **HMAC-SHA256** with your iPaymu account **API Key** and a
+`StringToSign`.
+
+```
+Signature = HMAC-SHA256(StringToSign, ApiKey)
+```
+
+### How to build StringToSign
+
+```
+StringToSign = HTTPMethod:VaNumber:Lowercase(SHA-256(RequestBody)):ApiKey
+```
+
+Component details:
+
+- **HTTPMethod** — HTTP method (`GET`, `POST`, `PUT`, `PATCH`, `DELETE`). Must be **UPPERCASE**.
+- **VaNumber** — iPaymu VA number (from your iPaymu dashboard).
+- **RequestBody** — Request body as JSON, hashed with **SHA-256**, result in **lowercase**.
+- **ApiKey** — iPaymu API Key (from your iPaymu dashboard).
+
+### Example implementation
+
+<Tabs defaultValue="js" groupId="language">
+  <TabsList>
+    <TabsTrigger value="js">Node.js</TabsTrigger>
+    <TabsTrigger value="php">PHP</TabsTrigger>
+  </TabsList>
+
+  <TabsContent value="js">
+    ```javascript
+    const crypto = require('crypto-js');
+
+    const apiKey = 'YOUR_API_KEY';
+    const va = 'YOUR_VA';
+    const method = 'POST';
+
+    const body = { account: '1179000899' };
+
+    // 1. Stringify body
+    const bodyJson = JSON.stringify(body);
+
+    // 2. Hash body (SHA-256), lowercase
+    const bodyHash = crypto.SHA256(bodyJson).toString(crypto.enc.Hex);
+
+    // 3. Build StringToSign
+    const stringToSign = `${method}:${va}:${bodyHash}:${apiKey}`;
+
+    // 4. Generate signature (HMAC-SHA256)
+    const signature = crypto.HmacSHA256(stringToSign, apiKey).toString(crypto.enc.Hex);
+
+    console.log('Signature:', signature);
+    ```
+
+  </TabsContent>
+
+  <TabsContent value="php">
+    ```php
+    <?php
+
+    $apiKey = 'YOUR_API_KEY';
+    $va = 'YOUR_VA';
+    $method = 'POST';
+
+    $body = ['account' => '1179000899'];
+
+    $jsonBody = json_encode($body, JSON_UNESCAPED_SLASHES);
+    $requestBody = strtolower(hash('sha256', $jsonBody));
+
+    $stringToSign = strtoupper($method) . ':' . $va . ':' . $requestBody . ':' . $apiKey;
+    $signature = hash_hmac('sha256', $stringToSign, $apiKey);
+
+    echo 'Signature: ' . $signature;
+    ?>
+    ```
+
+  </TabsContent>
+</Tabs>
+
+### Response when the signature is invalid
+
+```json
+{
+  "Status": 401,
+  "Message": "unauthorized"
+}
+```
+
+## Important Notes
+
+<Callout type="warn">
+  1. Add a **callback filter** — only the `"SUKSES"` status is considered **VALID**, anything else is
+     ignored.
+  2. The **iPaymu transaction ID must be saved.**
+</Callout>
+
+## Response Status List
+
+| Status | Description                                              |
+| :----- | :------------------------------------------------------ |
+| `200`  | Success.                                                |
+| `400`  | Invalid request — the request contains invalid data.    |
+| `401`  | Unauthorized — invalid credential or signature.         |
+| `403`  | Service not found — the account has no access to it.     |

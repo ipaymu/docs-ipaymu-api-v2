@@ -1,0 +1,52 @@
+---
+title: List Business Category
+description: Get the list of business categories for the verification APIs.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+The List Business Category API returns the list of business categories. The `Code` value from this
+endpoint is used as the `business_category` in [Merchant Verification](/close-api/merchant-verification).
+
+## Endpoint
+
+**URL**: `{{baseUrl}}/api/v2/business-category`
+**Method**: `POST`
+
+| Environment | URL                                                   |
+| :---------- | :---------------------------------------------------- |
+| Sandbox     | `https://sandbox.ipaymu.com/api/v2/business-category` |
+| Production  | `https://my.ipaymu.com/api/v2/business-category`      |
+
+## Request Headers
+
+See the [headers & signature](/close-api) that every Close API request must include. This endpoint
+requires no request body.
+
+## Example Response
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Success",
+  "Data": [
+    { "Code": "advertising", "Name": "Advertising", "NameEn": "Advertising" },
+    { "Code": "aksesoris_mainan", "Name": "Aksesoris & Mainan", "NameEn": "Accessories & Toys" },
+    { "Code": "edukasi", "Name": "Edukasi", "NameEn": "Education" },
+    { "Code": "elektronik", "Name": "Elektronik", "NameEn": "Electronic" }
+  ]
+}
+```
+
+## Response Parameters
+
+| Field           | Description                                          |
+| :-------------- | :-------------------------------------------------- |
+| `Data[].Code`   | Category code — used as `business_category`.         |
+| `Data[].Name`   | Category name (Indonesian).                         |
+| `Data[].NameEn` | Category name (English).                            |
+
+<Callout type="info">
+  The list above is truncated. The actual response returns the full list of business categories.
+</Callout>

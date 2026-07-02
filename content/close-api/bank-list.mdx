@@ -1,0 +1,56 @@
+---
+title: Bank List
+description: Mendapatkan daftar master bank yang tersedia di iPaymu.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+API Bank List berfungsi untuk melihat daftar master bank yang tersedia di iPaymu. Nilai `code` dari
+endpoint ini digunakan sebagai `bank_code` pada API verifikasi.
+
+## Endpoint
+
+**URL**: `{{baseUrl}}/api/v2/banklist`
+**Method**: `POST`
+
+| Lingkungan | URL                                          |
+| :--------- | :------------------------------------------- |
+| Sandbox    | `https://sandbox.ipaymu.com/api/v2/banklist` |
+| Production | `https://my.ipaymu.com/api/v2/banklist`      |
+
+## Request Header
+
+Lihat [header & signature](/close-api) yang wajib disertakan pada setiap request Close API. Endpoint
+ini tidak memerlukan request body.
+
+## Contoh Response
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Success",
+  "Data": {
+    "bank": [
+      { "id": "061", "code": "061", "name": "ANZ Panin Bank" },
+      { "id": "427", "code": "427", "name": "BANK BNI SYARIAH" },
+      { "id": "116", "code": "116", "name": "BPD Aceh" },
+      { "id": "129", "code": "129", "name": "BPD Bali" },
+      { "id": "133", "code": "133", "name": "BPD Bengkulu" }
+    ]
+  }
+}
+```
+
+## Keterangan Parameter Response
+
+| Field            | Deskripsi                                          |
+| :--------------- | :------------------------------------------------- |
+| `Data.bank[]`    | Daftar bank.                                       |
+| `bank[].id`      | ID bank.                                           |
+| `bank[].code`    | Kode bank — dipakai sebagai `bank_code` di verifikasi. |
+| `bank[].name`    | Nama bank.                                         |
+
+<Callout type="info">
+  Daftar pada contoh di atas dipersingkat. Response sebenarnya mengembalikan seluruh master bank.
+</Callout>

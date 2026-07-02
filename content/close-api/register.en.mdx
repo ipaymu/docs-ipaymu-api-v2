@@ -1,0 +1,72 @@
+---
+title: Register (Single Sign On)
+description: Programmatically register a new iPaymu account/member.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+The Register API is used to register an iPaymu account/member programmatically (Single Sign On).
+
+## Endpoint
+
+**URL**: `{{baseUrl}}/api/v2/register`
+**Method**: `POST`
+
+| Environment | URL                                          |
+| :---------- | :------------------------------------------- |
+| Sandbox     | `https://sandbox.ipaymu.com/api/v2/register` |
+| Production  | `https://my.ipaymu.com/api/v2/register`      |
+
+## Request Headers
+
+See the [headers & signature](/close-api) that every Close API request must include.
+
+## Request Body
+
+| Parameter     | Type   | Required | Description                                                              |
+| :------------ | :----- | :------- | :---------------------------------------------------------------------- |
+| `name`        | string | Yes      | User's name.                                                            |
+| `email`       | string | Yes      | User's email.                                                           |
+| `phone`       | string | Yes      | User's phone number.                                                    |
+| `password`    | string | Yes      | Password (minimum 8 characters).                                        |
+| `website_url` | string | No       | Website URL (to register as a merchant, e.g. `http://demo.ipaymu.com`). |
+| `website_ip`  | string | No       | Website IP (to register as a merchant, e.g. `127.0.0.1`).              |
+
+## Example Request
+
+```json
+{
+  "name": "Demo iPaymu",
+  "email": "demo@ipaymu.com",
+  "phone": "081234567890",
+  "password": "secret123"
+}
+```
+
+## Example Response
+
+```json
+{
+  "Status": 200,
+  "Message": "success",
+  "Data": {
+    "Email": "demo@ipaymu.com",
+    "Va": "117900089912390",
+    "VaName": "IPAYMU - demo"
+  }
+}
+```
+
+## Response Parameters
+
+| Field         | Description                          |
+| :------------ | :----------------------------------- |
+| `Status`      | `200` = Success, `400` = Error.      |
+| `Message`     | Response message.                    |
+| `Data.Email`  | Email registered at iPaymu.          |
+| `Data.Va`     | Virtual Account number.              |
+| `Data.VaName` | Virtual Account name.                |
+
+<Callout type="info">
+  On error, the `Data` field is not returned and `Message` contains the error description.
+</Callout>
