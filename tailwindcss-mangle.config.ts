@@ -2,7 +2,7 @@ import { defineConfig } from 'tailwindcss-patch'
 
 export default defineConfig({
   registry: {
-    output: {
+    extract: {
       file: '.tw-patch/tw-class-list.json',
     },
   },
