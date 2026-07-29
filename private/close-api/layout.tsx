@@ -24,10 +24,10 @@ export default async function Layout({
   return (
     <DocsLayout
       tree={closeApiSource.pageTree[lang]}
-      {...baseOptions(lang)}
+      {...baseOptions(lang, "close-api")}
       nav={{
-        ...baseOptions(lang).nav,
-        component: <HorizontalNavbar lang={lang} />,
+        ...baseOptions(lang, "close-api").nav,
+        component: <HorizontalNavbar lang={lang} current="close-api" />,
       }}
       // Enable i18n compatibility mode
       i18n

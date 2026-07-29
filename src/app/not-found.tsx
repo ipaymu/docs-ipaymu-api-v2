@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 
 // Inline script runs immediately (before chunks load) — handles trailing dot redirect
@@ -12,22 +12,19 @@ const trailingDotScript = `(function(){
 })();`;
 
 export default function NotFound() {
-  const [redirecting, setRedirecting] = useState(false);
-
+  // Cadangan kalau skrip inline di bawah tidak sempat jalan (mis. diblokir CSP).
+  // Tidak menyimpan state apa pun: `location.replace()` sudah meninggalkan
+  // halaman ini, jadi tidak ada yang perlu dirender ulang.
   useEffect(() => {
     const { pathname, search, hash } = window.location;
     const cleaned = pathname.replace(/\.+$/, "");
     if (cleaned !== pathname) {
-      setRedirecting(true);
       window.location.replace(cleaned + search + hash);
     }
   }, []);
 
-  if (redirecting) return null;
-
   return (
     <>
-      {/* eslint-disable-next-line @next/next/no-sync-scripts */}
       <script dangerouslySetInnerHTML={{ __html: trailingDotScript }} />
       <div className="flex min-h-screen flex-col items-center justify-center bg-background text-foreground p-4">
         <div className="max-w-md w-full text-center space-y-6">

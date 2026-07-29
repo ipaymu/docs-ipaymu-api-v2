@@ -9,15 +9,17 @@ import { Moon, Sun, Menu } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 
-import { baseOptions } from "@/lib/layout.shared";
+import { baseOptions, type NavSection } from "@/lib/layout.shared";
 import { withBasePath } from "@/lib/utils";
 
 interface HorizontalNavbarProps {
   lang: string;
+  /** Section yang sedang dibuka. Menentukan menu mana yang disorot. */
+  current?: NavSection;
   showSidebarTrigger?: boolean;
 }
 
-export function HorizontalNavbar({ lang, showSidebarTrigger = true }: HorizontalNavbarProps) {
+export function HorizontalNavbar({ lang, current, showSidebarTrigger = true }: HorizontalNavbarProps) {
   const pathname = usePathname();
   const { open } = useSidebar();
 
@@ -45,7 +47,10 @@ export function HorizontalNavbar({ lang, showSidebarTrigger = true }: Horizontal
     };
   }, [open]);
 
-  const navItems = baseOptions(lang).links || [];
+  // Status aktif berasal dari `current`, bukan dari pencocokan prefix pathname:
+  // `/id` dan `/id/docs` mengawali URL section lain, jadi prefix-match menyalakan
+  // beberapa menu sekaligus.
+  const navItems = baseOptions(lang, current).links || [];
 
   return (
     <nav className="border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 fixed top-0 z-50 h-14 w-full">
@@ -71,7 +76,7 @@ export function HorizontalNavbar({ lang, showSidebarTrigger = true }: Horizontal
               <Link
                 key={item.url}
                 href={item.url}
-                className={`text-sm font-medium transition-colors hover:text-primary ${pathname === item.url || pathname.startsWith(item.url + "/")
+                className={`text-sm font-medium transition-colors hover:text-primary ${item.active !== "none"
                     ? "text-primary"
                     : "text-muted-foreground"
                   }`}

@@ -157,7 +157,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <SidebarProvider>
-        <HorizontalNavbar lang={lang} showSidebarTrigger={false} />
+        <HorizontalNavbar lang={lang} current="home" showSidebarTrigger={false} />
       </SidebarProvider>
 
       <main className="flex-1 flex flex-col">

@@ -15,12 +15,12 @@ export default async function Layout({
   return (
     <DocsLayout
       tree={verificationSource.pageTree[lang]}
-      {...baseOptions(lang)}
+      {...baseOptions(lang, "verification")}
       // Enable i18n compatibility mode
       i18n
       nav={{
-        ...baseOptions(lang).nav,
-        component: <HorizontalNavbar lang={lang} />,
+        ...baseOptions(lang, "verification").nav,
+        component: <HorizontalNavbar lang={lang} current="verification" />,
       }}
       sidebar={{
         enabled: true,
