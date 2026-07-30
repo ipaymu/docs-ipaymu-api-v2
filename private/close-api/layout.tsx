@@ -1,7 +1,14 @@
-// NOTE: This route is intentionally staged OUTSIDE of `src/app`.
-// The public build (`npm run build`) must never contain the Close API, so the
-// route is copied into `src/app/[lang]/close-api/` only by the private build
-// (`npm run build:private` → scripts/with-close-api.mjs). See INTEGRATION-close-api.md.
+// CATATAN: rute ini sengaja berada DI LUAR `src/app`.
+//
+// Ia bukan halaman yang dilayani ke pengunjung. Fungsinya hanya sebagai perender
+// MDX untuk membuat artefak konten yang dikirim ke ipaymu-core: skrip
+// `npm run build:close-api-content` men-stage-nya sementara ke
+// `src/app/[lang]/close-api-export/`, membangun, mengambil HTML-nya, lalu
+// menghapus rute DAN hasil build-nya.
+//
+// Halaman yang benar-benar dilayani adalah cangkang publik di
+// `src/app/[lang]/close-api/` — cangkang itu tidak memuat isi dokumentasi.
+// Lihat PLAN-close-api-docs.md.
 import { closeApiSource } from "@/lib/source";
 import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import { baseOptions } from "@/lib/layout.shared";

@@ -32,40 +32,64 @@ View-source, URL langsung, dan berkas `_next/*.txt` semuanya bisa diakses siapa 
 Yang boleh ada di bundel publik hanyalah **cangkang kosong**: kerangka halaman yang
 belum berisi apa-apa sampai ia berhasil mengambil konten dari API terautentikasi.
 
-Pemisahan ini sudah setengah jalan di repo:
+Perkakas yang menjaga pemisahan ini:
 
-| Sudah ada | Fungsi |
+| Berkas | Fungsi |
 | :-- | :-- |
-| `content/close-api/` | 16 MDX (8 halaman × id/en) |
-| `private/close-api/` | Route di luar `src/app`, hanya dipasang saat build privat |
-| `scripts/clean-staged.mjs` | Bersihkan sisa route sebelum build publik |
-| `scripts/with-close-api.mjs` | Build privat → `out-private/` |
+| `content/close-api/` | 16 MDX (8 halaman × id/en) — sumber tulisan |
+| `content/close-api/meta.json` | **Satu sumber kebenaran** daftar slug |
+| `src/lib/close-api-slugs.ts` | Turunan `meta.json`; menghasilkan rute cangkang |
+| `src/app/[lang]/close-api/` | Cangkang publik permanen (tanpa isi dokumen) |
+| `private/close-api/` | Perender MDX untuk artefak; bukan halaman pengunjung |
+| `scripts/build-close-api-content.mjs` | Bangun artefak → `close-api-content/` |
+| `scripts/clean-staged.mjs` | Bersihkan sisa rute perender |
 
-Terverifikasi hari ini: `out/` mengandung **0** berkas dan **0** string `close-api`.
+Pengaman kebocoran ada di `.github/workflows/hostinger.yml`: build digagalkan
+kalau penanda isi dokumen (`StringToSign`, `api/v2/transferva`, dll.) muncul di
+`out/`. Mencari string `close-api` **tidak lagi** dipakai sebagai pengaman —
+cangkang memang wajar memuatnya.
 
 ---
 
 ## 3. Peta Produk → Halaman
 
-| `product_slug` | Halaman yang dibuka |
-| :-- | :-- |
-| `register` | `register` |
-| `transfer-va` | `transfer-va` |
-| `profile` | `profile` |
-| `verification` | `member-verification`, `merchant-verification`, `bank-list`, `business-category` |
+Pemetaan dipegang core di `config/closeapi.php` sebagai `api_code → {name, slug}`;
+lihat [`PLAN-close-api-core.md`](./PLAN-close-api-core.md) §3. Sisi docs **tidak**
+menyimpan tabel hak akses sendiri — kalau ada dua salinan, keduanya akan menyimpang.
 
-Halaman ikhtisar (`/close-api` tanpa slug) boleh dibuka **semua akun yang punya
-minimal satu produk** — isinya mekanisme signature bersama, bukan rahasia produk.
+Yang menjadi tanggung jawab repo ini: memberi tahu core slug apa saja yang ada.
+`npm run build:close-api-content` menghasilkan `close-api-content/manifest.json`
+berisi daftar slug + judul per bahasa, dan mencetak daftarnya ke terminal agar
+mudah disalin ke `config/closeapi.php`.
 
-`bank-list` dan `business-category` adalah data master pendukung alur verifikasi;
-sengaja dibundel ke produk `verification`.
+Slug yang terbit saat ini:
+
+```
+register  transfer-va  profile  bank-list
+business-category  member-verification  merchant-verification
+```
+
+Slug yang **belum** punya `api_code` di core tidak akan muncul di menu merchant
+dan dijawab `403` bila dibuka langsung. Itu perilaku aman, tapi berarti halamannya
+belum bisa dibaca siapa pun — jadi setiap halaman baru butuh satu baris di
+`config/closeapi.php`.
+
+Halaman ikhtisar (`/close-api` tanpa slug) diekspor sebagai `overview` dan boleh
+dibuka **semua akun yang punya minimal satu produk** — isinya mekanisme signature
+bersama, bukan rahasia produk.
 
 ---
 
-## 4. Kontrak API (harus sama persis dengan sisi core)
+## 4. Kontrak API
 
-Base URL mengikuti lingkungan akun: `https://my.ipaymu.com` atau
-`https://sandbox.ipaymu.com`.
+Sisi core adalah pemilik kontrak ini; [`PLAN-close-api-core.md`](./PLAN-close-api-core.md) §4
+yang berlaku. Bagian di sini hanya menjelaskan cara cangkang mengonsumsinya.
+
+Base URL **tidak** dikonfigurasi di build. Ia diambil dari klaim `iss` di dalam
+token, lalu dicocokkan ke allowlist di `close-api-shell.tsx`
+(`https://my.ipaymu.com`, `https://sandbox.ipaymu.com`). Dengan begitu satu bundel
+statis melayani produksi dan sandbox, dan `iss` yang dipalsukan tidak bisa
+mengarahkan permintaan ke origin lain. Lihat §6.2.
 
 ### 4.1 Manifest — penggerak menu
 
@@ -77,19 +101,19 @@ Authorization: Bearer <jwt>
 ```json
 {
   "products": [
-    {
-      "slug": "verification",
-      "pages": [
-        { "slug": "member-verification",   "title": "Member Verification" },
-        { "slug": "merchant-verification", "title": "Merchant Verification" }
-      ]
-    }
+    { "slug": "register",    "name": "Register SSO" },
+    { "slug": "transfer-va", "name": "Split Payment" }
   ]
 }
 ```
 
 Manifest **hanya memuat yang boleh dilihat**. Produk yang tidak dimiliki tidak
 boleh muncul sama sekali — bukan muncul lalu ditandai terkunci.
+
+> **Pembungkus respons.** Cangkang menerima **dua** bentuk: dibungkus
+> `{ Status, Success, Message, Data: {...} }` (konvensi rumah iPaymu) maupun objek
+> polos seperti contoh di atas. Sengaja toleran supaya core tidak perlu
+> menyesuaikan apa pun. Lihat `unwrap()` di `close-api-shell.tsx`.
 
 ### 4.2 Konten satu halaman
 
@@ -171,13 +195,24 @@ Konsekuensi penting: setelah ini `out/` akan berisi berkas `close-api/*.html`.
 Pemeriksaan "0 string close-api" tidak lagi berlaku sebagai pengaman — diganti
 pemeriksaan §6.4.
 
-### 6.2 Modul token
+### 6.2 Token dan allowlist issuer
 
-Berkas baru, misal `src/lib/close-api-auth.ts`:
+Ditangani di `close-api-shell.tsx` (tidak jadi modul terpisah): baca `#token=`,
+simpan ke `sessionStorage`, bersihkan address bar, buang saat `401`.
 
-- `readTokenFromFragment()` — ambil `#token=`, simpan, bersihkan URL.
-- `getToken()` — baca dari `sessionStorage`.
-- `clearToken()` — dipanggil saat 401.
+**Bagian yang tidak boleh dilepas — `ALLOWED_ISSUERS`.** Base URL core diambil
+dari klaim `iss` di token, dan klaim itu hanya di-decode, **tidak** diverifikasi
+tanda tangannya (secret-nya cuma ada di core). Tanpa allowlist, token palsu
+berisi `iss: https://penyerang.example` membuat browser:
+
+1. mengirim Bearer token ke server penyerang, dan
+2. menerima HTML sembarang yang berakhir di DOM halaman ini — XSS pada origin
+   docs, yang bisa membaca token di `sessionStorage`.
+
+Karena itu `iss` diperlakukan sebagai pilihan dari daftar tertutup
+(`https://my.ipaymu.com`, `https://sandbox.ipaymu.com`), bukan URL yang dipercaya.
+Token dengan issuer di luar daftar langsung dibuang dan halaman menampilkan
+"Sesi Kedaluwarsa".
 
 ### 6.3 Menu
 
@@ -190,48 +225,59 @@ Perhatikan menu ini masuk `NavSection` yang baru saja diperbaiki; nilai
 
 ### 6.4 Pengaman kebocoran di CI
 
-Ganti pemeriksaan lama dengan pemeriksaan berbasis isi. Ambil beberapa kalimat
-penanda dari `content/close-api/*.mdx` dan pastikan tidak satu pun muncul di `out/`:
+Ada di `.github/workflows/hostinger.yml`, langkah *"Pastikan konten Close API
+tidak bocor"*. Ia mencari penanda ISI dokumen (`StringToSign`,
+`api/v2/transferva`, `api/v2/merchant-verification`, `api/v2/member-verification`,
+`api/v2/banklist`, `api/v2/business-category`) di `out/` dan menggagalkan build
+bila salah satu ditemukan.
 
-```bash
-# gagalkan build kalau isi Close API bocor ke bundel publik
-for s in "StringToSign" "api/v2/transferva" "api/v2/merchant-verification"; do
-  if grep -rqF "$s" out/; then
-    echo "::error::Konten Close API bocor ke bundel publik: $s"
-    exit 1
-  fi
-done
-```
+Mencari string `close-api` **tidak lagi** dipakai: cangkang memang wajar memuatnya.
 
-Tambahkan langkah ini ke `.github/workflows/hostinger.yml` setelah build.
+Pengaman ini bukan teoretis — ia langsung menangkap satu kebocoran nyata, lihat §6.6.
 
 ### 6.5 Rendering konten
 
-Konten datang sebagai HTML dari API. **Jangan** `dangerouslySetInnerHTML` mentah-mentah.
-Dua pilihan:
+Konten datang sebagai HTML dari core lalu disuntikkan dengan
+`dangerouslySetInnerHTML`. Sebelum disuntikkan ia **wajib** lewat
+`sanitizeCloseApiHtml()` di `src/lib/close-api-html.ts` — allowlist tag dan
+atribut, buang `<script>`/`<iframe>`/`<form>`/`<svg>`, buang semua atribut `on*`,
+tolak URL non-`https:`/`data:image`, dan paksa `rel="noopener noreferrer"` pada
+`target="_blank"`.
 
-1. Core mengirim HTML yang sudah disanitasi, docs tetap menyaring ulang dengan
-   allowlist tag (pendekatan sabuk-dan-bretel).
-2. Core mengirim MDX terkompilasi, docs mengeksekusinya dengan peta komponen
-   terbatas (`Callout`, `Tabs`, `Card`, tabel) — konsisten dengan halaman lain.
+Kenapa perlu padahal isinya artefak tim sendiri: HTML-nya datang lewat jaringan.
+Kalau artefak di core tersabotase atau responsnya dibelokkan, skrip akan berjalan
+di origin `docs.ipaymu.com` dan bisa membaca token. Sanitasi memutus rantai itu,
+dan tetap berguna sebagai lapisan kedua di belakang allowlist issuer (§6.2).
 
-Pilihan 1 lebih sederhana dan cukup, mengingat sumber HTML-nya adalah MDX milik
-tim sendiri, bukan input pengguna.
+Diverifikasi di browser sungguhan: 9 payload serangan dinetralkan, sementara
+tabel, blok kode, anchor heading, dan diagram mermaid (`data:image/svg+xml`) tetap
+utuh.
 
 ### 6.6 Artefak konten untuk core
 
-Core tidak menyimpan MDX. Repo ini menghasilkan artefak yang dilayani core:
+Core tidak menyimpan MDX. `npm run build:close-api-content` menghasilkan:
 
 ```
 close-api-content/
-├── manifest.json          # slug + judul per bahasa
-├── id/<slug>.html
-└── en/<slug>.html
+├── manifest.json          # daftar slug + judul per bahasa
+├── id/<slug>.html         # potongan artikel
+├── id/<slug>.json         # { title, toc }
+├── en/<slug>.html
+└── en/<slug>.json
 ```
 
-Tambahkan skrip build (mis. `bun run build:close-api-content`) dan workflow yang
-menerbitkan artefak ini untuk diambil core. Penulisan dokumen tetap MDX di repo ini
-— alur kerja penulis tidak berubah.
+Halaman ikhtisar diekspor sebagai `overview`. Folder ini ada di `.gitignore` —
+jangan pernah di-commit. Salin ke core: `storage/app/close-api-content/`.
+
+Penulisan dokumen tetap MDX di repo ini; alur kerja penulis tidak berubah.
+
+> **Jebakan yang sudah ditutup.** Skrip ini membangun dengan `PRIVATE_BUILD=1`,
+> sehingga `out/` sempat berisi **seluruh** isi Close API di
+> `/<lang>/close-api-export/*` — 176 berkas. Versi awalnya membersihkan rute yang
+> di-stage tapi **membiarkan `out/` terkontaminasi**; siapa pun yang menjalankan
+> skrip ini lalu mengunggah `out/` akan membocorkan semuanya. Sekarang `out/`
+> ikut dihapus di akhir, jadi penyebaran selalu menuntut `npm run build` yang
+> bersih lebih dulu.
 
 ### 6.7 Metadata
 
@@ -252,8 +298,11 @@ pertahankan di route cangkang yang baru.
 | `scripts/with-close-api.mjs` | Dihapus — digantikan skrip artefak | **Selesai** |
 | `package.json` | `build:private`/`dev:private` → `build:close-api-content` | **Selesai** |
 | `.gitignore` | Tambah `/close-api-content/` | **Selesai** |
+| `src/lib/close-api-slugs.ts` | Turunan `meta.json` — satu sumber kebenaran slug | **Selesai** |
+| `src/lib/close-api-html.ts` | Sanitasi HTML sebelum masuk DOM | **Selesai** |
+| `.github/workflows/hostinger.yml` | `npm ci`, pengaman kebocoran, kemas `Caddyfile` | **Selesai** |
+| `Caddyfile` | Rewrite clean-URL untuk FrankenPHP/Caddy | **Selesai** |
 | `src/lib/layout.shared.tsx` | Menu dari manifest, bukan flag build | Belum (opsional) |
-| `.github/workflows/hostinger.yml` | Pengaman kebocoran di CI | Belum |
 
 Catatan implementasi:
 

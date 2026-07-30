@@ -44,7 +44,7 @@ siapa pun yang menebak URL.
 
 Situs dokumentasi adalah berkas statis di hosting biasa. Ia **tidak bisa** memeriksa
 siapa pengunjungnya. Karena itu core memegang seluruh keamanan:
-c
+
 1. **Menerbitkan token** setelah merchant login di dashboard.
 2. **Menyimpan entitlement** siapa boleh produk apa.
 3. **Melayani konten** Close API, dan menolak yang tidak berhak.

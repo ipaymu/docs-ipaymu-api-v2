@@ -1,0 +1,56 @@
+# Konfigurasi Caddy (FrankenPHP) untuk menyajikan hasil static export Next.js.
+#
+# Situs ini tidak memuat PHP sama sekali — isinya berkas statis dari `out/`.
+# Caddy TIDAK membaca `.htaccess`; seluruh aturan rewrite harus ada di sini.
+#
+# Uji lokal:
+#   SITE_ROOT=./out SITE_ADDRESS=:8099 frankenphp run --config Caddyfile
+#
+# Produksi: arahkan SITE_ROOT ke folder tempat isi `out/` diunggah, dan
+# SITE_ADDRESS ke domainnya (mis. docs.ipaymu.com) agar Caddy mengurus HTTPS.
+{
+	# Tidak perlu admin API untuk melayani berkas statis.
+	admin off
+}
+
+{$SITE_ADDRESS::80} {
+	root * {$SITE_ROOT:/app/public}
+
+	encode zstd gzip
+
+	# INTI PERBAIKAN ROUTING.
+	#
+	# Static export Next.js mengemit tiap rute sebagai `<nama>.html` DAN folder
+	# kembar `<nama>/` yang tidak berisi `index.html`. Contoh:
+	#   out/id/docs.html   +   out/id/docs/
+	#
+	# Urutan `{path}.html` DULU itu wajib. Kalau `{path}` diletakkan lebih awal,
+	# ia cocok dengan folder kembar yang kosong itu dan hasilnya 404.
+	try_files {path}.html {path} {path}/index.html
+
+	file_server
+
+	# Aset ber-hash dari Next aman di-cache selamanya.
+	@immutable path /_next/static/*
+	header @immutable Cache-Control "public, max-age=31536000, immutable"
+
+	# Dokumentasi Close API bersifat privat: cangkangnya tidak boleh diindeks,
+	# dan tidak boleh mengendap di cache bersama.
+	@closeApi path /*/close-api /*/close-api/*
+	header @closeApi {
+		X-Robots-Tag "noindex, nofollow"
+		Cache-Control "no-store"
+	}
+
+	header {
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	handle_errors {
+		@notfound expression {err.status_code} == 404
+		rewrite @notfound /404.html
+		file_server
+	}
+}

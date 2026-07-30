@@ -30,6 +30,15 @@ const NEXT_BIN = join("node_modules", ".bin", process.platform === "win32" ? "ne
 
 function cleanup() {
   if (existsSync(DEST)) rmSync(DEST, { recursive: true, force: true });
+
+  // WAJIB: buang juga hasil build-nya.
+  //
+  // Build di skrip ini memakai PRIVATE_BUILD=1, jadi `out/` berisi SELURUH isi
+  // dokumentasi Close API di `/<lang>/close-api-export/*` — 176 berkas. Kalau
+  // `out/` itu dibiarkan lalu diunggah ke hosting, seluruh dokumentasi privat
+  // jadi publik. Menghapusnya membuat kecelakaan itu tidak mungkin terjadi:
+  // penyebaran selalu butuh `npm run build` yang bersih lebih dulu.
+  if (existsSync(OUT)) rmSync(OUT, { recursive: true, force: true });
 }
 process.on("exit", cleanup);
 
@@ -96,6 +105,11 @@ function extractToc(articleHtml) {
 
 if (existsSync(CONTENT)) rmSync(CONTENT, { recursive: true, force: true });
 
+// Kumpulkan daftar halaman terbit per bahasa untuk manifest.json (lihat akhir
+// berkas). Core memakai manifest ini sebagai daftar slug yang BENAR-BENAR ada,
+// jadi `config/closeapi.php` tidak perlu ditebak dengan tangan.
+const terbit = {};
+
 let written = 0;
 for (const lang of LANGS) {
   const dir = join(OUT, lang, "close-api-export");
@@ -117,16 +131,43 @@ for (const lang of LANGS) {
       console.warn(`  ! lewati ${lang}/${slug} (artikel tidak ditemukan)`);
       continue;
     }
+    const title = extractTitle(html) ?? slug;
     writeFileSync(join(CONTENT, lang, `${slug}.html`), article);
     writeFileSync(
       join(CONTENT, lang, `${slug}.json`),
-      JSON.stringify({ title: extractTitle(html) ?? slug, toc: extractToc(article) }, null, 2),
+      JSON.stringify({ title, toc: extractToc(article) }, null, 2),
     );
+    (terbit[lang] ??= []).push({ slug, title });
     written++;
     console.log(`  ✓ ${lang}/${slug}`);
   }
 }
 
+// --- 4. manifest.json -------------------------------------------------------
+// Daftar tunggal semua halaman terbit. Core membacanya untuk mengetahui slug apa
+// saja yang tersedia, tanpa perlu menebak atau menyalin daftar secara manual.
+if (written > 0) {
+  writeFileSync(
+    join(CONTENT, "manifest.json"),
+    JSON.stringify({ generatedAt: new Date().toISOString(), languages: terbit }, null, 2),
+  );
+}
+
 cleanup();
 console.log(`\n✔ ${written} berkas artefak siap di ./${CONTENT}`);
 console.log("  Salin ke core:  storage/app/close-api-content/");
+console.log("\n  Catatan: ./out sengaja dihapus — build tadi memakai PRIVATE_BUILD=1");
+console.log("  sehingga memuat isi Close API. Jalankan `npm run build` untuk bundel publik.");
+
+// --- 5. Bantu core menyelaraskan config/closeapi.php ------------------------
+// `overview` bukan produk; ia halaman ikhtisar untuk slug kosong.
+const slugTerbit = (terbit.id ?? []).map((p) => p.slug).filter((s) => s !== "overview");
+if (slugTerbit.length) {
+  console.log("\n  Slug yang tersedia untuk dipetakan di config/closeapi.php:");
+  for (const s of slugTerbit) console.log(`    - ${s}`);
+  console.log(
+    "\n  Slug yang belum punya api_code di core TIDAK akan muncul di menu merchant\n" +
+      "  dan akan dijawab 403 bila dibuka langsung. Itu perilaku yang aman —\n" +
+      "  tapi berarti halamannya belum bisa dibaca siapa pun.",
+  );
+}

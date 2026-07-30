@@ -1,5 +1,22 @@
 # Close API Docs — Integration Spec for ipaymu-core
 
+> ## ⛔ SUPERSEDED — JANGAN DIPAKAI SEBAGAI ACUAN
+>
+> Dokumen ini menjelaskan **Opsi A** (reverse proxy melayani `out-private/`) yang
+> **tidak dipilih**. Arsitektur yang dipakai adalah **Opsi C**: situs tetap satu
+> bundel statis, dan ipaymu-core melayani konten Close API lewat API setelah
+> memverifikasi token.
+>
+> Acuan yang berlaku:
+> - [`PLAN-close-api-docs.md`](./PLAN-close-api-docs.md) — sisi dokumentasi
+> - [`PLAN-close-api-core.md`](./PLAN-close-api-core.md) — sisi ipaymu-core
+>
+> Perkakas yang disebut di bawah sudah **tidak ada**: `scripts/with-close-api.mjs`,
+> `npm run build:private`, `npm run dev:private`, dan keluaran `out-private/`.
+> Penggantinya `npm run build:close-api-content` (lihat `scripts/build-close-api-content.mjs`).
+>
+> Disimpan hanya sebagai catatan sejarah keputusan.
+
 This document describes how the **private Close API documentation** produced by this repository is
 served behind access control owned by **ipaymu-core**.
 

@@ -23,6 +23,24 @@ import { DocsBody, DocsPage, DocsTitle } from "fumadocs-ui/page";
 import type * as PageTree from "fumadocs-core/page-tree";
 import { baseOptions } from "@/lib/layout.shared";
 import { HorizontalNavbar } from "@/components/layout/horizontal-navbar";
+import { sanitizeCloseApiHtml } from "@/lib/close-api-html";
+
+/**
+ * Ambil muatan respons, menerima dua bentuk sekaligus:
+ *
+ *   { Status, Success, Message, Data: {...} }   ← konvensi rumah iPaymu
+ *   { ...muatan langsung }                      ← bentuk polos
+ *
+ * Sengaja toleran supaya sisi core tidak perlu menyesuaikan apa pun; bentuk
+ * mana pun yang dikirim, cangkang ini tetap bekerja.
+ */
+function unwrap(body: unknown): Record<string, unknown> {
+  if (!body || typeof body !== "object") return {};
+  const obj = body as Record<string, unknown>;
+  const data = obj.Data ?? obj.data;
+  if (data && typeof data === "object") return data as Record<string, unknown>;
+  return obj;
+}
 
 type Product = { slug: string; name: string };
 type TocItem = { depth: number; title: string; url: string };
@@ -66,16 +84,36 @@ function storeToken(token: string | null): void {
 }
 
 /**
- * Baca klaim `iss` dari token untuk menentukan base URL core (produksi vs
- * sandbox), sehingga satu bundel statis melayani kedua lingkungan.
+ * Origin core yang boleh dihubungi. Daftar ini WAJIB ada.
  *
- * Ini hanya DECODE (base64), bukan verifikasi. Verifikasi tanda tangan
- * dilakukan core memakai secret yang tidak pernah dikirim ke browser.
+ * Klaim `iss` di dalam token hanya di-decode, TIDAK diverifikasi tanda
+ * tangannya (secret-nya cuma ada di core dan tidak pernah dikirim ke browser).
+ * Tanpa allowlist, siapa pun bisa membuat token palsu berisi
+ * `iss: https://penyerang.example`, memancing merchant membuka
+ * `…/close-api#token=<palsu>`, lalu:
+ *   1. menerima Bearer token yang dikirim browser ke server mereka, dan
+ *   2. membalas HTML sembarang yang berakhir di DOM halaman ini — yaitu XSS
+ *      pada origin docs, yang bisa membaca token di sessionStorage.
+ * Karena itu `iss` diperlakukan sebagai PILIHAN dari daftar tertutup, bukan
+ * sebagai URL yang bisa dipercaya.
+ */
+const ALLOWED_ISSUERS = [
+  "https://my.ipaymu.com",
+  "https://sandbox.ipaymu.com",
+] as const;
+
+/**
+ * Tentukan base URL core (produksi vs sandbox) dari klaim `iss`, sehingga satu
+ * bundel statis melayani kedua lingkungan. Mengembalikan null kalau `iss` tidak
+ * ada di allowlist.
  */
 function readIssuer(token: string): string | null {
   try {
     const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
-    return typeof payload.iss === "string" ? payload.iss.replace(/\/$/, "") : null;
+    if (typeof payload.iss !== "string") return null;
+
+    const iss = payload.iss.replace(/\/+$/, "").toLowerCase();
+    return ALLOWED_ISSUERS.find((allowed) => allowed === iss) ?? null;
   } catch {
     return null;
   }
@@ -121,9 +159,10 @@ export function CloseApiShell({ lang, slug }: { lang: string; slug: string }) {
       if (res.status === 403) return setStatus("forbidden");
       if (!res.ok) return setStatus("error");
 
-      const data = (await res.json())?.Data ?? {};
-      setTitle(data.title ?? "");
-      setHtml(data.html ?? "");
+      const data = unwrap(await res.json());
+      setTitle(typeof data.title === "string" ? data.title : "");
+      // Selalu disanitasi: HTML ini datang lewat jaringan dan disuntikkan ke DOM.
+      setHtml(sanitizeCloseApiHtml(typeof data.html === "string" ? data.html : ""));
       setToc(Array.isArray(data.toc) ? data.toc : []);
       setStatus("ready");
       if (data.title) document.title = `${data.title} | iPaymu Dokumentasi`;
@@ -143,6 +182,15 @@ export function CloseApiShell({ lang, slug }: { lang: string; slug: string }) {
       return;
     }
 
+    // Issuer di luar allowlist = token tidak dipakai sama sekali. Buang juga
+    // yang tersimpan supaya refresh berikutnya tidak mencobanya lagi.
+    const origin = readIssuer(t);
+    if (!origin) {
+      storeToken(null);
+      setStatus("expired");
+      return;
+    }
+
     if (fromHash) {
       storeToken(fromHash);
       // Buang token dari address bar; halaman aktif ditentukan pathname rute.
@@ -150,7 +198,7 @@ export function CloseApiShell({ lang, slug }: { lang: string; slug: string }) {
     }
 
     setToken(t);
-    setBase(readIssuer(t));
+    setBase(origin);
   }, []);
 
   // 2. Token siap → tanya core produk apa saja yang boleh dilihat merchant.
@@ -170,7 +218,8 @@ export function CloseApiShell({ lang, slug }: { lang: string; slug: string }) {
       if (res.status === 403) return setStatus("forbidden");
       if (!res.ok) return setStatus("error");
 
-      setProducts((await res.json())?.Data?.products ?? []);
+      const products = unwrap(await res.json()).products;
+      setProducts(Array.isArray(products) ? products : []);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, base]);
@@ -191,9 +240,18 @@ export function CloseApiShell({ lang, slug }: { lang: string; slug: string }) {
     const onHashChange = () => {
       const fresh = readTokenFromHash();
       if (!fresh) return;
+
+      // Allowlist berlaku sama untuk token pengganti.
+      const origin = readIssuer(fresh);
+      if (!origin) {
+        storeToken(null);
+        setStatus("expired");
+        return;
+      }
+
       storeToken(fresh);
       setToken(fresh);
-      setBase(readIssuer(fresh));
+      setBase(origin);
       window.history.replaceState(null, "", window.location.pathname + window.location.search);
     };
 
@@ -285,7 +343,8 @@ export function CloseApiShell({ lang, slug }: { lang: string; slug: string }) {
       ) : (
         <>
           <DocsTitle className="pt-12">{title}</DocsTitle>
-          {/* HTML dari core (artefak dokumentasi kita sendiri). Judul <h1>
+          {/* HTML dari core, sudah melewati sanitizeCloseApiHtml() di loadPage
+              (allowlist tag/atribut, buang skrip & URL berbahaya). Judul <h1>
               bawaan artefak disembunyikan lewat CSS agar tidak dobel dengan
               DocsTitle di atas. */}
           <DocsBody>
