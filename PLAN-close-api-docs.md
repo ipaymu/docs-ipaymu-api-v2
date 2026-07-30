@@ -242,18 +242,30 @@ pertahankan di route cangkang yang baru.
 
 ## 7. Berkas yang Akan Disentuh
 
-| Berkas | Perubahan |
-| :-- | :-- |
-| `src/app/[lang]/close-api/[[...slug]]/page.tsx` | Baru — cangkang klien |
-| `src/app/[lang]/close-api/layout.tsx` | Baru — layout + `current="close-api"` |
-| `src/lib/close-api-auth.ts` | Baru — token |
-| `src/lib/layout.shared.tsx` | Menu dari manifest, bukan flag build |
-| `scripts/build-close-api-content.mjs` | Baru — artefak untuk core |
-| `.github/workflows/hostinger.yml` | Tambah pengaman kebocoran |
-| `private/`, `scripts/with-close-api.mjs` | Dipensiunkan setelah C jalan |
+| Berkas | Perubahan | Status |
+| :-- | :-- | :-- |
+| `src/app/[lang]/close-api/page.tsx` | Cangkang (satu rute, sub-halaman ditangani klien) | **Selesai** |
+| `src/app/[lang]/close-api/layout.tsx` | Layout + `current="close-api"` (DocsLayout, pohon kosong) | **Selesai** |
+| `src/components/close-api/close-api-shell.tsx` | Cangkang klien: baca `#token`, panggil core, render | **Selesai** |
+| `scripts/build-close-api-content.mjs` | Artefak konten untuk core | **Selesai** |
+| `scripts/clean-staged.mjs` | Diarahkan ke `close-api-export` (bukan cangkang publik) | **Selesai** |
+| `scripts/with-close-api.mjs` | Dihapus — digantikan skrip artefak | **Selesai** |
+| `package.json` | `build:private`/`dev:private` → `build:close-api-content` | **Selesai** |
+| `.gitignore` | Tambah `/close-api-content/` | **Selesai** |
+| `src/lib/layout.shared.tsx` | Menu dari manifest, bukan flag build | Belum (opsional) |
+| `.github/workflows/hostinger.yml` | Pengaman kebocoran di CI | Belum |
 
-Jangan hapus `private/` dan `clean-staged.mjs` sebelum jalur baru terbukti — keduanya
-pengaman yang sudah bekerja.
+Catatan implementasi:
+
+- **Tidak ada modul token di docs.** Cangkang hanya men-*decode* klaim `iss`
+  (base64) untuk menentukan base URL core. Verifikasi tanda tangan tetap di core
+  memakai secret yang tidak pernah dikirim ke browser — situs ini `output: export`,
+  jadi secret apa pun di sini akan ikut terbundel dan bisa dipalsukan.
+- **`private/` tetap dipakai**, bukan sebagai situs, melainkan sebagai perender
+  MDX saat membuat artefak (`build:close-api-content`). `clean-staged.mjs` tetap
+  ada sebagai pengaman.
+- Rute cangkang **satu halaman** (`/[lang]/close-api`); perpindahan produk
+  ditangani klien, sehingga tidak ada daftar slug yang perlu di-*prerender*.
 
 ---
 

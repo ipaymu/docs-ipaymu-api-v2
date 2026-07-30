@@ -26,3 +26,6 @@ yarn-error.log*
 .env*.local
 .vercel
 next-env.d.ts
+
+# Artefak konten Close API (dikirim ke ipaymu-core, jangan di-commit)
+/close-api-content/

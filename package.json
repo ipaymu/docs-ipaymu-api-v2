@@ -4,10 +4,9 @@
   "private": true,
   "scripts": {
     "build": "node ./scripts/clean-staged.mjs && next build",
-    "build:private": "node ./scripts/with-close-api.mjs build",
+    "build:close-api-content": "node ./scripts/build-close-api-content.mjs",
     "build:pages": "bun ./scripts/build-pages.mjs",
     "dev": "next dev",
-    "dev:private": "node ./scripts/with-close-api.mjs dev",
     "preview:pages": "bun ./scripts/preview-pages.mjs",
     "start": "serve out",
     "prepare": "tw-patch install",

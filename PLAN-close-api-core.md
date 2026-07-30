@@ -14,9 +14,29 @@ dashboard agar dokumentasi Close API hanya bisa dibaca merchant yang berhak.
 | :-- | :-- |
 | Bentuk | **Opsi C** — docs tetap statis, core melayani konten + otorisasi |
 | Domain docs | `https://docs.ipaymu.com` |
-| Granularitas | **Per produk**, sesuai tabel §3 |
+| Granularitas | **Per produk (api_code)**, sesuai `config/closeapi.php` |
+| Sumber entitlement | Tabel **`dp_api_accesses`** (yang sudah dipakai untuk gerbang API) |
 | Audit trail | Tidak perlu |
 | Sandbox | Sama dengan produksi, tidak dipisah |
+
+---
+
+## 1a. Kondisi Saat Ini (yang sudah ada)
+
+Sebagian pondasi **sudah terpasang** di core, plan ini menyesuaikan ke sana:
+
+| Komponen | Status | Lokasi |
+| :-- | :-- | :-- |
+| Tabel entitlement `dp_api_accesses` | **Ada** (dipakai `ApiAccessCheck` untuk gerbang API `apicheck:<code>`) | `App\ApiAccess` |
+| Peta `api_code → {name, slug}` + `docs_base_url` | **Ada** | `config/closeapi.php` |
+| Dashboard menampilkan Close API milik merchant | **Ada** | `IntegrationController@index` → view `user.integration.index` |
+| Link "buka docs" | **Ada, tapi belum aman** — memakai `?access=slug1,slug2` (query string, bisa dipalsukan) | `IntegrationController@index` (`$closeApiDocsUrl`) |
+| Endpoint token + verifikasi per-permintaan di docs | **Belum** | — |
+
+**Fokus plan ini:** mengganti link `?access=…` yang bisa dipalsukan dengan
+**token pendek + verifikasi entitlement per permintaan** (bagian §4–§6), supaya
+docs Close API **hanya** bisa dibuka merchant yang login di dashboard — bukan
+siapa pun yang menebak URL.
 
 ---
 
@@ -24,7 +44,7 @@ dashboard agar dokumentasi Close API hanya bisa dibaca merchant yang berhak.
 
 Situs dokumentasi adalah berkas statis di hosting biasa. Ia **tidak bisa** memeriksa
 siapa pengunjungnya. Karena itu core memegang seluruh keamanan:
-
+c
 1. **Menerbitkan token** setelah merchant login di dashboard.
 2. **Menyimpan entitlement** siapa boleh produk apa.
 3. **Melayani konten** Close API, dan menolak yang tidak berhak.
@@ -38,7 +58,7 @@ flowchart LR
     D -->|token umur pendek| M
     M -->|buka docs + token| K[docs.ipaymu.com statis]
     K -->|Bearer token| A[API core]
-    A -->|cek DB tiap permintaan| DB[(entitlement)]
+    A -->|cek dp_api_accesses tiap permintaan| DB[(dp_api_accesses)]
     A -->|200 konten / 403| K
 ```
 
@@ -46,31 +66,57 @@ flowchart LR
 
 ## 3. Model Data
 
+**Tidak membuat tabel baru.** Entitlement Close API = akses API yang sudah
+dimiliki merchant, yaitu tabel yang sudah ada **`dp_api_accesses`**:
+
 ```sql
-CREATE TABLE account_close_api_access (
-  account_id   BIGINT      NOT NULL,   -- FK ke account (VA), mis. 1179000899
-  product_slug VARCHAR(64) NOT NULL,   -- mis. 'transfer-va'
-  granted_at   TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (account_id, product_slug)
-);
+-- dp_api_accesses (ringkas, kolom yang relevan)
+--   member_id   BIGINT   -- FK ke dp_members.id (pemilik akses)
+--   api_code    SMALLINT -- kode produk API, mis. 506 = Split Payment
+--   status      SMALLINT -- 1 = aktif; selain itu = tidak aktif
+--   version     SMALLINT
+--   ...
+-- Satu baris = satu produk API yang di-grant ke satu merchant.
 ```
 
-Pencabutan akses = hapus baris. Tidak perlu kolom status, dan tidak perlu tabel
-audit (sesuai keputusan).
+- **Pemberian/pencabutan akses tidak dibangun ulang.** Sudah ada alurnya (admin
+  grant `dp_api_accesses`, mis. lewat settlement-dashboard `members/{id}/list-api`).
+- Entitlement dibaca `WHERE member_id = ? AND status = 1`.
+- Model: `App\ApiAccess`. Helper: `ApiAccess::grantAccessByUserId($memberId, $code)`.
 
-### Peta produk → halaman
+### Peta `api_code` → produk/slug (sumber: `config/closeapi.php`)
 
-| `product_slug` | Halaman yang boleh dibuka |
-| :-- | :-- |
-| `register` | `register` |
-| `transfer-va` | `transfer-va` |
-| `profile` | `profile` |
-| `verification` | `member-verification`, `merchant-verification`, `bank-list`, `business-category` |
+Pemetaan **sudah ada** dan menjadi satu-satunya sumber. Jangan disebar ke banyak
+handler — baca dari config ini.
 
-Aturan tambahan: halaman ikhtisar (slug kosong) boleh dibuka **semua akun yang
-punya minimal satu baris** di tabel di atas. Isinya mekanisme signature bersama.
+```php
+// config/closeapi.php  (nilai saat ini)
+'docs_base_url' => env('IPAYMU_DOCS_BASE_URL', 'https://docs.ipaymu.com'),
+'products' => [
+    '100' => ['name' => 'Register SSO',       'slug' => 'register'],
+    '506' => ['name' => 'Split Payment',      'slug' => 'transfer-va'],
+    '507' => ['name' => 'Transfer Member',    'slug' => 'transfer-va'],
+    '405' => ['name' => 'List Balance by VA', 'slug' => null],
+    '500' => ['name' => 'History Transaksi',  'slug' => null],
+    '504' => ['name' => 'Withdraw Custom',    'slug' => null],
+    '505' => ['name' => 'Transaksi Reversal', 'slug' => null],
+    '501' => ['name' => 'Withdraw',           'slug' => null],
+    '513' => ['name' => 'Qris Issuer',        'slug' => null],
+],
+```
 
-Petakan di satu tempat saja (konstanta di core), jangan disebar di banyak handler.
+Aturan:
+- `slug = null` → produk dimiliki tapi **halaman docs belum terbit**; tampilkan
+  di daftar tanpa link. Isi slug begitu halamannya ada di `docs-ipaymu-api-v2`.
+- Beberapa `api_code` boleh menunjuk **slug yang sama** (mis. 506 & 507 →
+  `transfer-va`). Entitlement per-slug = "punya minimal satu `api_code` yang
+  memetakan ke slug itu".
+- Halaman **ikhtisar** (slug kosong) boleh dibuka semua akun yang punya
+  **minimal satu** baris `dp_api_accesses` aktif yang slug-nya tidak null.
+
+> Catatan: `dp_api_accesses.api_code` bertipe SMALLINT, key di config bertipe
+> string. Samakan tipe saat mencocokkan (cast ke string), seperti yang sudah
+> dilakukan `IntegrationController` (`->map(fn($c) => (string) $c)`).
 
 ---
 
@@ -87,11 +133,12 @@ Cookie: <sesi dashboard aktif>
 ```
 
 ```json
-{ "token": "<jwt>", "expiresIn": 900 }
+{ "token": "<jwt>", "expiresIn": 21600 }
 ```
 
-- Menolak kalau tidak ada sesi dashboard.
-- Menolak (`403`) kalau akun tidak punya satu pun produk Close API.
+- Menolak kalau tidak ada sesi dashboard (`401`).
+- Menolak (`403`) kalau akun tidak punya satu pun baris `dp_api_accesses` aktif
+  (`status = 1`) yang slug-nya sudah terbit di `config/closeapi.php`.
 
 ### 4.2 Manifest — penggerak menu
 
@@ -103,16 +150,15 @@ Authorization: Bearer <jwt>
 ```json
 {
   "products": [
-    {
-      "slug": "verification",
-      "pages": [
-        { "slug": "member-verification",   "title": "Member Verification" },
-        { "slug": "merchant-verification", "title": "Merchant Verification" }
-      ]
-    }
+    { "slug": "register",    "name": "Register SSO" },
+    { "slug": "transfer-va", "name": "Split Payment" }
   ]
 }
 ```
+
+Isi diambil dari `config('closeapi.products')`: untuk tiap `api_code` aktif milik
+merchant yang `slug`-nya tidak null. Slug yang sama dari beberapa `api_code`
+(506 & 507 → `transfer-va`) di-**dedupe** menjadi satu entri.
 
 **Hanya kembalikan yang boleh dilihat.** Produk yang tidak dimiliki tidak boleh
 muncul sama sekali — jangan dikirim lalu ditandai terkunci, karena itu membocorkan
@@ -154,7 +200,7 @@ tidak ada sama sekali. Gunakan kalimat netral.
 {
   "iss": "https://my.ipaymu.com",
   "aud": "https://docs.ipaymu.com",
-  "sub": "1179000899",
+  "sub": "284915",
   "env": "production",
   "iat": 1750000000,
   "exp": 1750000900,
@@ -164,7 +210,12 @@ tidak ada sama sekali. Gunakan kalimat netral.
 
 ### Aturan
 
-- **TTL 5–15 menit.** Ini tiket masuk, bukan sesi.
+- `sub` = **`dp_members.id`** (member_id) pemilik akses. Inilah kunci untuk
+  membaca `dp_api_accesses.member_id`. (Kalau lebih nyaman memakai VA/`baccount`
+  sebagai `sub`, resolusikan ke `member_id` sekali di awal — jangan mengubah
+  kunci entitlement.)
+- **TTL 6 jam** (`CLOSE_API_DOCS_JWT_TTL`, default 21600 detik). Cukup untuk
+  satu sesi baca tanpa merchant harus bolak-balik ke dashboard.
 - `aud` wajib `https://docs.ipaymu.com`; tolak kalau tidak cocok.
 - `iss` menyatakan lingkungan. Docs memakainya untuk menentukan base URL
   permintaan berikutnya, sehingga satu bundel statis melayani sandbox dan produksi.
@@ -175,9 +226,10 @@ tidak ada sama sekali. Gunakan kalimat netral.
 
 **Jangan menaruh daftar produk di dalam token.**
 
-Alasannya: token berumur 15 menit, sedangkan akses bisa dicabut kapan saja. Kalau
-daftar produk ikut ditandatangani di token, ada jendela sampai 15 menit di mana
-akses yang sudah dicabut masih diterima.
+Alasannya: token berumur 6 jam, sedangkan akses bisa dicabut kapan saja. Kalau
+daftar produk ikut ditandatangani di token, ada jendela sampai 6 jam di mana
+akses yang sudah dicabut masih diterima. Justru karena TTL-nya panjang, aturan
+ini makin penting.
 
 Token cukup menyatakan **siapa** (`sub`) dan **di lingkungan mana** (`env`).
 Entitlement selalu dibaca dari DB pada setiap permintaan. Dengan begitu pencabutan
@@ -194,21 +246,27 @@ token = verifikasiJWT(header Authorization)      # gagal -> 401
 if token.aud != "https://docs.ipaymu.com":       return 401
 if token.exp lewat:                              return 401
 
-produk = DB.produkAktif(token.sub)               # SELALU dari DB, bukan token
-if produk kosong:                                return 403
+# SELALU dari DB, bukan token:
+codes = SELECT api_code FROM dp_api_accesses
+        WHERE member_id = token.sub AND status = 1
+slugs = { config('closeapi.products')[code].slug
+          for code in codes if slug != null }    # cast code ke string
+if slugs kosong:                                 return 403
 
 # manifest
-return halamanUntuk(produk)                      # hanya yang boleh
+return halamanUntuk(slugs)                       # hanya slug yang boleh
 
 # page
-if slug kosong:                                  return ikhtisar   # semua yg punya produk
-if slug tidak dikenal:                           return 404
-if produkPemilik(slug) not in produk:            return 403
+if slug kosong:                                  return ikhtisar   # semua yg punya >=1 slug
+if slug tidak dikenal (bukan slug produk):       return 404
+if slug not in slugs:                            return 403
 return konten(lang, slug)
 ```
 
-Titik terpenting: baris `DB.produkAktif(...)` dijalankan **setiap permintaan**.
-Jangan di-cache lebih dari beberapa detik.
+Titik terpenting: query `dp_api_accesses` dijalankan **setiap permintaan**.
+Jangan di-cache lebih dari beberapa detik — supaya pencabutan akses
+(`status → 0` atau hapus baris) berlaku seketika. Ini yang membuat gerbang benar
+dijaga core, bukan URL yang bisa ditebak dari luar.
 
 ---
 
@@ -249,19 +307,37 @@ Ia hanya menyimpan HTML dan memutuskan siapa boleh membacanya.
 
 ## 9. Tautan dari Dashboard
 
-Tombol **"Dokumentasi Close API"** hanya dirender kalau akun punya minimal satu
-produk. Saat diklik:
+Sudah ada di `IntegrationController@index` (halaman **Integration**): daftar
+Close API milik merchant (`closeApiProducts`) dan flag `hasCloseApi`. Yang perlu
+**diubah** hanya cara membuka docs.
 
-1. Panggil `POST /api/v2/close-api-docs/token`.
-2. Arahkan ke:
+**Alur yang diinginkan (sesuai kebutuhan):**
+1. Dashboard menampilkan daftar Close API yang dimiliki merchant (sudah ada).
+2. Merchant klik salah satu produk (atau tombol "Buka Dokumentasi Close API").
+3. Dashboard memanggil `POST /api/v2/close-api-docs/token` (pakai sesi login).
+4. Buka **tab baru** ke docs dengan token di **fragment**:
 
 ```
 https://docs.ipaymu.com/id/close-api#token=<jwt>
+# untuk buka langsung ke satu produk:
+https://docs.ipaymu.com/id/close-api/transfer-va#token=<jwt>
 ```
 
-Gunakan **fragment** (`#`), bukan query string (`?`). Fragment tidak pernah dikirim
-ke server: tidak masuk access log, tidak bocor lewat header `Referer`, tidak
-tersimpan di log proxy perantara. Query string bocor di ketiganya.
+**Ganti yang sekarang.** `IntegrationController` saat ini memakai
+`…/close-api?access=slug1,slug2`. Daftar slug di query string itu **bisa
+dipalsukan** siapa saja — jadi belum memenuhi syarat "hanya bisa diakses user
+yang terdaftar di dashboard". Setelah endpoint token (§4.1) siap:
+
+- Hentikan pemakaian `?access=…` sebagai penentu akses. Slug boleh tetap dikirim
+  hanya untuk UX (menu awal), tetapi **konten tetap ditentukan token + cek DB**
+  di §6 — bukan dari daftar slug di URL.
+- Pakai **fragment** (`#`), bukan query string. Fragment tidak dikirim ke server:
+  tidak masuk access log, tidak bocor lewat `Referer`, tidak tersimpan di proxy.
+
+Kalau merchant membuka URL docs langsung tanpa token (mis. menebak/menyalin
+link), docs tidak punya token valid → permintaan ke core `401` → tidak ada
+konten yang tampil. Inilah yang memenuhi **"tidak bisa dilihat lewat link dari
+luar"**.
 
 Untuk akun sandbox, tautannya sama; yang berbeda hanya `iss` di dalam token, dan
 docs akan otomatis mengarahkan permintaan berikutnya ke `sandbox.ipaymu.com`.
@@ -271,7 +347,7 @@ docs akan otomatis mengarahkan permintaan berikutnya ke `sandbox.ipaymu.com`.
 ## 10. Daftar Periksa Keamanan
 
 - [ ] Entitlement dibaca dari DB pada **setiap** permintaan, bukan dari klaim token.
-- [ ] Token TTL ≤ 15 menit.
+- [ ] Token TTL sesuai kebijakan (default 6 jam) dan entitlement tetap dibaca per permintaan.
 - [ ] `aud` diverifikasi ketat.
 - [ ] CORS dibatasi `https://docs.ipaymu.com`, bukan wildcard.
 - [ ] `Cache-Control: no-store` pada semua respons konten.
@@ -293,12 +369,14 @@ document root yang dilayani web server, seluruh gerbang ini jadi percuma.
 | Permintaan tanpa `Authorization` | `401` |
 | Token kedaluwarsa | `401` |
 | Token dengan `aud` lain | `401` |
-| Akun tanpa produk apa pun | `403` |
-| Punya `register`, minta `transfer-va` | `403` |
-| Punya `verification`, minta `bank-list` | `200` |
+| Akun tanpa `dp_api_accesses` aktif (slug≠null) | `403` |
+| Punya `register` (code 100), minta `transfer-va` | `403` |
+| Punya Split Payment (code 506), minta `transfer-va` | `200` |
+| Punya code 507 saja, minta `transfer-va` | `200` (507 & 506 → slug sama) |
 | Punya `register`, minta ikhtisar (slug kosong) | `200` |
-| Akses dicabut, token lama masih berlaku | `403` **seketika** |
-| Slug karangan | `404` |
+| `dp_api_accesses.status` diubah ke 0, token lama masih berlaku | `403` **seketika** |
+| Slug karangan / slug yang belum terbit (`slug=null`) | `404` |
+| Buka URL docs langsung tanpa token (link dari luar) | `401` — tidak ada konten |
 | Akses langsung ke berkas artefak konten | tidak bisa dijangkau |
 
 Baris "akses dicabut, token lama masih berlaku" adalah pembeda utama desain ini.
@@ -308,18 +386,41 @@ Kalau baris itu lulus, berarti entitlement memang dibaca dari DB dan bukan dari 
 
 ## 12. Urutan Kerja
 
-| Tahap | Isi |
-| :-- | :-- |
-| 1 | Tabel `account_close_api_access` + UI admin pemberian/pencabutan akses |
-| 2 | Endpoint token + verifikasi JWT |
-| 3 | Penyimpanan artefak konten dari repo docs |
-| 4 | Endpoint `manifest` dan `page` + otorisasi |
-| 5 | CORS, header, rate limit |
-| 6 | Uji §11 |
-| 7 | Tombol di dashboard |
+| Tahap | Isi | Status |
+| :-- | :-- | :-- |
+| 1 | Entitlement `dp_api_accesses` + peta `config/closeapi.php` + grant/revoke akses | **Sudah ada** |
+| 2 | Dashboard menampilkan daftar Close API milik merchant | **Sudah ada** (`IntegrationController@index`) |
+| 3 | Endpoint token (`POST /token`) + verifikasi JWT | **Selesai** |
+| 4 | Penyimpanan artefak konten dari repo docs | **Wadah siap** — isi menyusul dari repo docs |
+| 5 | Endpoint `manifest` dan `page` + otorisasi (baca `dp_api_accesses` per permintaan) | **Selesai** |
+| 6 | CORS, header, rate limit | **Selesai** |
+| 7 | Ganti link dashboard `?access=…` → token di fragment (§9) | **Selesai** |
+| 8 | Uji §11 | **Lulus** (diverifikasi di lingkungan lokal) |
 
-Tahap 1–2 sudah cukup bagi tim docs untuk mulai mengintegrasikan; tahap 3–4 bisa
-menyusul karena docs bisa memakai API tiruan lebih dulu.
+### Berkas hasil implementasi (core)
+
+| Berkas | Isi |
+| :-- | :-- |
+| `config/closeapi.php` | Peta produk (sudah ada) + setelan token JWT + `content_path` |
+| `app/Services/CloseApiDocsService.php` | Entitlement dari `dp_api_accesses`, terbit/verifikasi token, baca artefak |
+| `app/Http/Middleware/CloseApiDocsAuth.php` | Gerbang Bearer token (401) |
+| `app/Http/Middleware/CloseApiDocsCors.php` | CORS origin tunggal + `no-store` (global, dijaga path) |
+| `app/Http/Controllers/Api/v2/CloseApiDocsController.php` | `token`, `manifest`, `page` |
+| `routes/web.php` | `POST /api/v2/close-api-docs/token` (sesi dashboard, throttle 20/menit) |
+| `routes/api.php` | `GET manifest`, `GET page` (throttle 60/menit) |
+| `storage/app/close-api-content/` | Lokasi artefak **privat** (+ README struktur) |
+
+> Catatan implementasi CORS: middleware global `HandleCors` memasang
+> `Access-Control-Allow-Origin: *` untuk `api/*`. Karena itu `CloseApiDocsCors`
+> didaftarkan sebagai middleware **global paling awal** (berjalan paling akhir
+> saat respons) dan dijaga agar hanya aktif di path `api/v2/close-api-docs/*`.
+> Untuk origin yang tidak dikenal, header wildcard **dibuang**, bukan ditimpa.
+
+**Sisa pekerjaan:** mengirim artefak konten dari repo docs ke
+`storage/app/close-api-content/<lang>/<slug>.html` (+ `.json` opsional untuk
+`title`/`toc`), dan mengisi `slug` di `config/closeapi.php` begitu halamannya
+terbit. Sebelum artefak ada, `manifest` sudah berfungsi penuh dan `page`
+menjawab `404` — cukup bagi tim docs untuk mulai mengintegrasikan.
 
 ---
 
@@ -329,5 +430,11 @@ menyusul karena docs bisa memakai API tiruan lebih dulu.
 2. Cara artefak konten dikirim dari repo docs ke core: unduhan artifact CI,
    rilis bertag, atau unggah manual.
 3. Siapa memegang secret penandatangan JWT dan bagaimana dirotasi.
-4. Perilaku saat merchant membuka docs langsung tanpa lewat dashboard — apakah
-   diarahkan ke halaman login dashboard, atau cukup ditampilkan pesan.
+4. Perilaku saat merchant membuka docs langsung tanpa lewat dashboard: token
+   tidak ada → core balas `401` → docs menampilkan pesan "buka dari dashboard"
+   (atau arahkan ke login dashboard). **Sudah diputuskan di §9**, tinggal
+   sepakati teks/redirect-nya.
+5. `sub` token: pakai `member_id` (rekomendasi plan ini) atau `baccount`/VA —
+   pastikan konsisten dengan cara membaca `dp_api_accesses`.
+6. Isi slug di `config/closeapi.php` menyusul saat halaman docs terbit
+   (`slug: null` → isi slug). Ini murni update config, tanpa ubah logika.
