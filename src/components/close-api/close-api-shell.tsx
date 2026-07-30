@@ -45,7 +45,28 @@ function unwrap(body: unknown): Record<string, unknown> {
 type Product = { slug: string; name: string };
 type TocItem = { depth: number; title: string; url: string };
 
-type Status = "loading" | "ready" | "no-token" | "expired" | "forbidden" | "error";
+/**
+ * Status dibagi dua tingkat, dan pembagian itu menentukan tampilan:
+ *
+ * - Tingkat SHELL (`no-token`, `expired`, `forbidden`, `error`): tidak ada yang
+ *   bisa ditampilkan sama sekali, jadi sidebar disembunyikan.
+ * - Tingkat HALAMAN (`page-forbidden`, `page-missing`, `page-error`): manifest
+ *   sudah berhasil, jadi daftar produk merchant VALID. Sidebar harus tetap ada
+ *   supaya merchant bisa pindah ke halaman lain — kegagalan satu halaman tidak
+ *   boleh mematikan navigasi.
+ */
+type Status =
+  | "loading"
+  | "ready"
+  | "no-token"
+  | "expired"
+  | "forbidden"
+  | "error"
+  | "page-forbidden"
+  | "page-missing"
+  | "page-error";
+
+const STATUS_TINGKAT_HALAMAN = new Set<Status>(["page-forbidden", "page-missing", "page-error"]);
 
 /**
  * Token disimpan di sessionStorage supaya tetap ada saat halaman di-refresh
@@ -156,8 +177,11 @@ export function CloseApiShell({ lang, slug }: { lang: string; slug: string }) {
         storeToken(null);
         return setStatus("expired");
       }
-      if (res.status === 403) return setStatus("forbidden");
-      if (!res.ok) return setStatus("error");
+      // 403/404 di sini soal SATU halaman, bukan soal akses secara keseluruhan.
+      // Ditandai sebagai status tingkat halaman supaya sidebar tetap tampil.
+      if (res.status === 403) return setStatus("page-forbidden");
+      if (res.status === 404) return setStatus("page-missing");
+      if (!res.ok) return setStatus("page-error");
 
       const data = unwrap(await res.json());
       setTitle(typeof data.title === "string" ? data.title : "");
@@ -263,13 +287,26 @@ export function CloseApiShell({ lang, slug }: { lang: string; slug: string }) {
    * Pohon menu untuk sidebar fumadocs. Isinya HANYA produk yang dikirim core,
    * jadi produk yang tidak dimiliki merchant tidak pernah muncul.
    */
+  // `type: "root"` dan `$id` WAJIB ada. Tanpa keduanya fumadocs tidak merender
+  // satu pun item sidebar — pohon dianggap tidak valid dan diabaikan diam-diam,
+  // sehingga merchant kehilangan seluruh navigasinya. Bandingkan dengan pohon
+  // yang dihasilkan loader untuk section lain: rootnya `type:"root"` + `$id`,
+  // dan setiap item punya `$id` sendiri.
   const tree = useMemo<PageTree.Root>(
     () => ({
+      type: "root",
+      $id: `close-api:${lang}`,
       name: "Close API",
       children: [
-        { type: "page", name: overviewLabel, url: `/${lang}/close-api` },
+        {
+          type: "page",
+          $id: `close-api:${lang}:overview`,
+          name: overviewLabel,
+          url: `/${lang}/close-api`,
+        },
         ...products.map((p) => ({
           type: "page" as const,
+          $id: `close-api:${lang}:${p.slug}`,
           name: p.name,
           url: `/${lang}/close-api/${p.slug}`,
         })),
@@ -286,7 +323,11 @@ export function CloseApiShell({ lang, slug }: { lang: string; slug: string }) {
 
   const shell = (children: React.ReactNode, withSidebar: boolean) => (
     <DocsLayout
-      tree={withSidebar ? tree : { name: "Close API", children: [] }}
+      tree={
+        withSidebar
+          ? tree
+          : { type: "root", $id: `close-api:${lang}:kosong`, name: "Close API", children: [] }
+      }
       {...layoutProps}
       i18n
       nav={{ ...layoutProps.nav, component: <HorizontalNavbar lang={lang} current="close-api" /> }}
@@ -303,7 +344,7 @@ export function CloseApiShell({ lang, slug }: { lang: string; slug: string }) {
   );
 
   // ---------- Tampilan gagal ----------
-  if (status === "no-token" || status === "expired" || status === "forbidden" || status === "error") {
+  if (status !== "loading" && status !== "ready") {
     const copy: Record<string, { title: string; body: string }> = {
       "no-token": {
         title: "Buka dari Dashboard iPaymu",
@@ -321,8 +362,29 @@ export function CloseApiShell({ lang, slug }: { lang: string; slug: string }) {
         title: "Terjadi Kesalahan",
         body: "Dokumentasi tidak bisa dimuat saat ini. Silakan coba lagi beberapa saat lagi.",
       },
+      "page-forbidden": {
+        title: "Tidak Ada Akses ke Halaman Ini",
+        body: "Akun Anda tidak memiliki akses ke dokumentasi ini. Pilih halaman lain di samping, atau hubungi tim iPaymu bila Anda merasa ini keliru.",
+      },
+      "page-missing": {
+        title: "Halaman Belum Tersedia",
+        body: "Dokumentasi untuk halaman ini belum diterbitkan. Silakan pilih halaman lain di samping.",
+      },
+      "page-error": {
+        title: "Halaman Gagal Dimuat",
+        body: "Halaman ini tidak bisa dimuat saat ini. Silakan coba lagi, atau pilih halaman lain di samping.",
+      },
     };
     const c = copy[status];
+
+    // Kegagalan tingkat halaman: manifest sudah berhasil, jadi daftar produk
+    // merchant valid dan sidebar WAJIB tetap tampil — kalau tidak, merchant
+    // terjebak tanpa cara pindah ke halaman lain yang mungkin bisa dibuka.
+    //
+    // `products.length` dipakai sebagai bukti manifest sudah berhasil: kalau
+    // manifest gagal atau merchant tidak punya produk, core menjawab 403 dan
+    // tidak ada yang bisa dinavigasi — jatuh ke tampilan penuh tanpa sidebar.
+    const tingkatHalaman = STATUS_TINGKAT_HALAMAN.has(status) && products.length > 0;
 
     return shell(
       // [grid-area:main] wajib: DocsLayout memakai CSS grid, tanpa penempatan
@@ -331,7 +393,7 @@ export function CloseApiShell({ lang, slug }: { lang: string; slug: string }) {
         <h1 className="mb-3 text-2xl font-semibold">{c.title}</h1>
         <p className="text-fd-muted-foreground">{c.body}</p>
       </div>,
-      false,
+      tingkatHalaman,
     );
   }
 
