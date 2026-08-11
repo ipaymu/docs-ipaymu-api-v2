@@ -292,10 +292,23 @@ export function CloseApiShell({ lang, slug }: { lang: string; slug: string }) {
   // sehingga merchant kehilangan seluruh navigasinya. Bandingkan dengan pohon
   // yang dihasilkan loader untuk section lain: rootnya `type:"root"` + `$id`,
   // dan setiap item punya `$id` sendiri.
+  //
+  // `$id` root WAJIB ikut berubah saat daftar produk berubah. TreeContextProvider
+  // fumadocs menyimpan pohonnya dengan `useMemo(() => rawTree, [rawTree.$id])` —
+  // pohon baru dengan `$id` yang sama diabaikan diam-diam. Pohon lain dibangun di
+  // server sekali jalan sehingga hal ini tidak terasa, tapi pohon ini datang
+  // belakangan lewat manifest: dengan `$id` tetap, fumadocs terkunci pada pohon
+  // render pertama (baru berisi ikhtisar, manifest belum tiba) dan produk
+  // merchant tidak pernah muncul di sidebar.
+  const treeId = useMemo(
+    () => `close-api:${lang}:${products.map((p) => p.slug).join("|")}`,
+    [products, lang],
+  );
+
   const tree = useMemo<PageTree.Root>(
     () => ({
       type: "root",
-      $id: `close-api:${lang}`,
+      $id: treeId,
       name: "Close API",
       children: [
         {
@@ -312,7 +325,7 @@ export function CloseApiShell({ lang, slug }: { lang: string; slug: string }) {
         })),
       ],
     }),
-    [products, lang, overviewLabel],
+    [products, lang, overviewLabel, treeId],
   );
 
   // `links` sengaja dikosongkan: fumadocs ikut merender daftar itu di SIDEBAR,
