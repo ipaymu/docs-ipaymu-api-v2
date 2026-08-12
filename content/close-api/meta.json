@@ -1,0 +1,13 @@
+{
+    "title": "Close API",
+    "pages": [
+        "index",
+        "register",
+        "transfer-va",
+        "profile",
+        "bank-list",
+        "business-category",
+        "member-verification",
+        "merchant-verification"
+    ]
+}

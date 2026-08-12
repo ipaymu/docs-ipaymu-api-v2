@@ -1,0 +1,52 @@
+---
+title: List Business Category
+description: Mendapatkan daftar kategori bisnis untuk keperluan API verifikasi.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+API List Business Category berfungsi untuk mendapatkan daftar kategori bisnis. Nilai `Code` dari
+endpoint ini digunakan sebagai `business_category` pada [Merchant Verification](/close-api/merchant-verification).
+
+## Endpoint
+
+**URL**: `{{baseUrl}}/api/v2/business-category`
+**Method**: `POST`
+
+| Lingkungan | URL                                                   |
+| :--------- | :---------------------------------------------------- |
+| Sandbox    | `https://sandbox.ipaymu.com/api/v2/business-category` |
+| Production | `https://my.ipaymu.com/api/v2/business-category`      |
+
+## Request Header
+
+Lihat [header & signature](/close-api) yang wajib disertakan pada setiap request Close API. Endpoint
+ini tidak memerlukan request body.
+
+## Contoh Response
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Success",
+  "Data": [
+    { "Code": "advertising", "Name": "Advertising", "NameEn": "Advertising" },
+    { "Code": "aksesoris_mainan", "Name": "Aksesoris & Mainan", "NameEn": "Accessories & Toys" },
+    { "Code": "edukasi", "Name": "Edukasi", "NameEn": "Education" },
+    { "Code": "elektronik", "Name": "Elektronik", "NameEn": "Electronic" }
+  ]
+}
+```
+
+## Keterangan Parameter Response
+
+| Field          | Deskripsi                                                |
+| :------------- | :------------------------------------------------------- |
+| `Data[].Code`  | Kode kategori — dipakai sebagai `business_category`.     |
+| `Data[].Name`  | Nama kategori (Bahasa Indonesia).                       |
+| `Data[].NameEn`| Nama kategori (Bahasa Inggris).                         |
+
+<Callout type="info">
+  Daftar pada contoh di atas dipersingkat. Response sebenarnya mengembalikan seluruh kategori bisnis.
+</Callout>

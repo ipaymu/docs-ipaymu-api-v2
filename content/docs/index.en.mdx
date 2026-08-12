@@ -1,0 +1,40 @@
+---
+title: Introduction
+description: Welcome to the iPaymu API v2 documentation.
+---
+
+Welcome to the **iPaymu API v2** documentation. This API allows you to integrate iPaymu's payment gateway services into your application.
+
+## Base URLs
+
+- **Production/Live**: `https://my.ipaymu.com`
+- **Development/Sandbox**: `https://sandbox.ipaymu.com`
+
+<Callout type="warn" title="Important Notes">
+  * **VA (Virtual Account)** and **API Key** can be found in the **Integration** menu on your iPaymu
+  dashboard. * VA and API Key for **Sandbox/Development** mode are **different** from those for
+  **Production/Live** mode. * If you encounter integration issues, please contact
+  [support@ipaymu.com](mailto:support@ipaymu.com) or via WhatsApp [here](https://wa.link/p8vnr7).
+</Callout>
+
+## Authentication
+
+iPaymu API v2 uses **Signature-based authentication**. Every request must include the following headers:
+
+| Header      | Description                                                                                                                                     |
+| :---------- | :---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `va`        | Your Virtual Account number (from iPaymu Dashboard).                                                                                            |
+| `signature` | A generated signature string to verify the request.                                                                                             |
+| `timestamp` | Current timestamp (format: `YYYYMMDDHHmmss` or ISO 8601 depending on endpoint requirements, usually `YYYYMMDDHHmmss` for signature generation). |
+
+## Sample Code
+
+You can find official sample code in various languages here:
+
+- **PHP**: [ipaymu-payment-v2-sample-php](https://github.com/putuedi/ipaymu-payment-v2-sample-php)
+- **NodeJS**: [ipaymu-payment-v2-sample-nodejs](https://github.com/putuedi/ipaymu-payment-v2-sample-nodejs)
+- **Python**: [ipaymu-payment-v2-sample-python](https://github.com/putuedi/ipaymu-payment-v2-sample-python)
+- **Golang**: [ipaymu-payment-v2-sample-go](https://github.com/putuedi/ipaymu-payment-v2-sample-go)
+- **Dotnet C#**: [ipaymu-payment-v2-sample-dotnet](https://github.com/putuedi/ipaymu-payment-v2-sample-dotnet)
+- **Ruby**: [ipaymu-payment-v2-sample-ruby](https://github.com/ipaymu/ipaymu-payment-v2-sample-ruby)
+- **Java**: [ipaymu-payment-v2-sample-java](https://github.com/ipaymu/ipaymu-payment-v2-sample-java)

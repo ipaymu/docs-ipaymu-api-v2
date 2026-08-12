@@ -1,0 +1,97 @@
+---
+title: Get Profile By VA
+description: Mengambil detail profil sebuah akun iPaymu berdasarkan nomor VA.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+API ini berfungsi untuk mengambil detail profil sebuah akun iPaymu berdasarkan nomor Virtual Account
+(VA).
+
+## Endpoint
+
+**URL**: `{{baseUrl}}/api/v2/profile`
+**Method**: `POST`
+
+| Lingkungan | URL                                         |
+| :--------- | :------------------------------------------ |
+| Sandbox    | `https://sandbox.ipaymu.com/api/v2/profile` |
+| Production | `https://my.ipaymu.com/api/v2/profile`      |
+
+## Request Header
+
+Lihat [header & signature](/close-api) yang wajib disertakan pada setiap request Close API.
+
+## Request Body
+
+| Parameter | Tipe   | Wajib | Deskripsi          |
+| :-------- | :----- | :---- | :----------------- |
+| `account` | string | Ya    | Nomor VA iPaymu.   |
+
+## Contoh Request
+
+```json
+{
+  "account": "1234567890"
+}
+```
+
+## Contoh Response
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Success",
+  "Data": {
+    "Name": "John Doe",
+    "Email": "user@example.com",
+    "Phone": "081234567890",
+    "ApiKey": "exampleApiKey.xxxxxxxx",
+    "Va": "1234567890",
+    "Gender": "L",
+    "Nik": "1234567890123456",
+    "Address": "Jl. Contoh No. 123",
+    "City": "KOTA CONTOH",
+    "Province": "01",
+    "ZipCode": "12345",
+    "Company": "PT Example Company",
+    "CompanyEmail": "company@example.com",
+    "BusinessPermitNumber": "0000001",
+    "IsMerchant": true,
+    "MerchantBalance": 1000000,
+    "MemberBalance": 500000,
+    "VerificationStatus": 1,
+    "VerificationStatusDesc": "VERIFIED",
+    "QrString": "exampleqrstring1234567890abcdef",
+    "BankName": "Example Bank",
+    "BankAccount": "John Doe",
+    "BankNumber": "1234567890123",
+    "RegisterDate": "2025-01-01 10:00:00"
+  }
+}
+```
+
+## Keterangan Parameter Response
+
+| Field                    | Deskripsi                                            |
+| :----------------------- | :-------------------------------------------------- |
+| `Name`                   | Nama pemilik akun.                                   |
+| `Email`                  | Email akun.                                          |
+| `Phone`                  | No. HP akun.                                         |
+| `ApiKey`                 | API Key akun.                                        |
+| `Va`                     | Nomor Virtual Account.                              |
+| `Gender`                 | Jenis kelamin (`L` = Laki-laki, `P` = Perempuan).   |
+| `Nik`                    | Nomor Induk Kependudukan (KTP).                     |
+| `IsMerchant`             | `true` jika akun adalah merchant.                   |
+| `MerchantBalance`        | Saldo merchant.                                      |
+| `MemberBalance`          | Saldo member.                                        |
+| `VerificationStatus`     | Status verifikasi (lihat [Member Verification](/close-api/member-verification)). |
+| `VerificationStatusDesc` | Deskripsi status verifikasi (mis. `VERIFIED`).      |
+| `BankName` / `BankAccount` / `BankNumber` | Detail rekening bank akun.         |
+| `RegisterDate`           | Tanggal pendaftaran akun.                           |
+
+<Callout type="warn">
+  Response dapat berisi data sensitif (mis. `ApiKey`, `Nik`). Pastikan data tidak dicatat di log dan
+  hanya diproses pada sisi server yang aman.
+</Callout>

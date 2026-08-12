@@ -1,0 +1,58 @@
+import { docs, plugins, verification, closeApi } from 'fumadocs-mdx:collections/server';
+import { type InferPageType, loader } from 'fumadocs-core/source';
+
+// See https://fumadocs.dev/docs/headless/source-api for more info
+export const source = loader({
+  baseUrl: '/docs',
+  source: docs.toFumadocsSource(),
+  i18n: {
+    defaultLanguage: 'id',  // Bahasa default (file .mdx biasa)
+    languages: ['id', 'en'], // Daftar bahasa yang disupport
+  },
+  plugins: [],
+});
+
+export const pluginsSource = loader({
+  baseUrl: '/docs-plugins',
+  source: plugins.toFumadocsSource(),
+  i18n: {
+    defaultLanguage: 'id',
+    languages: ['id', 'en'],
+  },
+});
+
+export const verificationSource = loader({
+  baseUrl: '/docs/verification',
+  source: verification.toFumadocsSource(),
+  i18n: {
+    defaultLanguage: 'id',
+    languages: ['id', 'en'],
+  },
+});
+
+// Close API docs (private build only). Served behind ipaymu-core access control.
+export const closeApiSource = loader({
+  baseUrl: '/close-api',
+  source: closeApi.toFumadocsSource(),
+  i18n: {
+    defaultLanguage: 'id',
+    languages: ['id', 'en'],
+  },
+});
+
+export function getPageImage(page: InferPageType<typeof source>) {
+  const segments = [...page.slugs, 'image.png'];
+
+  return {
+    segments,
+    url: `/og/docs/${segments.join('/')}`,
+  };
+}
+
+export async function getLLMText(page: InferPageType<typeof source>) {
+  const processed = await page.data.getText('processed');
+
+  return `# ${page.data.title}
+
+${processed}`;
+}

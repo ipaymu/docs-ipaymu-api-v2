@@ -1,0 +1,96 @@
+---
+title: Get Profile By VA
+description: Retrieve the profile details of an iPaymu account by its VA number.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+This API retrieves the profile details of an iPaymu account by its Virtual Account (VA) number.
+
+## Endpoint
+
+**URL**: `{{baseUrl}}/api/v2/profile`
+**Method**: `POST`
+
+| Environment | URL                                         |
+| :---------- | :------------------------------------------ |
+| Sandbox     | `https://sandbox.ipaymu.com/api/v2/profile` |
+| Production  | `https://my.ipaymu.com/api/v2/profile`      |
+
+## Request Headers
+
+See the [headers & signature](/close-api) that every Close API request must include.
+
+## Request Body
+
+| Parameter | Type   | Required | Description        |
+| :-------- | :----- | :------- | :----------------- |
+| `account` | string | Yes      | iPaymu VA number.  |
+
+## Example Request
+
+```json
+{
+  "account": "1234567890"
+}
+```
+
+## Example Response
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Success",
+  "Data": {
+    "Name": "John Doe",
+    "Email": "user@example.com",
+    "Phone": "081234567890",
+    "ApiKey": "exampleApiKey.xxxxxxxx",
+    "Va": "1234567890",
+    "Gender": "L",
+    "Nik": "1234567890123456",
+    "Address": "Jl. Contoh No. 123",
+    "City": "KOTA CONTOH",
+    "Province": "01",
+    "ZipCode": "12345",
+    "Company": "PT Example Company",
+    "CompanyEmail": "company@example.com",
+    "BusinessPermitNumber": "0000001",
+    "IsMerchant": true,
+    "MerchantBalance": 1000000,
+    "MemberBalance": 500000,
+    "VerificationStatus": 1,
+    "VerificationStatusDesc": "VERIFIED",
+    "QrString": "exampleqrstring1234567890abcdef",
+    "BankName": "Example Bank",
+    "BankAccount": "John Doe",
+    "BankNumber": "1234567890123",
+    "RegisterDate": "2025-01-01 10:00:00"
+  }
+}
+```
+
+## Response Parameters
+
+| Field                    | Description                                          |
+| :----------------------- | :-------------------------------------------------- |
+| `Name`                   | Account holder's name.                              |
+| `Email`                  | Account email.                                       |
+| `Phone`                  | Account phone number.                               |
+| `ApiKey`                 | Account API Key.                                     |
+| `Va`                     | Virtual Account number.                             |
+| `Gender`                 | Gender (`L` = Male, `P` = Female).                  |
+| `Nik`                    | National ID number (KTP).                           |
+| `IsMerchant`             | `true` if the account is a merchant.               |
+| `MerchantBalance`        | Merchant balance.                                   |
+| `MemberBalance`          | Member balance.                                     |
+| `VerificationStatus`     | Verification status (see [Member Verification](/close-api/member-verification)). |
+| `VerificationStatusDesc` | Verification status description (e.g. `VERIFIED`).  |
+| `BankName` / `BankAccount` / `BankNumber` | Account's bank details.            |
+| `RegisterDate`           | Account registration date.                         |
+
+<Callout type="warn">
+  The response may contain sensitive data (e.g. `ApiKey`, `Nik`). Make sure this data is not written
+  to logs and is only processed on a secure server side.
+</Callout>

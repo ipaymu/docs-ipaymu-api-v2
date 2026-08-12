@@ -1,0 +1,42 @@
+---
+title: Validasi IP & Domain
+description: Untuk memastikan keamanan transaksi, iPaymu menerapkan validasi ketat untuk alamat IP dan Domain.
+---
+
+Untuk memastikan keamanan transaksi, iPaymu menerapkan validasi ketat untuk alamat IP dan Domain, terutama di lingkungan **Production/Live**.
+
+<Callout type="warn" title="Persyaratan Production">
+  Dalam mode Production, alamat IP server Anda dan domain yang digunakan dalam body request WAJIB
+  terdaftar dan divalidasi oleh iPaymu. Kegagalan melakukan ini akan mengakibatkan error `Invalid
+  IP` atau `Invalid Domain`.
+</Callout>
+
+## Validasi Alamat IP
+
+iPaymu mewajibkan server Anda menggunakan **IP Statis**. IP Dinamis dapat berubah-ubah, menyebabkan kegagalan transaksi.
+
+### Mengapa IP Statis?
+
+- **Keamanan**: Memastikan request hanya berasal dari server yang diizinkan.
+- **Stabilitas**: Mencegah gangguan layanan yang disebabkan oleh perubahan IP.
+
+Jika server Anda menggunakan IP dinamis, silakan hubungi penyedia hosting Anda untuk meminta IP Statis. Setelah didapatkan, tambahkan langsung melalui [Manajemen IP](https://my.ipaymu.com/ip).
+
+## Validasi Domain
+
+<IpDomainValidationFlowchart />
+
+Jika request menggunakan URL aplikasi pada domain tambahan, daftarkan domain tersebut sebelum digunakan. Domain tambahan diperuntukkan bagi URL seperti `successUrl`, `cancelUrl`, `returnUrl`, dan `notifyUrl`.
+
+Untuk mendaftarkan domain tambahan, buka [Manajemen Domain](https://my.ipaymu.com/domain), isi domain dan peruntukan/keterangannya, lalu kirim untuk ditinjau. Tim iPaymu akan melakukan verifikasi maksimal **2 hari kerja**. Domain menjadi aktif setelah disetujui.
+
+Untuk alamat IP, buka [Manajemen IP](https://my.ipaymu.com/ip) dan tambahkan IP Statis secara langsung.
+
+### Masalah Umum
+
+- **Localhost**: Anda tidak dapat menggunakan URL `localhost` di Production.
+- **Subdomain Tidak Terdaftar**: Pastikan subdomain juga diperbolehkan jika Anda menggunakannya.
+- **Ketidakcocokan Protokol**: Pastikan Anda menggunakan protokol yang benar (`http` vs `https`) sesuai yang terdaftar.
+
+Untuk panduan rinci tentang pemecahan masalah ini, silakan merujuk ke postingan blog resmi:
+[Mengatasi Masalah Error Invalid IP & Domain di iPaymu](https://blog.ipaymu.com/mengatasi-masalah-error-invalid-ip-domain-di-ipaymu/)

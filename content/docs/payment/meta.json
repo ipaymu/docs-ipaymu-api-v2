@@ -1,0 +1,8 @@
+{
+    "title": "Payment",
+    "pages": [
+        "payment-channels",
+        "direct-payment",
+        "redirect-payment"
+    ]
+}

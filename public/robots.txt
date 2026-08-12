@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /close-api
+Disallow: /close-api/*
+Disallow: /*/close-api
+Disallow: /*/close-api/*
+Disallow: /close-api-export
+Disallow: /*/close-api-export
+
+Sitemap: https://docs.ipaymu.com/sitemap.xml

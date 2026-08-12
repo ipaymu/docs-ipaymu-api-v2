@@ -1,0 +1,149 @@
+---
+title: Pembayaran Langsung (Direct)
+description: Endpoint ini digunakan untuk memproses pembayaran langsung.
+postman: https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#005ef6ea-96e4-47f7-9282-afd1ce5a2904
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+<a
+  href="https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#005ef6ea-96e4-47f7-9282-afd1ce5a2904"
+  target="_blank"
+  className="button button--primary button--sm"
+>
+  Coba di Postman
+</a>
+
+<DanaNoticeCallout />
+
+<Callout type="warn" title="Persyaratan Production">
+  Dalam mode Production, pastikan server Anda menggunakan **IP Statis** dan domain Anda terdaftar.
+  Lihat [Validasi IP & Domain](../ip-domain-validation).
+</Callout>
+
+Endpoint ini digunakan untuk memproses pembayaran langsung (Direct Payment).
+
+<DirectPaymentFlowchart />
+
+**Endpoint:** `POST https://my.ipaymu.com/api/v2/payment/direct`
+
+## Headers
+
+| Kunci          | Nilai              | Deskripsi                 |
+| :------------- | :----------------- | :------------------------ |
+| `Content-Type` | `application/json` |                           |
+| `signature`    | `string`           | Signature yang dihasilkan |
+| `va`           | `string`           | Nomor Virtual Account     |
+| `timestamp`    | `string`           | Waktu request             |
+
+## Parameter Body
+
+| Kunci             | Tipe     | Wajib       | Deskripsi                                                               |
+| :---------------- | :------- | :---------- | :---------------------------------------------------------------------- |
+| `name`            | `string` | Ya          | Nama pembeli                                                            |
+| `phone`           | `string` | Ya          | Nomor HP pembeli                                                        |
+| `email`           | `string` | Ya          | Email pembeli                                                           |
+| `amount`          | `number` | Ya          | Total jumlah pembayaran                                                 |
+| `notifyUrl`       | `string` | Ya          | URL callback untuk menerima notifikasi status pembayaran                 |
+| `expired`         | `number` | Tidak       | Durasi kadaluarsa pembayaran (default: 24)                              |
+| `expiredType`     | `string` | Tidak       | Tipe durasi kadaluarsa: `days`, `hours`, `minutes`                      |
+| `comments`        | `string` | Tidak       | Catatan transaksi                                                       |
+| `referenceId`     | `string` | Tidak       | ID referensi transaksi dari sistem Anda                                 |
+| `paymentMethod`   | `string` | Ya          | Metode pembayaran. Nilai: `va`, `cstore`, `cod`, `qris`, `cc`, `paylater`, `ewallet`. |
+| `paymentChannel`  | `string` | Ya          | Saluran berdasarkan metode pembayaran. Lihat rinciannya di bawah tabel. |
+| `product[]`       | `array`  | Ya          | Nama produk                                                             |
+| `qty[]`           | `array`  | Ya          | Jumlah produk                                                           |
+| `price[]`         | `array`  | Ya          | Harga produk per unit                                                   |
+| `weight[]`        | `array`  | Kondisional | Berat barang dalam kg (wajib jika COD).                                 |
+| `width[]`         | `array`  | Kondisional | Lebar dimensi barang dalam cm (wajib jika COD). |
+| `height[]`        | `array`  | Kondisional | Tinggi dimensi barang dalam cm (opsional jika COD). |
+| `length[]`        | `array`  | Kondisional | Panjang barang dalam cm (wajib jika COD). |
+| `deliveryArea`    | `string` | Kondisional | Kode pos pengiriman (wajib jika COD). |
+| `deliveryAddress` | `string` | Kondisional | Alamat pengiriman (wajib jika COD). |
+
+<details open>
+<summary>Daftar <code>paymentChannel</code> yang tersedia berdasarkan <code>paymentMethod</code></summary>
+<div className="pt-4">
+| Metode Pembayaran (`paymentMethod`) | Daftar Saluran (`paymentChannel`) |
+| :---------------------------------- | :-------------------------------- |
+| **Virtual Account (`va`)**          | `bag`, `bca`, `bpd_bali`, `bni`, `cimb`, `mandiri`, `bmi`, `bri`, `bsi`, `permata`, `danamon`,`btn` |
+| **Convenience Store (`cstore`)**    | `alfamart`, `indomaret`           |
+| **Cash On Delivery (`cod`)**        | `rpx` (Kurir RPX)                 |
+| **QRIS (`qris`)**                   | `mpm`                             |
+| **Credit Card (`cc`)**              | `cc`                              |
+| **Pay Later (`paylater`)**          | `akulaku`                         |
+| **e-Wallet (`ewallet`)**            | `dana`, `shopeepay`               |
+</div>
+</details>
+
+<h3 id="e-wallet" className="scroll-m-20 font-bold text-lg border-b pb-1 mt-8 mb-3">Panduan Integrasi e-Wallet (`ewallet`)</h3>
+
+Untuk memproses pembayaran via e-Wallet (**DANA** & **ShopeePay**):
+1. Set `paymentMethod`: `"ewallet"`
+2. Set `paymentChannel`: `"dana"` atau `"shopeepay"`
+3. Pengguna akan mendapatkan `Url` *redirect* atau QR/deep link pembayaran pada respon data untuk menyelesaikannya.
+
+```json
+{
+  "name": "Pelanggan",
+  "phone": "08123456789",
+  "email": "buyer@mail.com",
+  "amount": 50000,
+  "notifyUrl": "https://mywebsite.com/callback",
+  "paymentMethod": "ewallet",
+  "paymentChannel": "dana",
+  "product": ["Layanan Premium"],
+  "qty": [1],
+  "price": [50000]
+}
+```
+
+## Contoh Request
+
+```json
+{
+  "name": "Buyer",
+  "phone": "08123456789",
+  "email": "buyer@mail.com",
+  "amount": 10000,
+  "notifyUrl": "https://mywebsite.com/callback",
+  "expired": 24,
+  "expiredType": "hours",
+  "comments": "Payment for Order #123",
+  "referenceId": "REF123456",
+  "paymentMethod": "va",
+  "paymentChannel": "bca",
+  "product": ["Product A"],
+  "qty": [1],
+  "price": [10000],
+  "weight": [1],
+  "width": [1],
+  "height": [1],
+  "length": [1],
+  "deliveryArea": "76111",
+  "deliveryAddress": "Jalan Raya No. 1"
+}
+```
+
+## Contoh Response
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Success",
+  "Data": {
+    "TransactionId": 12345,
+    "ReferenceId": "REF123456",
+    "Via": "va",
+    "Channel": "bca",
+    "PaymentNo": "1234567890",
+    "PaymentName": "BCA Virtual Account",
+    "Total": 10000,
+    "Fee": 0,
+    "Expired": "2023-12-31 23:59:59",
+    "Note": null,
+    "Url": "https://my.ipaymu.com/payment/12345"
+  }
+}
+```

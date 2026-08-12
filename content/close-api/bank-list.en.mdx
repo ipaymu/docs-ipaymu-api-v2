@@ -1,0 +1,56 @@
+---
+title: Bank List
+description: Get the list of master banks available at iPaymu.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+The Bank List API returns the master list of banks available at iPaymu. The `code` value from this
+endpoint is used as the `bank_code` in the verification APIs.
+
+## Endpoint
+
+**URL**: `{{baseUrl}}/api/v2/banklist`
+**Method**: `POST`
+
+| Environment | URL                                          |
+| :---------- | :------------------------------------------- |
+| Sandbox     | `https://sandbox.ipaymu.com/api/v2/banklist` |
+| Production  | `https://my.ipaymu.com/api/v2/banklist`      |
+
+## Request Headers
+
+See the [headers & signature](/close-api) that every Close API request must include. This endpoint
+requires no request body.
+
+## Example Response
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Success",
+  "Data": {
+    "bank": [
+      { "id": "061", "code": "061", "name": "ANZ Panin Bank" },
+      { "id": "427", "code": "427", "name": "BANK BNI SYARIAH" },
+      { "id": "116", "code": "116", "name": "BPD Aceh" },
+      { "id": "129", "code": "129", "name": "BPD Bali" },
+      { "id": "133", "code": "133", "name": "BPD Bengkulu" }
+    ]
+  }
+}
+```
+
+## Response Parameters
+
+| Field            | Description                                        |
+| :--------------- | :------------------------------------------------ |
+| `Data.bank[]`    | List of banks.                                    |
+| `bank[].id`      | Bank ID.                                          |
+| `bank[].code`    | Bank code — used as `bank_code` in verification.  |
+| `bank[].name`    | Bank name.                                        |
+
+<Callout type="info">
+  The list above is truncated. The actual response returns the full master bank list.
+</Callout>

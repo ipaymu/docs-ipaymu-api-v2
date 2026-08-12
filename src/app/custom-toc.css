@@ -1,0 +1,40 @@
+/* Custom styles untuk Fumadocs TOC (Table of Contents) */
+.toc-item a[data-active="true"] {
+  color: #0957c3 !important; /* Primary color */
+  font-weight: 600 !important;
+}
+
+.toc-item a[data-active="true"] svg {
+  color: #0957c3 !important;
+  fill: #0957c3 !important;
+}
+
+/* Alternative selector untuk Fumadocs */
+[data-toc-item] a[data-active="true"] {
+  color: #0957c3 !important;
+}
+
+/* Fumadocs links active state */
+[data-fumadocs-toc] a[data-active="true"] {
+  color: #0957c3 !important;
+  font-weight: 600 !important;
+}
+
+[data-fumadocs-toc] a[data-active="true"] svg {
+  color: #0957c3 !important;
+  stroke: #0957c3 !important;
+}
+
+/* Hover effects */
+.toc-item a:hover,
+[data-toc-item] a:hover,
+[data-fumadocs-toc] a:hover {
+  color: #0957c3 !important;
+}
+
+/* Icon styling for active items */
+.toc-item a[data-active="true"]::before,
+[data-toc-item] a[data-active="true"]::before,
+[data-fumadocs-toc] a[data-active="true"]::before {
+  background-color: #0957c3 !important;
+}

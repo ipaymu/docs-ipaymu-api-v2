@@ -1,0 +1,17 @@
+{
+  "name": "ipaymu-callback-javascript",
+  "version": "1.0.0",
+  "description": "Implementasi callback iPaymu dengan Node.js dan Express",
+  "main": "callback-urlencoded.js",
+  "scripts": {
+    "start:url": "node callback-urlencoded.js",
+    "start:json": "node callback-json.js",
+    "test": "cd ../test-runner && npm test"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "keywords": ["ipaymu", "callback", "nodejs", "express"],
+  "author": "",
+  "license": "MIT"
+}

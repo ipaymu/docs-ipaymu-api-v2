@@ -1,0 +1,85 @@
+---
+title: Member Verification
+description: Mengajukan verifikasi akun iPaymu sebagai member.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+API Member Verification berfungsi untuk melakukan pengajuan verifikasi akun iPaymu sebagai **member**.
+
+## Endpoint
+
+**URL**: `{{baseUrl}}/api/v2/member-verification`
+**Method**: `POST`
+
+| Lingkungan | URL                                                     |
+| :--------- | :------------------------------------------------------ |
+| Sandbox    | `https://sandbox.ipaymu.com/api/v2/member-verification` |
+| Production | `https://my.ipaymu.com/api/v2/member-verification`      |
+
+## Request Header
+
+Endpoint ini mengirim file, sehingga gunakan `Content-Type: multipart/form-data`. Header `va`,
+`signature`, dan `timestamp` tetap wajib — lihat [header & signature](/close-api).
+
+| Header         | Nilai                 |
+| :------------- | :-------------------- |
+| `Content-Type` | `multipart/form-data` |
+| `va`           | `{{va}}`              |
+| `signature`    | `{{signature}}`       |
+| `timestamp`    | `{{timestamp}}`       |
+
+## Request Body (multipart/form-data)
+
+| Parameter                | Tipe   | Wajib | Deskripsi                                                       |
+| :----------------------- | :----- | :---- | :------------------------------------------------------------- |
+| `account`                | text   | Ya    | Nomor VA iPaymu yang akan diverifikasi.                       |
+| `birthday`               | text   | Ya    | Tanggal lahir (format `YYYY-mm-dd`).                          |
+| `birthplace`             | text   | Ya    | Tempat lahir.                                                  |
+| `gender`                 | text   | Ya    | `L` = Laki-laki, `P` = Perempuan.                             |
+| `national_id`            | text   | Ya    | Nomor KTP.                                                     |
+| `province`               | text   | Ya    | Provinsi (dari [API Area](/docs/area-api)).                   |
+| `city`                   | text   | Ya    | Kota/Kabupaten (dari API Area).                              |
+| `district`               | text   | Ya    | Kecamatan (dari API Area).                                    |
+| `village`                | text   | Ya    | Kelurahan (dari API Area).                                    |
+| `postal_code`            | text   | Ya    | Kode POS.                                                      |
+| `address`                | text   | Ya    | Alamat (maks. 200 karakter).                                 |
+| `bank_code`              | text   | Ya    | Kode bank (dari [Bank List](/close-api/bank-list)).          |
+| `bank_number`            | text   | Ya    | Nomor rekening bank.                                          |
+| `bank_account`           | text   | Ya    | Nama pemilik rekening (harus sama dengan nama akun).         |
+| `npwp_no`                | text   | Ya    | Nomor NPWP.                                                    |
+| `national_id_photo`      | file   | Ya    | File KTP (`.png`/`.jpg`/`.jpeg`, maks. 2MB).                 |
+| `selfie_photo`           | file   | Ya    | Foto selfie dengan memegang KTP (maks. 2MB).                 |
+| `passbook_photo`         | file   | Ya    | Foto/scan buku rekening (maks. 2MB).                         |
+| `business_license_photo` | file   | Tidak | Scan surat izin usaha (`.png`/`.jpg`/`.jpeg`, maks. 2MB).    |
+
+## Contoh Response
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Verification success",
+  "Data": {
+    "VerificationId": 22567,
+    "VerificationStatus": {
+      "Code": -2,
+      "Desc": "PROCESSING"
+    }
+  }
+}
+```
+
+## Keterangan Status Verifikasi
+
+| Code | Desc          | Keterangan                                                |
+| :--- | :------------ | :-------------------------------------------------------- |
+| `-2` | `PROCESSING`  | Akun dalam proses verifikasi.                            |
+| `-1` | `UNCOMPLETED` | Verifikasi ditolak karena dokumen tidak lengkap/tidak valid. |
+| `1`  | `VERIFIED`    | Akun sudah terverifikasi.                                |
+| `0`  | `BASIC`       | Akun belum terverifikasi.                                |
+
+<Callout type="info">
+  Nilai `province`, `city`, `district`, dan `village` harus diambil dari [API Area](/docs/area-api),
+  dan `bank_code` dari [Bank List](/close-api/bank-list).
+</Callout>

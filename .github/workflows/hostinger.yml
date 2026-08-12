@@ -1,0 +1,98 @@
+# Membangun situs dan mengemas bundel siap-unggah untuk Hostinger.
+#
+# Unduh ZIP artifact dari tab Actions, lalu unggah isinya ke server.
+#
+# Kenapa terpisah dari pages.yml: workflow Pages membangun dengan BASE_PATH
+# (subpath GitHub Pages). Kalau hasil build itu diunggah ke domain root
+# Hostinger, semua aset 404. Workflow ini sengaja TIDAK menyetel BASE_PATH.
+#
+# Bundelnya tidak memuat package.json / package-lock.json, jadi pemindai
+# dependensi Hostinger tidak punya manifest untuk dibaca.
+#
+# Memakai npm (bukan bun) supaya alat di CI sama dengan yang dipakai di
+# Hostinger; bun hanya dipakai di mesin lokal.
+
+name: Bundel Hostinger
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    env:
+      # Mermaid (remark-mermaid-dataurl) merender diagram lewat Chromium headless.
+      PUPPETEER_CHROMIUM_FLAGS: "--no-sandbox"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Pastikan konten Close API tidak bocor ke bundel publik
+        # Cangkang Close API memang ada di bundel dan itu wajar, jadi mencari
+        # string "close-api" bukan lagi pengaman yang berarti. Yang diperiksa
+        # di sini adalah ISI dokumennya — kalau salah satu penanda ini muncul,
+        # artinya dokumentasi privat ikut terbundel dan build harus gagal.
+        run: |
+          gagal=0
+          for penanda in "StringToSign" "api/v2/transferva" "api/v2/merchant-verification" "api/v2/member-verification" "api/v2/banklist" "api/v2/business-category"; do
+            if grep -rqF "$penanda" out/; then
+              echo "::error::Konten Close API bocor ke bundel publik: $penanda"
+              gagal=1
+            fi
+          done
+          [ "$gagal" -eq 0 ] || exit 1
+          echo "OK - tidak ada isi Close API di bundel publik."
+
+      - name: Pastikan .htaccess ikut terbawa
+        run: test -f out/.htaccess || { echo "::error::out/.htaccess hilang"; exit 1; }
+
+      - name: Susun bundel unggahan
+        # Caddyfile ditaruh DI LUAR webroot: ia konfigurasi server, bukan
+        # berkas yang perlu dilayani ke publik.
+        run: |
+          mkdir -p bundel/public_html
+          cp -a out/. bundel/public_html/
+          cp Caddyfile bundel/
+          cat > bundel/CARA-UNGGAH.txt <<'EOF'
+          Isi bundel ini:
+
+            public_html/   -> unggah SELURUH isinya ke webroot situs.
+                              Hapus dulu isi webroot yang lama, terutama
+                              package.json dan package-lock.json dari unggahan
+                              source sebelumnya — selama berkas itu masih ada,
+                              pemindai dependensi akan terus melaporkan CVE.
+
+            Caddyfile      -> taruh DI LUAR webroot, lalu arahkan FrankenPHP ke
+                              berkas ini. Setel:
+                                SITE_ROOT     = path ke public_html
+                                SITE_ADDRESS  = docs.ipaymu.com
+
+          Tanpa Caddyfile ini, rute seperti /id/docs akan 404: Next.js
+          mengemit `docs.html` berdampingan dengan folder kembar `docs/` yang
+          tidak punya index.html, jadi server perlu aturan `try_files`.
+          Berkas .htaccess di dalam public_html hanya berguna kalau suatu saat
+          situs dilayani Apache/LiteSpeed; Caddy mengabaikannya.
+          EOF
+
+      - name: Upload bundel
+        uses: actions/upload-artifact@v4
+        with:
+          name: situs-hostinger
+          path: bundel/
+          # WAJIB: tanpa ini .htaccess (berkas tersembunyi) dibuang diam-diam.
+          include-hidden-files: true
+          retention-days: 30

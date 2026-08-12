@@ -1,0 +1,1453 @@
+---
+title: Callback
+description: Parameters and structure of the callback notification.
+postman: https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#473eae42-0c4c-49ea-af0f-3c8436fcacbd
+---
+
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/mdx/tabs";
+
+# Callback
+
+When a buyer completes a payment, iPaymu will send a callback notification to your configured endpoint. This document covers the complete callback structure, required headers, and signature validation process.
+
+## Configuration
+
+You can configure the callback content type in your iPaymu dashboard. Choose the format that works best for your system:
+
+| Content-Type | Description |
+|:-------------|:------------|
+| `application/x-www-form-urlencoded` | Default. Recommended for better stability and compatibility |
+| `application/json` | Alternative format if your system prefers JSON |
+
+**Settings Links:**
+
+- **Production:** [https://my.ipaymu.com/integration/setting](https://my.ipaymu.com/integration/setting)
+- **Sandbox:** [https://sandbox.ipaymu.com/integration/setting](https://sandbox.ipaymu.com/integration/setting)
+
+### Secret Key for Signature Validation
+
+To perform signature validation on callbacks, use your **VA (Virtual Account) Number** from your iPaymu account as the secret key.
+
+**How to get the Secret Key:**
+1. Login to your iPaymu Dashboard
+2. Select **Integration** or **Settings** menu
+3. Click **API Key**
+4. Your VA Number will be displayed in the **API Key** or **Merchant VA** section
+
+**Example Secret Key:** `YOUR_IPAYMU_VA`
+
+> [!IMPORTANT]
+> Never commit your production VA, API key, or other merchant credentials to a public repository. Use environment variables or a secret manager.
+
+---
+
+## Callback Flow Diagram
+
+Here is the complete flow diagram of the callback process from iPaymu:
+
+<CallbackFlowchart lang="en" />
+
+**Important Notes:**
+- If signature is invalid, don't process the transaction
+- Always respond with HTTP 200 to stop retries
+- Implement idempotency to avoid duplication
+
+---
+
+## Important Notes
+
+Before implementing callback handling, make sure you understand these key points:
+
+| Topic | Description |
+|:------|:------------|
+| **Retry Mechanism** | iPaymu will automatically retry the callback if your server doesn't respond with `200 OK`. Set up proper idempotency handling to avoid duplicate processing. |
+| **Idempotency** | Since retries may occur, always check transaction status in your database before processing. This prevents double-posting when the same callback arrives multiple times. |
+| **Signature Validation** | Always validate the `X-Signature` header to confirm the request genuinely comes from iPaymu. Never process callbacks without verification. |
+| **Secret Key** | Use your **Merchant VA Number** as the secret key for signature validation. |
+
+---
+
+## Headers
+
+Every callback request includes these headers. The `X-Signature` is crucial for security verification.
+
+| Header | Value | Description |
+|:-------|:------|:------------|
+| `Accept` | `application/json` | The content type iPaymu expects for responses |
+| `Content-Type` | `application/json` | Format of the request body |
+| `X-External-ID` | `20251111101052209120` | Unique identifier for this callback request |
+| `X-Signature` | `c9594cc8...` | HMAC-SHA256 signature for validation |
+| `X-Timestamp` | `2025-11-11T10:10:52+07:00` | Timestamp when the callback was generated |
+
+---
+
+## Complete Payload Examples
+
+Here are complete payload examples sent by iPaymu:
+
+### x-www-form-urlencoded Example
+
+```
+POST /callback HTTP/1.1
+Host: your-domain.com
+Content-Type: application/x-www-form-urlencoded
+X-Signature: c9594cc8...
+X-Timestamp: 2025-11-11T10:10:52+07:00
+
+buyer_email=customer%40example.com&
+buyer_name=John%20Doe&
+buyer_phone=081234567890&
+created_at=2025-11-11%2010%3A00%3A00&
+expired_at=2025-11-11%2011%3A00%3A00&
+fee=1500&
+paid_at=2025-11-11%2010%3A10%3A52&
+reference_id=ORDER123456&
+sid=SESSION789&
+status=berhasil&
+status_code=1&
+status_desc=Success&
+channel=bca&
+paid_off=98500&
+product=Product%20Name&
+quantity=1&
+merchant=YOUR_IPAYMU_VA&
+merchant_name=Your%20Store&
+system_notes=Payment%20completed&
+trscode=TRX789012&
+trx_id=12345678&
+unique_code=0&
+via=va&
+payment_no=1234567890&
+va=1234567890&
+url=https%3A%2F%2Fyour-domain.com%2Fcallback&
+additional_info=%5B%5D&
+transaction_status_code=1&
+settlement_status=unsettle&
+settlement_date=null&
+expired_time=3600&
+expired_unix=1762842000&
+is_escrow=0&
+is_refund=0&
+is_sandbox=false&
+total=100000&
+amount=100000&
+sub_total=100000&
+referenceId=ORDER123456
+```
+
+### application/json Example
+
+```json
+{
+  "buyer_email": "customer@example.com",
+  "buyer_name": "John Doe",
+  "buyer_phone": "081234567890",
+  "created_at": "2025-11-11 10:00:00",
+  "expired_at": "2025-11-11 11:00:00",
+  "fee": "1500",
+  "paid_at": "2025-11-11 10:10:52",
+  "reference_id": "ORDER123456",
+  "sid": "SESSION789",
+  "status": "berhasil",
+  "status_code": "1",
+  "status_desc": "Success",
+  "channel": "bca",
+  "paid_off": "98500",
+  "product": "Product Name",
+  "quantity": "1",
+  "merchant": "YOUR_IPAYMU_VA",
+  "merchant_name": "Your Store",
+  "system_notes": "Payment completed",
+  "trscode": "TRX789012",
+  "trx_id": "12345678",
+  "unique_code": "0",
+  "via": "va",
+  "payment_no": "1234567890",
+  "va": "1234567890",
+  "url": "https://your-domain.com/callback",
+  "additional_info": [],
+  "transaction_status_code": "1",
+  "settlement_status": "unsettle",
+  "settlement_date": null,
+  "expired_time": "3600",
+  "expired_unix": "1762842000",
+  "is_escrow": "0",
+  "is_refund": "0",
+  "is_sandbox": "false",
+  "total": "100000",
+  "amount": "100000",
+  "sub_total": "100000",
+  "referenceId": "ORDER123456"
+}
+```
+
+---
+
+## Callback Data Structure
+
+The following table shows all possible fields in a callback response. **Pay close attention to the data types** — using the wrong type during signature validation will cause hash mismatches.
+
+### Core Transaction Fields
+
+| Field | Type | Description | Validation Notes |
+|:------|:-----|:------------|:-----------------|
+| `trx_id` | Integer | Unique transaction ID in iPaymu system | Convert from String if receiving via Form Data |
+| `sid` | String | Transaction session ID | - |
+| `reference_id` | String | Your merchant reference ID | - |
+| `status` | String | Text status: `berhasil`, `pending`, `expired` | - |
+| `status_code` | Integer | Status code: `1` (Success), `0` (Pending), `-2` (Expired) | Convert from String `"1"` to Integer `1` |
+
+### Amount Fields
+
+| Field | Type | Description | Validation Notes |
+|:------|:-----|:------------|:-----------------|
+| `sub_total` | String | Net transaction amount | Leave as String |
+| `total` | String | Gross transaction amount | Leave as String |
+| `amount` | String | Total transaction amount | Leave as String |
+| `fee` | String | Admin fee | Leave as String |
+| `paid_off` | Integer | Net amount received (`amount - fee`) | Convert from String to Integer |
+
+### Timestamp Fields
+
+| Field | Type | Description | Validation Notes |
+|:------|:-----|:------------|:-----------------|
+| `created_at` | String | Transaction creation time | Format: `YYYY-MM-DD HH:MM:SS` |
+| `expired_at` | String | Transaction expiration time | - |
+| `paid_at` | String | Payment completion time | - |
+| `settlement_status` | String | Settlement status | `settled` or `unsettle` |
+
+### Status Fields
+
+| Field | Type | Description | Validation Notes |
+|:------|:-----|:------------|:-----------------|
+| `transaction_status_code` | Integer | Original status code | Convert from String to Integer |
+| `is_escrow` | Boolean | Escrow indicator | Convert String `"0"` to `false`, `"1"` to `true` |
+
+### Payment Details
+
+| Field | Type | Description | Validation Notes |
+|:------|:-----|:------------|:-----------------|
+| `via` | String | Payment method (e.g., `va`) | - |
+| `channel` | String | Payment channel (e.g., `bca`, `mandiri`) | - |
+| `payment_no` | String | VA or payment number | **Important:** Keep as String to preserve leading zeros |
+| `va` | String | Merchant VA number | Same as `payment_no`. Only present for VA transactions |
+| `system_notes` | String | System-generated notes | - |
+
+### Buyer Information
+
+| Field | Type | Description | Validation Notes |
+|:------|:-----|:------------|:-----------------|
+| `buyer_name` | String | Buyer name | - |
+| `buyer_email` | String | Buyer email | - |
+| `buyer_phone` | String | Buyer phone number | - |
+
+### Additional Fields
+
+| Field | Type | Description | Validation Notes |
+|:------|:-----|:------------|:-----------------|
+| `additional_info` | Array | Additional information | **Required:** Include `[]` even if field is not sent |
+| `url` | String | Callback URL | - |
+
+---
+
+## Conditional Fields
+
+Some fields behave differently depending on the payment method. Here's what to expect:
+
+| Field | Behavior |
+|:------|:---------|
+| `transaction_status_code` | `1` = Payment settled immediately. `6` = Payment received (settlement may be processed separately) |
+| `payment_no` | Populated for VA transactions. **Empty** for QRIS and e-wallet payments |
+| `va` | Only present for VA transactions. **Not included** for QRIS and e-wallet payments |
+
+---
+
+## Signature Validation
+
+To ensure callbacks genuinely come from iPaymu, you must validate the signature on every request. Here's the step-by-step process:
+
+### Validation Steps
+
+1. **Extract Data** — Get all data from `req.body`
+2. **Normalize Types** — Convert values to their correct data types
+   - String to Integer: `trx_id`, `status_code`, `transaction_status_code`, `paid_off`
+   - String to Boolean: `is_escrow`
+   - String `[]` to Array `[]`: `additional_info`
+3. **Handle Missing Fields** — If `additional_info` is missing (common with `x-www-form-urlencoded`), add it manually as an empty array
+4. **Sort Keys** — Sort all keys in **Ascending (A-Z)** order with case sensitivity
+5. **Convert to JSON** — Serialize the sorted object to a JSON string
+6. **URL Escape (Optional)** — Escape forward slashes (`/` → `\/`) if following strict PHP `json_encode` standards
+7. **Generate Hash** — Create HMAC-SHA256 using the JSON string and your secret key (VA number)
+8. **Compare** — Match your generated hash against the `X-Signature` header
+
+### Example Code Implementation
+
+<Tabs defaultValue="js" groupId="language">
+  <TabsList>
+    <TabsTrigger value="js">JavaScript</TabsTrigger>
+    <TabsTrigger value="php">PHP</TabsTrigger>
+    <TabsTrigger value="go">Go</TabsTrigger>
+    <TabsTrigger value="rust">Rust</TabsTrigger>
+    <TabsTrigger value="python">Python</TabsTrigger>
+  </TabsList>
+
+  <TabsContent value="js" className="p-0">
+    <Tabs defaultValue="urlencoded">
+      <TabsList>
+        <TabsTrigger value="urlencoded">x-www-form-urlencoded</TabsTrigger>
+        <TabsTrigger value="json">application/json</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="urlencoded">
+
+```javascript
+import crypto from 'crypto';
+import express from 'express';
+
+const app = express();
+
+app.use(express.urlencoded({ extended: true }));
+
+function normalizeData(rawData) {
+    const result = {};
+    for (const key in rawData) {
+        let val = rawData[key];
+        if (key === 'is_escrow') {
+            result[key] = (val === 'true' || val === '1' || val === 1);
+        }
+        else if (['trx_id', 'status_code', 'transaction_status_code', 'paid_off'].includes(key)) {
+            result[key] = parseInt(val, 10);
+        }
+        else if (key === 'additional_info') {
+            if (val === '[]') result[key] = [];
+            else result[key] = val;
+        }
+        else {
+            result[key] = String(val);
+        }
+    }
+    if (!result.hasOwnProperty('additional_info')) {
+        result['additional_info'] = [];
+    }
+    return result;
+}
+
+function phpKsort(obj) {
+    return Object.keys(obj)
+        .sort((a, b) => a.localeCompare(b))
+        .reduce((sortedObj, key) => {
+            sortedObj[key] = obj[key];
+            return sortedObj;
+        }, {});
+}
+
+app.post('/callback', (req, res) => {
+    const secretKey = '123456'; // Your iPaymu account VA Number (see Dashboard > Integration > API Key)
+    const receivedSignature = req.headers['x-signature'];
+
+    // Step 1 & 2: Get and normalize data
+    const normalizedData = normalizeData(req.body);
+    if (normalizedData.signature) delete normalizedData.signature;
+
+    // Step 3 & 4: Sort keys
+    const sortedData = phpKsort(normalizedData);
+    
+    // Step 5 & 6: Convert to JSON with slash escaping
+    let jsonBody = JSON.stringify(sortedData);
+    jsonBody = jsonBody.replace(/\//g, '\\/');
+
+    // Step 7: Generate hash
+    const calculatedSignature = crypto
+        .createHmac('sha256', secretKey)
+        .update(jsonBody)
+        .digest('hex');
+
+    // Step 8: Compare signatures
+    if (calculatedSignature === receivedSignature) {
+        console.log('✅ Signature valid');
+        
+        // TODO: Update transaction status in database
+        // TODO: Ensure idempotency - check if already processed
+        
+        res.status(200).json({ status: 'OK' });
+    } else {
+        console.log('❌ Invalid signature');
+        console.log('Expected:', receivedSignature);
+        console.log('Got:     ', calculatedSignature);
+        res.status(400).send('Invalid Signature');
+    }
+});
+
+app.listen(PORT, () => {
+  console.log('═══════════════════════════════════════════════════');
+  console.log('  iPaymu Callback Handler - URL-encoded');
+  console.log('═══════════════════════════════════════════════════');
+  console.log(`  Server running on http://localhost:${PORT}`);
+  console.log(`  Endpoint: POST http://localhost:${PORT}/callback`);
+  console.log('═══════════════════════════════════════════════════');
+});
+```
+
+      </TabsContent>
+
+      <TabsContent value="json">
+
+```javascript
+import crypto from 'crypto';
+import express from 'express';
+
+const app = express();
+
+app.use(express.json());
+
+function phpKsort(obj) {
+    return Object.keys(obj)
+        .sort((a, b) => a.localeCompare(b))
+        .reduce((sortedObj, key) => {
+            sortedObj[key] = obj[key];
+            return sortedObj;
+        }, {});
+}
+
+app.post('/callback', (req, res) => {
+    const secretKey = '123456'; // Your iPaymu account VA Number (see Dashboard > Integration > API Key)
+    const receivedSignature = req.body.signature || req.headers['x-signature'];
+
+    // Step 1: Get data and remove signature
+    let data = { ...req.body };
+    delete data.signature;
+
+    // Step 2-4: Data already in correct types, just sort
+    const sortedData = phpKsort(data);
+    
+    // Step 5 & 6: Convert to JSON with slash escaping
+    let jsonBody = JSON.stringify(sortedData);
+    jsonBody = jsonBody.replace(/\//g, '\\/');
+
+    // Step 7: Generate hash
+    const calculatedSignature = crypto
+        .createHmac('sha256', secretKey)
+        .update(jsonBody)
+        .digest('hex');
+
+    // Step 8: Compare signatures
+    if (calculatedSignature === receivedSignature) {
+        console.log('✅ Signature valid');
+        res.status(200).json({ status: 'OK' });
+    } else {
+        console.log('❌ Invalid signature');
+        res.status(400).send('Invalid Signature');
+    }
+});
+
+app.listen(PORT, () => {
+  console.log('═══════════════════════════════════════════════════');
+  console.log('  iPaymu Callback Handler - JSON');
+  console.log('═══════════════════════════════════════════════════');
+  console.log(`  Server running on http://localhost:${PORT}`);
+  console.log(`  Endpoint: POST http://localhost:${PORT}/callback`);
+  console.log('═══════════════════════════════════════════════════');
+});
+```
+
+      </TabsContent>
+    </Tabs>
+  </TabsContent>
+
+  <TabsContent value="php" className="p-0">
+    <Tabs defaultValue="urlencoded">
+      <TabsList>
+        <TabsTrigger value="urlencoded">x-www-form-urlencoded</TabsTrigger>
+        <TabsTrigger value="json">application/json</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="urlencoded">
+
+```php
+<?php
+// callback.php
+
+$secretKey = '123456'; // Your iPaymu account VA Number (see Dashboard > Integration > API Key)
+
+// Get all data from POST (x-www-form-urlencoded)
+$data = $_POST;
+
+// Get signature from header or body
+$receivedSignature = $_SERVER['HTTP_X_SIGNATURE'] ?? $data['signature'] ?? '';
+
+// Remove signature from data if in body
+unset($data['signature']);
+
+// Normalize data types
+foreach ($data as $key => &$val) {
+    if ($key === 'is_escrow') {
+        // Boolean: "0" -> false, "1" -> true
+        $val = ($val === '1' || $val === 'true' || $val === true);
+    } elseif (in_array($key, ['trx_id', 'status_code', 'transaction_status_code', 'paid_off'])) {
+        // Integer
+        $val = intval($val);
+    } elseif ($key === 'additional_info') {
+        // Array: convert string "[]" to empty array
+        if ($val === '[]') {
+            $val = [];
+        }
+    } else {
+        // String
+        $val = strval($val);
+    }
+}
+unset($val);
+
+// Ensure additional_info exists (often not sent in form data)
+if (!isset($data['additional_info'])) {
+    $data['additional_info'] = [];
+}
+
+// Sort keys ascending (A-Z)
+ksort($data);
+
+// Convert to JSON (with slash escaping like PHP json_encode)
+$jsonBody = json_encode($data);
+
+// Generate HMAC-SHA256
+$calculatedSignature = hash_hmac('sha256', $jsonBody, $secretKey);
+
+// Validate signature
+if (hash_equals($calculatedSignature, $receivedSignature)) {
+    http_response_code(200);
+    echo json_encode(['status' => 'success', 'message' => 'OK']);
+    
+    // TODO: Update transaction status in database
+    // TODO: Ensure idempotency
+    
+} else {
+    error_log("❌ Invalid signature! Expected: $receivedSignature, Got: $calculatedSignature");
+    http_response_code(400);
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Invalid Signature',
+        'debug' => [
+            'received' => $receivedSignature,
+            'calculated' => $calculatedSignature
+        ]
+    ]);
+}
+```
+
+      </TabsContent>
+
+      <TabsContent value="json">
+
+```php
+<?php
+// callback.php
+
+$secretKey = '123456'; // Your iPaymu account VA Number (see Dashboard > Integration > API Key)
+
+// Get raw JSON input
+$input = file_get_contents('php://input');
+$data = json_decode($input, true);
+
+if (!$data) {
+    http_response_code(400);
+    echo json_encode(['status' => 'error', 'message' => 'Invalid JSON']);
+    exit;
+}
+
+// Get signature from body or header
+$receivedSignature = $data['signature'] ?? $_SERVER['HTTP_X_SIGNATURE'] ?? '';
+
+// Remove signature from data
+unset($data['signature']);
+
+// Sort keys ascending (A-Z)
+ksort($data);
+
+// Convert to JSON
+$jsonBody = json_encode($data);
+
+// Generate HMAC-SHA256
+$calculatedSignature = hash_hmac('sha256', $jsonBody, $secretKey);
+
+// Validate signature
+if (hash_equals($calculatedSignature, $receivedSignature)) {
+    http_response_code(200);
+    echo json_encode(['status' => 'success', 'message' => 'OK']);
+} else {
+    error_log("❌ Invalid signature! Expected: $receivedSignature, Got: $calculatedSignature");
+    http_response_code(400);
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Invalid Signature',
+        'debug' => [
+            'received' => $receivedSignature,
+            'calculated' => $calculatedSignature
+        ]
+    ]);
+}
+```
+
+      </TabsContent>
+    </Tabs>
+
+    **Important Notes for PHP:**
+
+    - `json_encode()` by default escapes `/` characters to `\/` - this is correct behavior and must be followed
+    - Use `hash_equals()` for signature comparison to prevent timing attacks
+    - `ksort()` sorts keys case-sensitively by default
+  </TabsContent>
+
+  <TabsContent value="go" className="p-0">
+    <Tabs defaultValue="urlencoded">
+      <TabsList>
+        <TabsTrigger value="urlencoded">x-www-form-urlencoded</TabsTrigger>
+        <TabsTrigger value="json">application/json</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="urlencoded">
+
+```go
+package main
+
+import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"sort"
+	"strconv"
+	"strings"
+)
+
+const secretKey = "123456" // Your iPaymu account VA Number (see Dashboard > Integration > API Key)
+
+func normalizeData(data map[string]interface{}) map[string]interface{} {
+	result := make(map[string]interface{})
+	
+	for key, val := range data {
+	switch key {
+	case "is_escrow":
+		// Boolean
+		switch v := val.(type) {
+		case string:
+			result[key] = v == "1" || v == "true"
+		case bool:
+			result[key] = v
+		default:
+			result[key] = false
+		}
+		
+	case "trx_id", "status_code", "transaction_status_code", "paid_off":
+		// Integer
+		switch v := val.(type) {
+		case string:
+			if i, err := strconv.Atoi(v); err == nil {
+				result[key] = i
+			} else {
+				result[key] = val
+			}
+		case float64:
+			result[key] = int(v)
+		default:
+			result[key] = val
+		}
+		
+	case "additional_info":
+		// Array
+		switch v := val.(type) {
+		case string:
+			if v == "[]" || v == "" {
+				result[key] = []interface{}{}
+			}
+		case []interface{}:
+			result[key] = v
+		default:
+			result[key] = []interface{}{}
+		}
+		
+	default:
+		// String
+		result[key] = fmt.Sprintf("%v", val)
+	}
+	}
+	
+	// Ensure additional_info exists
+	if _, ok := result["additional_info"]; !ok {
+	result["additional_info"] = []interface{}{}
+	}
+	
+	return result
+}
+
+func phpKsort(data map[string]interface{}) map[string]interface{} {
+	// Get all keys and sort
+	keys := make([]string, 0, len(data))
+	for k := range data {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys) // Ascending A-Z
+	
+	// Create new map with sorted order
+	sorted := make(map[string]interface{})
+	for _, k := range keys {
+		sorted[k] = data[k]
+	}
+	
+	return sorted
+}
+
+func generateSignature(data map[string]interface{}) string {
+	// Sort keys
+	sortedData := phpKsort(data)
+	
+	// Convert to JSON
+	jsonBytes, _ := json.Marshal(sortedData)
+	jsonBody := string(jsonBytes)
+	
+	// Escape slashes like PHP
+	jsonBody = strings.ReplaceAll(jsonBody, "/", "\\/")
+	
+	// Generate HMAC-SHA256
+	h := hmac.New(sha256.New, []byte(secretKey))
+	h.Write([]byte(jsonBody))
+	
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+func callbackHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	
+	// Parse form data
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Invalid form data", http.StatusBadRequest)
+		return
+	}
+	
+	// Get signature from header
+	receivedSignature := r.Header.Get("X-Signature")
+	
+	// Convert form data to map
+	data := make(map[string]interface{})
+	for key, values := range r.Form {
+		if len(values) > 0 {
+			data[key] = values[0]
+		}
+	}
+	
+	// Remove signature from data
+	delete(data, "signature")
+	
+	// Normalize data
+	normalizedData := normalizeData(data)
+	
+	// Generate signature
+	calculatedSignature := generateSignature(normalizedData)
+	
+	// Validate
+	if hmac.Equal([]byte(calculatedSignature), []byte(receivedSignature)) {
+		fmt.Println("✅ Signature valid")
+		
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{
+			"status": "OK",
+		})
+	} else {
+		fmt.Println("❌ Invalid signature")
+		fmt.Println("Expected:", receivedSignature)
+		fmt.Println("Got:     ", calculatedSignature)
+		
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"status":  "error",
+			"message": "Invalid Signature",
+		})
+	}
+}
+
+func main() {
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
+		fmt.Printf("Server error: %v\n", err)
+	}
+}
+```
+
+      </TabsContent>
+
+      <TabsContent value="json">
+
+```go
+package main
+
+import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"sort"
+	"strings"
+)
+
+const secretKey = "123456" // Your iPaymu account VA Number (see Dashboard > Integration > API Key)
+
+func phpKsort(data map[string]interface{}) map[string]interface{} {
+	keys := make([]string, 0, len(data))
+	for k := range data {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	
+	sorted := make(map[string]interface{})
+	for _, k := range keys {
+		sorted[k] = data[k]
+	}
+	
+	return sorted
+}
+
+func generateSignature(data map[string]interface{}) string {
+	sortedData := phpKsort(data)
+	jsonBytes, _ := json.Marshal(sortedData)
+	jsonBody := string(jsonBytes)
+	jsonBody = strings.ReplaceAll(jsonBody, "/", "\\/")
+	
+	h := hmac.New(sha256.New, []byte(secretKey))
+	h.Write([]byte(jsonBody))
+	
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+func callbackHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	
+	var data map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+	
+	// Get signature
+	receivedSignature := ""
+	if sig, ok := data["signature"].(string); ok {
+		receivedSignature = sig
+	} else {
+		receivedSignature = r.Header.Get("X-Signature")
+	}
+	
+	// Remove signature
+	delete(data, "signature")
+	
+	calculatedSignature := generateSignature(data)
+	
+	if hmac.Equal([]byte(calculatedSignature), []byte(receivedSignature)) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{"status": "OK"})
+	} else {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"status":  "error",
+			"message": "Invalid Signature",
+		})
+	}
+}
+
+func main() {
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
+		fmt.Printf("Server error: %v\n", err)
+	}
+}
+```
+
+      </TabsContent>
+    </Tabs>
+  </TabsContent>
+
+  <TabsContent value="rust" className="p-0">
+    <Tabs defaultValue="urlencoded">
+      <TabsList>
+        <TabsTrigger value="urlencoded">x-www-form-urlencoded</TabsTrigger>
+        <TabsTrigger value="json">application/json</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="urlencoded">
+
+```rust
+use actix_web::{web, App, HttpResponse, HttpServer, post, HttpRequest};
+use hmac::{Hmac, Mac};
+use sha2::Sha256;
+use serde_json::{Value, Map};
+use std::collections::BTreeMap;
+
+// Type for HMAC-SHA256
+type HmacSha256 = Hmac<Sha256>;
+
+const SECRET_KEY: &str = "123456"; // Your iPaymu account VA Number (see Dashboard > Integration > API Key)
+
+fn normalize_data(data: &Map<String, Value>) -> Map<String, Value> {
+    let mut result = Map::new();
+    
+    for (key, val) in data.iter() {
+        let normalized_val = match key.as_str() {
+            "is_escrow" => {
+                match val {
+                    Value::String(s) => Value::Bool(s == "1" || s == "true"),
+                    Value::Bool(b) => Value::Bool(*b),
+                    _ => Value::Bool(false),
+                }
+            }
+            "trx_id" | "status_code" | "transaction_status_code" | "paid_off" => {
+                match val {
+                    Value::String(s) => {
+                        s.parse::<i64>().map(Value::Number)
+                            .unwrap_or_else(|_| val.clone())
+                    }
+                    Value::Number(n) => Value::Number(n.clone()),
+                    _ => val.clone(),
+                }
+            }
+            "additional_info" => {
+                match val {
+                    Value::String(s) if s == "[]" => Value::Array(vec![]),
+                    Value::Array(a) => Value::Array(a.clone()),
+                    _ => Value::Array(vec![]),
+                }
+            }
+            _ => Value::String(val.as_str().unwrap_or("").to_string()),
+        };
+        
+        result.insert(key.clone(), normalized_val);
+    }
+    
+    // Ensure additional_info exists
+    if !result.contains_key("additional_info") {
+        result.insert("additional_info".to_string(), Value::Array(vec![]));
+    }
+    
+    result
+}
+
+fn php_ksort(data: &Map<String, Value>) -> BTreeMap<String, Value> {
+    // BTreeMap is automatically sorted by key
+    let mut sorted = BTreeMap::new();
+    for (k, v) in data.iter() {
+        sorted.insert(k.clone(), v.clone());
+    }
+    sorted
+}
+
+fn generate_signature(data: &Map<String, Value>) -> String {
+    // Sort keys
+    let sorted = php_ksort(data);
+    
+    // Convert to JSON
+    let json_body = serde_json::to_string(&sorted).unwrap();
+    
+    // Escape slashes like PHP
+    let json_body = json_body.replace("/", "\\/");
+    
+    // Generate HMAC-SHA256
+    let mut mac = HmacSha256::new_from_slice(SECRET_KEY.as_bytes())
+        .expect("HMAC can take key of any size");
+    mac.update(json_body.as_bytes());
+    
+    hex::encode(mac.finalize().into_bytes())
+}
+
+#[post("/callback")]
+async fn callback_handler(req: HttpRequest, body: web::Form<serde_json::Value>) -> HttpResponse {
+    // Get signature from header
+    let received_sig = req.headers()
+        .get("X-Signature")
+        .and_then(|h| h.to_str().ok())
+        .unwrap_or("");
+    
+    // Convert form data to Map
+    let mut data = Map::new();
+    if let Value::Object(map) = body.into_inner() {
+        for (k, v) in map {
+            if k != "signature" {
+                data.insert(k, v);
+            }
+        }
+    }
+    
+    // Normalize data
+    let normalized = normalize_data(&data);
+    
+    // Generate signature
+    let calculated_sig = generate_signature(&normalized);
+    
+    // Validate
+    if calculated_sig == received_sig {
+        println!("✅ Signature valid");
+        HttpResponse::Ok().json(serde_json::json!({
+            "status": "OK"
+        }))
+    } else {
+        println!("❌ Invalid signature");
+        HttpResponse::BadRequest().json(serde_json::json!({
+            "status": "error",
+            "message": "Invalid Signature"
+        }))
+    }
+}
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    println!("Server running on :8080");
+    HttpServer::new(|| {
+        App::new().service(callback_handler)
+    })
+    .bind("127.0.0.1:8080")?
+    .run()
+    .await
+}
+```
+
+**Cargo.toml Dependencies:**
+
+```toml
+[dependencies]
+actix-web = "4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+hmac = "0.12"
+sha2 = "0.10"
+hex = "0.4"
+```
+
+      </TabsContent>
+
+      <TabsContent value="json">
+
+```rust
+use actix_web::{web, App, HttpResponse, HttpServer, post, HttpRequest};
+use hmac::{Hmac, Mac};
+use sha2::Sha256;
+use serde_json::{Value, Map};
+use std::collections::BTreeMap;
+
+type HmacSha256 = Hmac<Sha256>;
+const SECRET_KEY: &str = "YOUR_IPAYMU_VA";
+
+fn php_ksort(data: &Map<String, Value>) -> BTreeMap<String, Value> {
+    let mut sorted = BTreeMap::new();
+    for (k, v) in data.iter() {
+        sorted.insert(k.clone(), v.clone());
+    }
+    sorted
+}
+
+fn generate_signature(data: &Map<String, Value>) -> String {
+    let sorted = php_ksort(data);
+    let json_body = serde_json::to_string(&sorted).unwrap();
+    let json_body = json_body.replace("/", "\\/");
+    
+    let mut mac = HmacSha256::new_from_slice(SECRET_KEY.as_bytes())
+        .expect("HMAC can take key of any size");
+    mac.update(json_body.as_bytes());
+    
+    hex::encode(mac.finalize().into_bytes())
+}
+
+#[post("/callback")]
+async fn callback_handler(
+    req: HttpRequest, 
+    body: web::Json<Value>
+) -> HttpResponse {
+    let received_sig = req.headers()
+        .get("X-Signature")
+        .and_then(|h| h.to_str().ok())
+        .unwrap_or("");
+    
+    let mut data = Map::new();
+    if let Value::Object(map) = body.into_inner() {
+        for (k, v) in map {
+            if k != "signature" {
+                data.insert(k, v);
+            }
+        }
+    }
+    
+    let calculated_sig = generate_signature(&data);
+    
+    if calculated_sig == received_sig {
+        HttpResponse::Ok().json(serde_json::json!({ "status": "OK" }))
+    } else {
+        HttpResponse::BadRequest().json(serde_json::json!({
+            "status": "error",
+            "message": "Invalid Signature"
+        }))
+    }
+}
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    HttpServer::new(|| App::new().service(callback_handler))
+        .bind("127.0.0.1:8080")?
+        .run()
+        .await
+}
+```
+
+      </TabsContent>
+    </Tabs>
+  </TabsContent>
+
+  <TabsContent value="python" className="p-0">
+    <Tabs defaultValue="urlencoded">
+      <TabsList>
+        <TabsTrigger value="urlencoded">x-www-form-urlencoded</TabsTrigger>
+        <TabsTrigger value="json">application/json</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="urlencoded">
+
+```python
+from flask import Flask, request, jsonify
+import hmac
+import hashlib
+import json
+from collections import OrderedDict
+
+app = Flask(__name__)
+
+SECRET_KEY = '123456'  # Your iPaymu account VA Number (see Dashboard > Integration > API Key)
+
+
+def normalize_data(raw_data):
+    """Normalize data types from form input"""
+    result = {}
+    
+    for key, val in raw_data.items():
+        if key == 'is_escrow':
+            # Boolean
+            result[key] = val in ('1', 'true', True, 1)
+        elif key in ['trx_id', 'status_code', 'transaction_status_code', 'paid_off']:
+            # Integer
+            try:
+                result[key] = int(val)
+            except (ValueError, TypeError):
+                result[key] = val
+        elif key == 'additional_info':
+            # Array
+            if val == '[]' or val == '':
+                result[key] = []
+            else:
+                result[key] = val
+        else:
+            # String
+            result[key] = str(val)
+    
+    # Ensure additional_info exists
+    if 'additional_info' not in result:
+        result['additional_info'] = []
+    
+    return result
+
+
+def php_ksort(data):
+    """Sort dictionary keys like PHP ksort (ascending A-Z)"""
+    return OrderedDict(sorted(data.items(), key=lambda x: x[0]))
+
+
+def generate_signature(data):
+    """Generate HMAC-SHA256 signature"""
+    # Sort keys
+    sorted_data = php_ksort(data)
+    
+    # Convert to JSON with slash escaping
+    json_body = json.dumps(sorted_data, separators=(',', ':'))
+    json_body = json_body.replace('/', '\\/')
+    
+    # Generate HMAC-SHA256
+    signature = hmac.new(
+        SECRET_KEY.encode('utf-8'),
+        json_body.encode('utf-8'),
+        hashlib.sha256
+    ).hexdigest()
+    
+    return signature
+
+
+@app.route('/callback', methods=['POST'])
+def callback_handler():
+    # Get signature from header
+    received_signature = request.headers.get('X-Signature', '')
+    
+    # Get form data
+    raw_data = request.form.to_dict()
+    
+    # Remove signature from data if present
+    data = {k: v for k, v in raw_data.items() if k != 'signature'}
+    
+    # Normalize data types
+    normalized_data = normalize_data(data)
+    
+    # Generate signature
+    calculated_signature = generate_signature(normalized_data)
+    
+    # Validate
+    if hmac.compare_digest(calculated_signature, received_signature):
+        print('✅ Signature valid')
+        
+        # TODO: Update transaction status in database
+        # TODO: Ensure idempotency
+        
+        return jsonify({'status': 'OK'}), 200
+    else:
+        print('❌ Invalid signature')
+        print(f'Expected: {received_signature}')
+        print(f'Got:      {calculated_signature}')
+        
+        return jsonify({
+            'status': 'error',
+            'message': 'Invalid Signature'
+        }), 400
+
+
+if __name__ == '__main__':
+    port = int(os.getenv('PORT', 5000))
+    print('═══════════════════════════════════════════════════')
+    print('  iPaymu Callback Handler - URL-encoded (Python)')
+    print('═══════════════════════════════════════════════════')
+    print(f'  Server running on http://localhost:{port}')
+    print(f'  Endpoint: POST http://localhost:{port}/callback')
+    print('═══════════════════════════════════════════════════')
+    app.run(debug=True, host='0.0.0.0', port=port)
+```
+
+      </TabsContent>
+
+      <TabsContent value="json">
+
+```python
+from flask import Flask, request, jsonify
+import hmac
+import hashlib
+import json
+from collections import OrderedDict
+
+app = Flask(__name__)
+
+SECRET_KEY = '123456'  # Your iPaymu account VA Number (see Dashboard > Integration > API Key)
+
+
+def php_ksort(data):
+    """Sort dictionary keys like PHP ksort"""
+    return OrderedDict(sorted(data.items(), key=lambda x: x[0]))
+
+
+def generate_signature(data):
+    """Generate HMAC-SHA256 signature"""
+    sorted_data = php_ksort(data)
+    json_body = json.dumps(sorted_data, separators=(',', ':'))
+    json_body = json_body.replace('/', '\\/')
+    
+    signature = hmac.new(
+        SECRET_KEY.encode('utf-8'),
+        json_body.encode('utf-8'),
+        hashlib.sha256
+    ).hexdigest()
+    
+    return signature
+
+
+@app.route('/callback', methods=['POST'])
+def callback_handler():
+    received_signature = request.headers.get('X-Signature', '')
+    
+    # Parse JSON
+    data = request.get_json() or {}
+    
+    # Get signature from body if present
+    if 'signature' in data:
+        received_signature = data.pop('signature')
+    
+    # Generate signature
+    calculated_signature = generate_signature(data)
+    
+    # Validate
+    if hmac.compare_digest(calculated_signature, received_signature):
+        print('✅ Signature valid')
+        return jsonify({'status': 'OK'}), 200
+    else:
+        print('❌ Invalid signature')
+        return jsonify({
+            'status': 'error',
+            'message': 'Invalid Signature'
+        }), 400
+
+
+if __name__ == '__main__':
+    port = int(os.getenv('PORT', 5001))
+    print('═══════════════════════════════════════════════════')
+    print('  iPaymu Callback Handler - JSON (Python)')
+    print('═══════════════════════════════════════════════════')
+    print(f'  Server running on http://localhost:{port}')
+    print(f'  Endpoint: POST http://localhost:{port}/callback')
+    print('═══════════════════════════════════════════════════')
+    app.run(debug=True, host='0.0.0.0', port=port)
+```
+
+      </TabsContent>
+    </Tabs>
+  </TabsContent>
+</Tabs>
+
+---
+
+## Debugging Guide
+
+If signature validation keeps failing, follow these debugging steps:
+
+### 1. Log All Data
+
+```javascript
+// Add detailed logging in your callback handler
+app.post('/callback', (req, res) => {
+    console.log('=== CALLBACK DEBUG ===');
+    console.log('Headers:', JSON.stringify(req.headers, null, 2));
+    console.log('Body (raw):', req.body);
+    console.log('Content-Type:', req.headers['content-type']);
+    console.log('X-Signature:', req.headers['x-signature']);
+    
+    // Continue validation...
+});
+```
+
+### 2. Check JSON Output
+
+```javascript
+// Print the JSON used for signature generation
+const sortedData = phpKsort(normalizedData);
+let jsonBody = JSON.stringify(sortedData);
+jsonBody = jsonBody.replace(/\//g, '\\/');
+
+console.log('JSON for signature:');
+console.log(jsonBody);
+// Output must exactly match what iPaymu expects
+```
+
+### 3. Compare Byte by Byte
+
+```javascript
+// If signature doesn't match, compare character by character
+function compareSignatures(sig1, sig2) {
+    console.log('Signature comparison:');
+    console.log('Expected:', sig1);
+    console.log('Got:     ', sig2);
+    
+    for (let i = 0; i < Math.max(sig1.length, sig2.length); i++) {
+        const c1 = sig1[i] || 'N/A';
+        const c2 = sig2[i] || 'N/A';
+        if (c1 !== c2) {
+            console.log(`Mismatch at index ${i}: '${c1}' vs '${c2}'`);
+        }
+    }
+}
+```
+
+---
+
+## Common Mistakes
+
+Here are common mistakes when implementing callbacks:
+
+### 1. Not Converting Data Types
+
+**Wrong:**
+```javascript
+const data = req.body; // Use directly without normalization
+```
+
+**Correct:**
+```javascript
+const normalizedData = normalizeData(req.body);
+// Ensure trx_id, status_code, etc. are Integer types
+```
+
+### 2. Incorrect Key Sorting
+
+**Wrong:**
+```javascript
+const sorted = Object.keys(data).sort(); // May be case-insensitive
+```
+
+**Correct:**
+```javascript
+const sorted = Object.keys(data).sort((a, b) => a.localeCompare(b));
+```
+
+### 3. Not Escaping Slashes in JSON
+
+**Wrong:**
+```javascript
+const jsonBody = JSON.stringify(sortedData); // URL stays http://...
+```
+
+**Correct:**
+```javascript
+let jsonBody = JSON.stringify(sortedData);
+jsonBody = jsonBody.replace(/\//g, '\\/'); // URL becomes http:\/\/...
+```
+
+### 4. Missing `additional_info`
+
+**Wrong:**
+```javascript
+// Not adding additional_info if not in request
+```
+
+**Correct:**
+```javascript
+if (!result.hasOwnProperty('additional_info')) {
+    result['additional_info'] = [];
+}
+```
+
+### 5. Using Wrong Secret Key
+
+**Wrong:**
+```javascript
+const secretKey = 'api_key_or_other'; // Not VA Number
+```
+
+**Correct:**
+```javascript
+const secretKey = '123456'; // Your iPaymu account VA Number (see Dashboard > Integration > API Key)
+```
+
+---
+
+## Implementation Checklist
+
+Before going live, make sure you have:
+
+- [ ] Configured callback URL in iPaymu dashboard
+- [ ] Using VA Number as secret key
+- [ ] Implemented correct data type normalization
+- [ ] Sorting keys in ascending order (A-Z)
+- [ ] Escaping forward slashes in JSON
+- [ ] Responding with HTTP 200 for valid requests
+- [ ] Implemented idempotency (duplicate check)
+- [ ] Logging all callbacks for debugging
+- [ ] Tested with dummy data from iPaymu
+- [ ] Have fallback mechanism if callback fails
+
+---
+
+**Source:** [iPaymu Callback Documentation](https://drive.google.com/file/d/1WfBEI5ry6V7knuSiCONYC4ZhQmD8Aipn/view)
