@@ -1,0 +1,134 @@
+---
+title: Area
+description: Daftar wilayah Indonesia (provinsi, kota/kabupaten, kecamatan, kelurahan) untuk mengisi data verifikasi.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+API Area menyediakan data wilayah Indonesia secara berjenjang. Dipakai untuk mengisi
+`province`, `city`, `district`, dan `village` pada
+[Merchant Verification](/close-api/merchant-verification) dan
+[Member Verification](/close-api/member-verification).
+
+<Callout type="warn">
+  API verifikasi mencocokkan **nama** wilayah dengan data master dan memeriksa hubungan
+  induk-anaknya: `city` harus berada di `province` yang dikirim, `district` di dalam `city`,
+  dan `village` di dalam `district`. Kirim `name` persis seperti yang dikembalikan endpoint
+  ini — jangan diubah huruf besar-kecilnya atau disingkat, karena akan ditolak
+  `Invalid province` / `Invalid city` / `Invalid district` / `Invalid village`.
+</Callout>
+
+## Endpoint
+
+Empat endpoint yang dipanggil berurutan. Setiap tingkat memakai `code` dari tingkat di atasnya.
+
+| Tingkat        | URL                                             | Method |
+| :------------- | :---------------------------------------------- | :----- |
+| Provinsi       | `{{baseUrl}}/api/areas/province`                | `POST` |
+| Kota/Kabupaten | `{{baseUrl}}/api/areas/city/{province}`         | `POST` |
+| Kecamatan      | `{{baseUrl}}/api/areas/district/{city}`         | `POST` |
+| Kelurahan      | `{{baseUrl}}/api/areas/village/{district}`      | `POST` |
+
+| Lingkungan | Base URL                        |
+| :--------- | :------------------------------ |
+| Sandbox    | `https://sandbox.ipaymu.com`    |
+| Production | `https://my.ipaymu.com`         |
+
+<Callout type="info">
+  Perhatikan: endpoint ini berada di bawah `/api/areas`, **tanpa** segmen `/v2` seperti
+  endpoint Close API lainnya.
+</Callout>
+
+## Request Header
+
+Lihat [header & signature](/close-api) yang wajib disertakan pada setiap request Close API.
+Keempat endpoint ini tidak memerlukan request body.
+
+## Parameter Path
+
+| Parameter    | Deskripsi                                              |
+| :----------- | :----------------------------------------------------- |
+| `{province}` | `code` provinsi, mis. `11`                            |
+| `{city}`     | `code` kota/kabupaten, mis. `1101`                    |
+| `{district}` | `code` kecamatan, mis. `110101`                       |
+
+## Contoh Response
+
+### Provinsi
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Success",
+  "Data": [
+    { "code": "11", "name": "ACEH" },
+    { "code": "51", "name": "BALI" },
+    { "code": "36", "name": "BANTEN" }
+  ]
+}
+```
+
+### Kota/Kabupaten — `/api/areas/city/11`
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Success",
+  "Data": [
+    { "code": "1101", "name": "KABUPATEN ACEH SELATAN" },
+    { "code": "1102", "name": "KABUPATEN ACEH TENGGARA" }
+  ]
+}
+```
+
+### Kecamatan — `/api/areas/district/1101`
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Success",
+  "Data": [
+    { "code": "110101", "name": "BAKONGAN" },
+    { "code": "110102", "name": "KLUET UTARA" }
+  ]
+}
+```
+
+### Kelurahan — `/api/areas/village/110101`
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Success",
+  "Data": [
+    { "code": "1101012001", "name": "KEUDE BAKONGAN", "postal_code": "23773" },
+    { "code": "1101012002", "name": "UJONG MANGKI", "postal_code": "23773" }
+  ]
+}
+```
+
+## Keterangan Parameter Response
+
+| Field         | Tingkat   | Deskripsi                                                      |
+| :------------ | :-------- | :------------------------------------------------------------- |
+| `code`        | semua     | Kode wilayah, dipakai sebagai parameter path tingkat berikutnya |
+| `name`        | semua     | Nama wilayah — nilai inilah yang dikirim ke API verifikasi     |
+| `postal_code` | kelurahan | Kode pos, bisa dipakai untuk mengisi `postal_code`             |
+
+## Alur Pemakaian
+
+<Callout type="info">
+  Kirim `name` ke API verifikasi, bukan `code`. `code` hanya dipakai untuk menelusuri
+  tingkat berikutnya di endpoint ini.
+</Callout>
+
+1. Ambil daftar provinsi, pilih satu, simpan `code` dan `name`-nya
+2. Panggil `/api/areas/city/{code provinsi}`, pilih kota/kabupaten
+3. Panggil `/api/areas/district/{code kota}`, pilih kecamatan
+4. Panggil `/api/areas/village/{code kecamatan}`, pilih kelurahan
+5. Kirim keempat `name` tersebut sebagai `province`, `city`, `district`, `village` ke API
+   verifikasi, dan `postal_code` dari kelurahan yang dipilih
