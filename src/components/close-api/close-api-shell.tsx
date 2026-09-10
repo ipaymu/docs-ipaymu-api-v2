@@ -186,7 +186,9 @@ export function CloseApiShell({ lang, slug }: { lang: string; slug: string }) {
       const data = unwrap(await res.json());
       setTitle(typeof data.title === "string" ? data.title : "");
       // Selalu disanitasi: HTML ini datang lewat jaringan dan disuntikkan ke DOM.
-      setHtml(sanitizeCloseApiHtml(typeof data.html === "string" ? data.html : ""));
+      // `lang` ikut dikirim karena tautan antar-halaman di artefak netral bahasa
+      // (`/close-api/area`) dan harus diberi awalan rute (`/id/close-api/area`).
+      setHtml(sanitizeCloseApiHtml(typeof data.html === "string" ? data.html : "", lang));
       setToc(Array.isArray(data.toc) ? data.toc : []);
       setStatus("ready");
       if (data.title) document.title = `${data.title} | iPaymu Dokumentasi`;

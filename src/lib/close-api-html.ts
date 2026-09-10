@@ -61,7 +61,28 @@ function isSafeUrl(value: string): boolean {
   return false;
 }
 
-function cleanElement(el: Element): void {
+/** Bahasa yang punya rute di situs ini. Selain ini, href dibiarkan apa adanya. */
+const LANG_RUTE = new Set(["id", "en"]);
+
+/**
+ * Sisipkan segmen bahasa pada tautan antar-halaman Close API.
+ *
+ * Artefak MDX ditulis tanpa bahasa (`/close-api/area`) karena satu berkas
+ * dipakai untuk id maupun en. Rute situs SELALU berawalan bahasa
+ * (`/id/close-api/area`), jadi tanpa penyisipan ini setiap tautan antar-halaman
+ * — mis. "Business Category" di halaman Merchant Verification — berakhir 404.
+ *
+ * Ditangani di sini, bukan saat artefak dibuat, supaya artefak tetap netral
+ * bahasa dan halaman yang SUDAH tersimpan di core ikut sembuh tanpa perlu
+ * dibangun ulang dan di-seed lagi.
+ */
+function withLang(href: string, lang: string): string {
+  if (!LANG_RUTE.has(lang)) return href;
+  if (href !== "/close-api" && !href.startsWith("/close-api/")) return href;
+  return `/${lang}${href}`;
+}
+
+function cleanElement(el: Element, lang: string): void {
   for (const attr of Array.from(el.attributes)) {
     const name = attr.name.toLowerCase();
 
@@ -84,6 +105,10 @@ function cleanElement(el: Element): void {
       continue;
     }
 
+    if (name === "href") {
+      el.setAttribute(attr.name, withLang(attr.value, lang));
+    }
+
     // `style` dibatasi: buang yang memuat url()/expression() agar tidak bisa
     // memuat sumber daya luar atau menyalahgunakan CSS lama.
     if (name === "style" && /url\s*\(|expression\s*\(/i.test(attr.value)) {
@@ -97,7 +122,7 @@ function cleanElement(el: Element): void {
   }
 }
 
-function walk(root: Element): void {
+function walk(root: Element, lang: string): void {
   // Salin daftar anak lebih dulu: pohonnya dimodifikasi selama iterasi.
   for (const child of Array.from(root.children)) {
     const tag = child.tagName.toLowerCase();
@@ -109,25 +134,26 @@ function walk(root: Element): void {
 
     if (!ALLOWED_TAGS.has(tag)) {
       // Tag tak dikenal: buang wadahnya, pertahankan isinya.
-      walk(child);
+      walk(child, lang);
       child.replaceWith(...Array.from(child.childNodes));
       continue;
     }
 
-    cleanElement(child);
-    walk(child);
+    cleanElement(child, lang);
+    walk(child, lang);
   }
 }
 
 /**
- * Kembalikan HTML yang sudah dibersihkan. Hanya berjalan di browser
- * (butuh DOMParser); di server mengembalikan string kosong.
+ * Kembalikan HTML yang sudah dibersihkan, dengan tautan antar-halaman Close API
+ * diberi awalan bahasa `lang`. Hanya berjalan di browser (butuh DOMParser);
+ * di server mengembalikan string kosong.
  */
-export function sanitizeCloseApiHtml(dirty: string): string {
+export function sanitizeCloseApiHtml(dirty: string, lang: string): string {
   if (typeof window === "undefined" || typeof DOMParser === "undefined") return "";
   if (!dirty) return "";
 
   const doc = new DOMParser().parseFromString(dirty, "text/html");
-  walk(doc.body);
+  walk(doc.body, lang);
   return doc.body.innerHTML;
 }

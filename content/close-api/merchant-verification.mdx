@@ -33,29 +33,32 @@ Endpoint ini mengirim file, sehingga gunakan `Content-Type: multipart/form-data`
 | `birthday`    | text | Ya    | Tanggal lahir (format `YYYY-mm-dd`).           |
 | `birthplace`  | text | Ya    | Tempat lahir.                                   |
 | `gender`      | text | Ya    | `L` = Laki-laki, `P` = Perempuan.              |
-| `national_id` | text | Ya    | Nomor KTP.                                      |
-| `province`    | text | Ya    | Provinsi (dari [API Area](/docs/area-api)).    |
+| `national_id` | text | Ya    | Nomor KTP, **tepat 16 digit**.                 |
+| `province`    | text | Ya    | Provinsi (dari [API Area](/close-api/area)).    |
 | `city`        | text | Ya    | Kota/Kabupaten (dari API Area).               |
 | `district`    | text | Ya    | Kecamatan (dari API Area).                      |
 | `village`     | text | Ya    | Kelurahan (dari API Area).                      |
+
+Nama wilayah dicocokkan dengan data master dan harus berjenjang: `city` berada di `province`
+yang dikirim, `district` di dalam `city`, dan `village` di dalam `district`.
 | `postal_code` | text | Ya    | Kode POS.                                       |
-| `address`     | text | Ya    | Alamat (maks. 200 karakter).                   |
+| `address`     | text | Ya    | Alamat (maks. 250 karakter).                   |
 
 ### Data Bisnis
 
 | Parameter              | Tipe | Wajib | Deskripsi                                                |
 | :--------------------- | :--- | :---- | :------------------------------------------------------ |
-| `business_name`        | text | Ya    | Nama bisnis/usaha (maks. 50 karakter).                 |
-| `business_description` | text | Ya    | Deskripsi bisnis/usaha (maks. 150 karakter).           |
+| `business_name`        | text | Ya    | Nama bisnis/usaha (maks. 150 karakter).                |
+| `business_description` | text | Ya    | Deskripsi bisnis/usaha (maks. 250 karakter).           |
 | `business_type`        | text | Ya    | `1` = Personal, `2` = Corporate.                       |
 | `business_category`    | text | Ya    | Kategori bisnis (dari [Business Category](/close-api/business-category)). |
 | `business_license_no`  | text | Tidak | Nomor izin usaha.                                       |
-| `business_address`     | text | Ya    | Alamat bisnis/usaha (maks. 200 karakter).             |
+| `business_address`     | text | Ya    | Alamat bisnis/usaha (maks. 250 karakter).             |
 | `business_email`       | text | Ya    | Email bisnis/usaha.                                     |
-| `business_phone`       | text | Ya    | No. HP bisnis/usaha.                                    |
-| `social_media_url`     | text | Ya    | URL sosial media (`https://example.com/username`).     |
+| `business_phone`       | text | Tidak | No. HP bisnis/usaha.                                    |
+| `social_media_url`     | text | Tidak | URL sosial media (`https://example.com/username`).     |
 | `website_url`          | text | Ya    | URL website (`https://example.com`).                   |
-| `website_ip`           | text | Ya    | IP website (contoh: `127.0.0.1`).                      |
+| `website_ip`           | text | Ya    | IP website (contoh: `127.0.0.1`). Ditolak bila IP sudah dipakai akun lain atau masuk daftar blokir. |
 
 ### Data Bank & NPWP
 
@@ -63,17 +66,87 @@ Endpoint ini mengirim file, sehingga gunakan `Content-Type: multipart/form-data`
 | :------------- | :--- | :---- | :------------------------------------------------- |
 | `bank_code`    | text | Ya    | Kode bank (dari [Bank List](/close-api/bank-list)). |
 | `bank_number`  | text | Ya    | Nomor rekening bank.                              |
-| `bank_account` | text | Ya    | Nama pemilik rekening (harus sama dengan nama akun/nama bisnis). |
-| `npwp_no`      | text | Ya    | Nomor NPWP.                                        |
+| `bank_account` | text | Ya    | Nama pemilik rekening. Harus sama dengan salah satu dari: nama akun, nama perusahaan akun, atau `business_name`. Kombinasi `bank_code` + `bank_number` tidak boleh sudah terdaftar di akun lain. |
+| `npwp_no`      | text | Tidak | Nomor NPWP.                                        |
 
 ### Dokumen (File)
 
 | Parameter                | Tipe | Wajib | Deskripsi                                                |
 | :----------------------- | :--- | :---- | :------------------------------------------------------ |
-| `national_id_photo`      | file | Ya    | File KTP (`.png`/`.jpg`/`.jpeg`, maks. 2MB).           |
-| `selfie_photo`           | file | Ya    | Foto selfie dengan memegang KTP (maks. 2MB).          |
-| `passbook_photo`         | file | Ya    | Foto/scan buku rekening (maks. 2MB).                  |
-| `business_license_photo` | file | Tidak | Scan surat izin usaha (`.png`/`.jpg`/`.jpeg`, maks. 2MB). |
+| `national_id_photo`      | file | Ya    | File KTP.                                               |
+| `selfie_photo`           | file | Ya    | Foto selfie dengan memegang KTP.                       |
+| `passbook_photo`         | file | Ya    | Foto/scan buku rekening yang menunjukkan nomor dan nama pemilik rekening. |
+| `director_id_photo`      | file | Tidak | File KTP direktur (untuk `business_type` = `2`).       |
+| `business_license_photo` | file | Tidak | Scan surat izin usaha.                                  |
+
+Semua file menerima `.jpg`, `.jpeg`, `.png`, `.pdf`, maksimal 2MB.
+
+## Contoh Request
+
+Endpoint ini memakai `multipart/form-data`, jadi kirim sebagai form field — bukan JSON.
+
+```bash
+curl -X POST https://my.ipaymu.com/api/v2/merchant-verification \
+  -H "va: 1179000899" \
+  -H "signature: <signature>" \
+  -H "timestamp: 20260908120000" \
+  -F "account=1179000899" \
+  -F "birthday=1990-05-17" \
+  -F "birthplace=Denpasar" \
+  -F "gender=L" \
+  -F "national_id=5171010101900001" \
+  -F "province=ACEH" \
+  -F "city=KABUPATEN ACEH SELATAN" \
+  -F "district=BAKONGAN" \
+  -F "village=KEUDE BAKONGAN" \
+  -F "postal_code=23773" \
+  -F "address=Jl. Merdeka No. 10" \
+  -F "business_name=Toko Contoh" \
+  -F "business_description=Menjual perlengkapan kantor" \
+  -F "business_type=1" \
+  -F "business_category=accounting--auditing----bookkeeping-services" \
+  -F "business_address=Jl. Merdeka No. 10" \
+  -F "business_email=toko@contoh.co.id" \
+  -F "website_url=https://contoh.co.id" \
+  -F "website_ip=203.0.113.10" \
+  -F "bank_code=002" \
+  -F "bank_number=1234567890" \
+  -F "bank_account=Toko Contoh" \
+  -F "national_id_photo=@ktp.jpg" \
+  -F "selfie_photo=@selfie.jpg" \
+  -F "passbook_photo=@buku-tabungan.jpg"
+```
+
+<Callout type="warn">
+  **Tanda tangan untuk request multipart.** Hitung signature atas string `{}` — bukan atas
+  isi form. Server memang menyediakan jalur ini khusus untuk request ber-file. Kalau Anda
+  mencoba menandatangani seluruh body, hasilnya akan ditolak: field file ikut terbawa dan
+  di-encode menjadi `{}`, lalu server masih menormalkannya lagi menjadi `""` — sangat mudah
+  meleset. Lihat [header & signature](/close-api).
+</Callout>
+
+## Dari Mana Nilainya Diambil
+
+Kesalahan paling sering adalah tertukar antara **kode** dan **nama**. Ketiganya berbeda:
+
+| Parameter                                  | Sumber                                                      | Isi dengan | Contoh |
+| :----------------------------------------- | :---------------------------------------------------------- | :--------- | :----- |
+| `province`, `city`, `district`, `village`  | [Area](/close-api/area)                                      | **`name`** | `ACEH`, `BAKONGAN` |
+| `postal_code`                              | [Area](/close-api/area) — tingkat kelurahan                  | `postal_code` | `23773` |
+| `bank_code`                                | [Bank List](/close-api/bank-list)                            | **`code`** | `002` (Bank Rakyat Indonesia) |
+| `business_category`                        | [Business Category](/close-api/business-category)            | **`Code`** | `accounting--auditing----bookkeeping-services` |
+
+<Callout type="warn">
+  `bank_code` diisi **kode** bank (`002`), bukan namanya (`Bank Rakyat Indonesia`).
+  `business_category` diisi **kode** kategori yang berbentuk slug huruf kecil, dan
+  pencocokannya peka huruf besar-kecil — kirim persis seperti yang dikembalikan endpoint,
+  jangan diubah menjadi huruf besar.
+</Callout>
+
+<Callout type="info">
+  `bank_account` harus sama dengan salah satu dari: nama akun, nama perusahaan akun, atau
+  `business_name` yang Anda kirim di request ini.
+</Callout>
 
 ## Contoh Response
 
@@ -83,10 +156,37 @@ Endpoint ini mengirim file, sehingga gunakan `Content-Type: multipart/form-data`
   "Success": true,
   "Message": "Verification success",
   "Data": {
-    "VerificationId": 22567,
-    "VerificationStatus": {
-      "Code": -2,
-      "Desc": "PROCESSING"
+    "verification_id": 22567,
+    "verification_status": {
+      "code": -2,
+      "desc": "PROCESSING",
+      "state": "PROCESSING_ADMIN",
+      "step": null,
+      "notes": null
+    }
+  }
+}
+```
+
+Saat pengajuan ditolak admin, `notes` berisi catatan per-section dan `step`
+menunjuk step pertama yang harus diperbaiki:
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Verification success",
+  "Data": {
+    "verification_id": 22567,
+    "verification_status": {
+      "code": -1,
+      "desc": "UNCOMPLETED",
+      "state": "UNCOMPLETED",
+      "step": "profile",
+      "notes": {
+        "profile": ["Foto KTP buram", "Nama tidak sesuai KTP"],
+        "bank": "Buku rekening tidak terbaca"
+      }
     }
   }
 }
@@ -96,12 +196,25 @@ Endpoint ini mengirim file, sehingga gunakan `Content-Type: multipart/form-data`
 
 | Code | Desc          | Keterangan                                                |
 | :--- | :------------ | :-------------------------------------------------------- |
-| `-2` | `PROCESSING`  | Akun dalam proses verifikasi.                            |
-| `-1` | `UNCOMPLETED` | Verifikasi ditolak karena dokumen tidak lengkap/tidak valid. |
+| `-2` | `PROCESSING`  | Akun dalam proses verifikasi, tidak ada yang perlu dilakukan. |
+| `-1` | `UNCOMPLETED` | Perlu tindakan merchant: pengajuan ditolak, atau masih draft yang belum dikirim. |
 | `1`  | `VERIFIED`    | Akun sudah terverifikasi.                                |
 | `0`  | `BASIC`       | Akun belum terverifikasi.                                |
 
+### Field tambahan
+
+| Field   | Keterangan                                                                 |
+| :------ | :------------------------------------------------------------------------- |
+| `state` | Keadaan rinci di balik `code`: `BASIC`, `VERIFIED`, `PROCESSING`, `PROCESSING_ADMIN`, `INCOMPLETE`, `UNCOMPLETED`. |
+| `step`  | Step yang perlu diperbaiki atau dilanjutkan merchant (`profile`, `business`, `bank`, `document`, `application`). `null` bila tidak ada. |
+| `notes` | Catatan penolakan admin per-section. `null` bila pengajuan tidak ditolak. Nilainya bisa berupa string atau array string. |
+
+<Callout type="warn">
+  `code` `-2` berarti **masih diproses**, bukan ditolak. Jangan memberi tahu
+  merchant bahwa verifikasinya gagal sebelum `code` bernilai `-1`.
+</Callout>
+
 <Callout type="info">
-  `province`/`city`/`district`/`village` diambil dari [API Area](/docs/area-api), `bank_code` dari
+  `province`/`city`/`district`/`village` diambil dari [API Area](/close-api/area), `bank_code` dari
   [Bank List](/close-api/bank-list), dan `business_category` dari [Business Category](/close-api/business-category).
 </Callout>

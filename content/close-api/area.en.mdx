@@ -1,0 +1,134 @@
+---
+title: Area
+description: Indonesian administrative areas (province, city, district, village) used to fill in verification data.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+The Area API exposes Indonesian administrative areas as a hierarchy. Use it to fill in
+`province`, `city`, `district`, and `village` for
+[Merchant Verification](/close-api/merchant-verification) and
+[Member Verification](/close-api/member-verification).
+
+<Callout type="warn">
+  The verification API matches area **names** against master data and validates the
+  parent-child chain: `city` must belong to the `province` you send, `district` to `city`,
+  and `village` to `district`. Send `name` exactly as returned here — do not change the
+  casing or abbreviate it, or the request is rejected with `Invalid province` /
+  `Invalid city` / `Invalid district` / `Invalid village`.
+</Callout>
+
+## Endpoints
+
+Four endpoints, called in sequence. Each level uses the `code` from the level above it.
+
+| Level    | URL                                        | Method |
+| :------- | :----------------------------------------- | :----- |
+| Province | `{{baseUrl}}/api/areas/province`           | `POST` |
+| City     | `{{baseUrl}}/api/areas/city/{province}`    | `POST` |
+| District | `{{baseUrl}}/api/areas/district/{city}`    | `POST` |
+| Village  | `{{baseUrl}}/api/areas/village/{district}` | `POST` |
+
+| Environment | Base URL                     |
+| :---------- | :--------------------------- |
+| Sandbox     | `https://sandbox.ipaymu.com` |
+| Production  | `https://my.ipaymu.com`      |
+
+<Callout type="info">
+  Note these endpoints live under `/api/areas`, **without** the `/v2` segment used by the
+  other Close API endpoints.
+</Callout>
+
+## Request Header
+
+See the [header & signature](/close-api) required on every Close API request. None of these
+four endpoints take a request body.
+
+## Path Parameters
+
+| Parameter    | Description                          |
+| :----------- | :----------------------------------- |
+| `{province}` | Province `code`, e.g. `11`          |
+| `{city}`     | City `code`, e.g. `1101`            |
+| `{district}` | District `code`, e.g. `110101`      |
+
+## Example Responses
+
+### Province
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Success",
+  "Data": [
+    { "code": "11", "name": "ACEH" },
+    { "code": "51", "name": "BALI" },
+    { "code": "36", "name": "BANTEN" }
+  ]
+}
+```
+
+### City — `/api/areas/city/11`
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Success",
+  "Data": [
+    { "code": "1101", "name": "KABUPATEN ACEH SELATAN" },
+    { "code": "1102", "name": "KABUPATEN ACEH TENGGARA" }
+  ]
+}
+```
+
+### District — `/api/areas/district/1101`
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Success",
+  "Data": [
+    { "code": "110101", "name": "BAKONGAN" },
+    { "code": "110102", "name": "KLUET UTARA" }
+  ]
+}
+```
+
+### Village — `/api/areas/village/110101`
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Success",
+  "Data": [
+    { "code": "1101012001", "name": "KEUDE BAKONGAN", "postal_code": "23773" },
+    { "code": "1101012002", "name": "UJONG MANGKI", "postal_code": "23773" }
+  ]
+}
+```
+
+## Response Fields
+
+| Field         | Level   | Description                                                     |
+| :------------ | :------ | :-------------------------------------------------------------- |
+| `code`        | all     | Area code, used as the path parameter for the next level        |
+| `name`        | all     | Area name — this is the value you send to the verification API  |
+| `postal_code` | village | Postal code, usable for the `postal_code` field                 |
+
+## How to Use It
+
+<Callout type="info">
+  Send `name` to the verification API, not `code`. The `code` is only used to walk to the
+  next level within this API.
+</Callout>
+
+1. Fetch provinces, pick one, keep its `code` and `name`
+2. Call `/api/areas/city/{province code}`, pick a city
+3. Call `/api/areas/district/{city code}`, pick a district
+4. Call `/api/areas/village/{district code}`, pick a village
+5. Send those four `name` values as `province`, `city`, `district`, `village` to the
+   verification API, plus the `postal_code` of the chosen village

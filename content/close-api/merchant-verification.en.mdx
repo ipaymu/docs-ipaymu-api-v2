@@ -33,29 +33,32 @@ This endpoint uploads files, so use `Content-Type: multipart/form-data`. The `va
 | `birthday`    | text | Yes      | Date of birth (format `YYYY-mm-dd`).          |
 | `birthplace`  | text | Yes      | Place of birth.                                |
 | `gender`      | text | Yes      | `L` = Male, `P` = Female.                      |
-| `national_id` | text | Yes      | National ID (KTP) number.                     |
-| `province`    | text | Yes      | Province (from the [Area API](/docs/area-api)). |
+| `national_id` | text | Yes      | National ID (KTP) number, **exactly 16 digits**. |
+| `province`    | text | Yes      | Province (from the [Area API](/close-api/area)). |
 | `city`        | text | Yes      | City/Regency (from the Area API).             |
 | `district`    | text | Yes      | District (from the Area API).                  |
 | `village`     | text | Yes      | Village (from the Area API).                   |
+
+Area names are matched against master data and must nest correctly: `city` inside the given
+`province`, `district` inside `city`, and `village` inside `district`.
 | `postal_code` | text | Yes      | Postal code.                                   |
-| `address`     | text | Yes      | Address (max. 200 characters).               |
+| `address`     | text | Yes      | Address (max. 250 characters).               |
 
 ### Business Data
 
 | Parameter              | Type | Required | Description                                              |
 | :--------------------- | :--- | :------- | :------------------------------------------------------ |
-| `business_name`        | text | Yes      | Business name (max. 50 characters).                    |
-| `business_description` | text | Yes      | Business description (max. 150 characters).            |
+| `business_name`        | text | Yes      | Business name (max. 150 characters).                   |
+| `business_description` | text | Yes      | Business description (max. 250 characters).            |
 | `business_type`        | text | Yes      | `1` = Personal, `2` = Corporate.                       |
 | `business_category`    | text | Yes      | Business category (from [Business Category](/close-api/business-category)). |
 | `business_license_no`  | text | No       | Business license number.                               |
-| `business_address`     | text | Yes      | Business address (max. 200 characters).               |
+| `business_address`     | text | Yes      | Business address (max. 250 characters).               |
 | `business_email`       | text | Yes      | Business email.                                        |
-| `business_phone`       | text | Yes      | Business phone number.                                 |
-| `social_media_url`     | text | Yes      | Social media URL (`https://example.com/username`).     |
+| `business_phone`       | text | No       | Business phone number.                                 |
+| `social_media_url`     | text | No       | Social media URL (`https://example.com/username`).     |
 | `website_url`          | text | Yes      | Website URL (`https://example.com`).                   |
-| `website_ip`           | text | Yes      | Website IP (e.g. `127.0.0.1`).                        |
+| `website_ip`           | text | Yes      | Website IP (e.g. `127.0.0.1`). Rejected if the IP already belongs to another account or is blocklisted. |
 
 ### Bank & Tax Data
 
@@ -63,17 +66,86 @@ This endpoint uploads files, so use `Content-Type: multipart/form-data`. The `va
 | :------------- | :--- | :------- | :------------------------------------------------- |
 | `bank_code`    | text | Yes      | Bank code (from the [Bank List](/close-api/bank-list)). |
 | `bank_number`  | text | Yes      | Bank account number.                             |
-| `bank_account` | text | Yes      | Account holder name (must match the account/business name). |
-| `npwp_no`      | text | Yes      | Tax ID (NPWP) number.                             |
+| `bank_account` | text | Yes      | Account holder name. Must match one of: the account name, the account's company name, or `business_name`. The `bank_code` + `bank_number` pair must not already be registered to another account. |
+| `npwp_no`      | text | No       | Tax ID (NPWP) number.                             |
 
 ### Documents (Files)
 
 | Parameter                | Type | Required | Description                                              |
 | :----------------------- | :--- | :------- | :------------------------------------------------------ |
-| `national_id_photo`      | file | Yes      | KTP file (`.png`/`.jpg`/`.jpeg`, max. 2MB).            |
-| `selfie_photo`           | file | Yes      | Selfie holding the KTP (max. 2MB).                    |
-| `passbook_photo`         | file | Yes      | Photo/scan of the bank passbook (max. 2MB).          |
-| `business_license_photo` | file | No       | Business license scan (`.png`/`.jpg`/`.jpeg`, max. 2MB). |
+| `national_id_photo`      | file | Yes      | KTP file.                                              |
+| `selfie_photo`           | file | Yes      | Selfie holding the KTP.                                |
+| `passbook_photo`         | file | Yes      | Photo/scan of the bank passbook showing the account number and holder name. |
+| `director_id_photo`      | file | No       | Director's KTP file (for `business_type` = `2`).       |
+| `business_license_photo` | file | No       | Business license scan.                                 |
+
+All files accept `.jpg`, `.jpeg`, `.png`, `.pdf`, max. 2MB.
+
+## Example Request
+
+This endpoint uses `multipart/form-data`, so send form fields — not JSON.
+
+```bash
+curl -X POST https://my.ipaymu.com/api/v2/merchant-verification \
+  -H "va: 1179000899" \
+  -H "signature: <signature>" \
+  -H "timestamp: 20260908120000" \
+  -F "account=1179000899" \
+  -F "birthday=1990-05-17" \
+  -F "birthplace=Denpasar" \
+  -F "gender=L" \
+  -F "national_id=5171010101900001" \
+  -F "province=ACEH" \
+  -F "city=KABUPATEN ACEH SELATAN" \
+  -F "district=BAKONGAN" \
+  -F "village=KEUDE BAKONGAN" \
+  -F "postal_code=23773" \
+  -F "address=Jl. Merdeka No. 10" \
+  -F "business_name=Toko Contoh" \
+  -F "business_description=Menjual perlengkapan kantor" \
+  -F "business_type=1" \
+  -F "business_category=accounting--auditing----bookkeeping-services" \
+  -F "business_address=Jl. Merdeka No. 10" \
+  -F "business_email=toko@contoh.co.id" \
+  -F "website_url=https://contoh.co.id" \
+  -F "website_ip=203.0.113.10" \
+  -F "bank_code=002" \
+  -F "bank_number=1234567890" \
+  -F "bank_account=Toko Contoh" \
+  -F "national_id_photo=@ktp.jpg" \
+  -F "selfie_photo=@selfie.jpg" \
+  -F "passbook_photo=@buku-tabungan.jpg"
+```
+
+<Callout type="warn">
+  **Signing multipart requests.** Compute the signature over the string `{}` — not over the
+  form contents. The server supports this path specifically for requests carrying files. If
+  you try to sign the whole body it will be rejected: file fields are included and encoded as
+  `{}`, which the server then normalises again to `""` — very easy to get wrong. See
+  [header & signature](/close-api).
+</Callout>
+
+## Where Each Value Comes From
+
+The most common mistake is mixing up **code** and **name**. They are different:
+
+| Parameter                                  | Source                                                       | Send the   | Example |
+| :----------------------------------------- | :---------------------------------------------------------- | :--------- | :----- |
+| `province`, `city`, `district`, `village`  | [Area](/close-api/area)                                      | **`name`** | `ACEH`, `BAKONGAN` |
+| `postal_code`                              | [Area](/close-api/area) — village level                  | `postal_code` | `23773` |
+| `bank_code`                                | [Bank List](/close-api/bank-list)                            | **`code`** | `002` (Bank Rakyat Indonesia) |
+| `business_category`                        | [Business Category](/close-api/business-category)            | **`Code`** | `accounting--auditing----bookkeeping-services` |
+
+<Callout type="warn">
+  `bank_code` takes the bank **code** (`002`), not its name (`Bank Rakyat Indonesia`).
+  `business_category` takes the category **code**, a lowercase slug, and the match is
+  case-sensitive — send it exactly as the endpoint returns it, do not uppercase it.
+</Callout>
+
+<Callout type="info">
+  `bank_account` must match one of: the account name, the account's company name, or the
+  `business_name` you send in this request.
+</Callout>
 
 ## Example Response
 
@@ -83,10 +155,37 @@ This endpoint uploads files, so use `Content-Type: multipart/form-data`. The `va
   "Success": true,
   "Message": "Verification success",
   "Data": {
-    "VerificationId": 22567,
-    "VerificationStatus": {
-      "Code": -2,
-      "Desc": "PROCESSING"
+    "verification_id": 22567,
+    "verification_status": {
+      "code": -2,
+      "desc": "PROCESSING",
+      "state": "PROCESSING_ADMIN",
+      "step": null,
+      "notes": null
+    }
+  }
+}
+```
+
+When the submission is rejected by an admin, `notes` carries the per-section
+remarks and `step` points to the first step that must be fixed:
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "Verification success",
+  "Data": {
+    "verification_id": 22567,
+    "verification_status": {
+      "code": -1,
+      "desc": "UNCOMPLETED",
+      "state": "UNCOMPLETED",
+      "step": "profile",
+      "notes": {
+        "profile": ["ID card photo is blurry", "Name does not match the ID card"],
+        "bank": "Passbook is unreadable"
+      }
     }
   }
 }
@@ -95,13 +194,26 @@ This endpoint uploads files, so use `Content-Type: multipart/form-data`. The `va
 ## Verification Status
 
 | Code | Desc          | Description                                               |
-| :--- | :------------ | :------------------------------------------------------- |
-| `-2` | `PROCESSING`  | Account is being verified.                               |
-| `-1` | `UNCOMPLETED` | Verification rejected — incomplete/invalid documents.    |
+| :--- | :------------ | :-------------------------------------------------------- |
+| `-2` | `PROCESSING`  | Account is being verified; nothing to act on.            |
+| `-1` | `UNCOMPLETED` | Merchant action required: the submission was rejected, or it is still an unsubmitted draft. |
 | `1`  | `VERIFIED`    | Account is verified.                                     |
-| `0`  | `BASIC`       | Account is not yet verified.                             |
+| `0`  | `BASIC`       | Account is not verified yet.                             |
+
+### Additional fields
+
+| Field   | Description                                                                |
+| :------ | :------------------------------------------------------------------------- |
+| `state` | The precise state behind `code`: `BASIC`, `VERIFIED`, `PROCESSING`, `PROCESSING_ADMIN`, `INCOMPLETE`, `UNCOMPLETED`. |
+| `step`  | The step the merchant must fix or continue (`profile`, `business`, `bank`, `document`, `application`). `null` when there is none. |
+| `notes` | Per-section admin rejection remarks. `null` when the submission was not rejected. Each value may be a string or an array of strings. |
+
+<Callout type="warn">
+  Code `-2` means the submission is **still under review**, not rejected. Do not
+  tell the merchant that verification failed until `code` is `-1`.
+</Callout>
 
 <Callout type="info">
-  `province`/`city`/`district`/`village` come from the [Area API](/docs/area-api), `bank_code` from
+  `province`/`city`/`district`/`village` come from the [Area API](/close-api/area), `bank_code` from
   the [Bank List](/close-api/bank-list), and `business_category` from [Business Category](/close-api/business-category).
 </Callout>
