@@ -4,6 +4,7 @@
         "index",
         "register",
         "transfer-va",
+        "withdraw-auto",
         "profile",
         "area",
         "bank-list",

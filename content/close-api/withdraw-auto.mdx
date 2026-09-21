@@ -1,0 +1,155 @@
+---
+title: Auto Withdraw
+description: Mendaftarkan penarikan dana otomatis untuk akun sendiri maupun akun anak, lalu memantau status persetujuannya.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+Auto Withdraw menjalankan penarikan saldo merchant ke rekening bank terdaftar secara berkala tanpa
+perlu request penarikan satu per satu. Lewat API ini Anda bisa **mendaftarkan** konfigurasinya
+sendiri — sebelumnya pendaftaran hanya bisa dilakukan tim iPaymu.
+
+<Callout type="warn">
+  Pendaftaran tidak langsung aktif. Setiap pendaftaran masuk dengan status `pending` dan baru
+  berjalan setelah direview dan disetujui tim iPaymu. Selama statusnya belum `active`, tidak ada
+  penarikan yang dijalankan.
+</Callout>
+
+## Alur
+
+1. Merchant memanggil `withdraw-auto/register` untuk dirinya sendiri atau untuk akun anak.
+2. Konfigurasi tersimpan dengan status `pending`.
+3. Tim iPaymu memeriksa dan menyetujui (`active`) atau menolak (`rejected`).
+4. Merchant memantau hasilnya lewat `withdraw-auto/detail` atau `withdraw-auto/list`. Kalau ditolak,
+   alasannya ada di field `RejectReason`.
+
+## Syarat
+
+- Akun yang didaftarkan harus sudah terverifikasi dan punya rekening bank terdaftar.
+- Untuk mendaftarkan akun anak, akun tersebut harus sudah terhubung sebagai child lewat
+  [Register (Single Sign On)](/close-api/register) atau assign affiliate.
+- Satu akun hanya boleh punya satu konfigurasi auto withdraw.
+
+## Request Header
+
+Lihat [header & signature](/close-api) yang wajib disertakan pada setiap request Close API.
+
+---
+
+## Register
+
+**URL**: `{{baseUrl}}/api/v2/withdraw-auto/register`
+**Method**: `POST`
+
+| Lingkungan | URL                                                       |
+| :--------- | :-------------------------------------------------------- |
+| Sandbox    | `https://sandbox.ipaymu.com/api/v2/withdraw-auto/register` |
+| Production | `https://my.ipaymu.com/api/v2/withdraw-auto/register`      |
+
+### Request Body
+
+| Parameter                      | Tipe    | Wajib             | Deskripsi                                                                                     |
+| :----------------------------- | :------ | :---------------- | :-------------------------------------------------------------------------------------------- |
+| `account`                      | string  | Tidak             | VA akun yang didaftarkan. Kosongkan untuk mendaftarkan akun sendiri; isi VA anak untuk anak.    |
+| `max_withdraw`                 | numeric | Ya                | Limit maksimal total penarikan per periode.                                                     |
+| `withdraw_amount`              | numeric | Tidak             | Nominal maksimal per satu penarikan, minimal `50000`. Kosong = sebesar `max_withdraw`.          |
+| `min_balance`                  | numeric | Tidak             | Saldo minimal yang disisakan. Default `0`.                                                      |
+| `withdraw_period`              | string  | Ya                | `day`, `date`, atau `custom`.                                                                   |
+| `withdraw_processed_day`       | array   | Jika `day`        | Hari penarikan: `monday` … `sunday`.                                                            |
+| `withdraw_processed_date`      | integer | Jika `date`       | Tanggal penarikan, `1`–`31`.                                                                    |
+| `custom_withdraw_period_value` | integer | Jika `custom`     | Jarak hari antar penarikan.                                                                     |
+| `withdraw_processed_time`      | string  | Ya                | Jam penarikan, format `HH:mm:ss` (mis. `22:00:00`).                                             |
+
+<Callout>
+  Rekening tujuan dan partner bank tidak dikirim di request. Tujuan penarikan selalu rekening bank
+  yang terdaftar pada akun, dan partner bank ditentukan iPaymu saat review.
+</Callout>
+
+### Contoh Request
+
+```json
+{
+  "account": "1234567890",
+  "max_withdraw": 10000000,
+  "withdraw_amount": 2000000,
+  "min_balance": 100000,
+  "withdraw_period": "day",
+  "withdraw_processed_day": ["monday", "thursday"],
+  "withdraw_processed_time": "22:00:00"
+}
+```
+
+### Contoh Response
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "registration submitted, waiting for approval",
+  "Data": {
+    "Id": 121,
+    "Va": "1234567890",
+    "Name": "PT Example Company",
+    "Status": "pending",
+    "MinBalance": 100000,
+    "MaxWithdraw": 10000000,
+    "WithdrawAmount": 2000000,
+    "WithdrawPeriod": "day",
+    "WithdrawProcessed": "monday,thursday",
+    "WithdrawProcessedTime": "22:00:00",
+    "RejectReason": null,
+    "LastWithdrawAt": null,
+    "ReviewedAt": null,
+    "CreatedAt": "2026-09-19 10:15:00"
+  }
+}
+```
+
+---
+
+## Detail
+
+Mengambil status satu pendaftaran.
+
+**URL**: `{{baseUrl}}/api/v2/withdraw-auto/detail`
+**Method**: `POST`
+
+| Parameter | Tipe   | Wajib | Deskripsi                                                   |
+| :-------- | :----- | :---- | :---------------------------------------------------------- |
+| `account` | string | Tidak | VA akun. Kosongkan untuk akun sendiri.                       |
+
+---
+
+## List
+
+Mengambil seluruh pendaftaran yang **Anda** daftarkan — milik sendiri maupun anak.
+
+**URL**: `{{baseUrl}}/api/v2/withdraw-auto/list`
+**Method**: `POST`
+
+| Parameter | Tipe   | Wajib | Deskripsi                                                        |
+| :-------- | :----- | :---- | :---------------------------------------------------------------- |
+| `status`  | string | Tidak | Filter: `pending`, `active`, `rejected`, `inactive`.               |
+
+---
+
+## Status
+
+| Status     | Arti                                                                       |
+| :--------- | :------------------------------------------------------------------------- |
+| `pending`  | Menunggu review tim iPaymu. Belum ada penarikan yang berjalan.              |
+| `active`   | Disetujui dan berjalan sesuai periode yang didaftarkan.                     |
+| `rejected` | Ditolak saat review. Alasannya ada di `RejectReason`.                       |
+| `inactive` | Pernah aktif, lalu dihentikan tim iPaymu.                                   |
+
+## Kode Error
+
+| HTTP | Message                                                  | Penyebab                                                       |
+| :--- | :-------------------------------------------------------- | :-------------------------------------------------------------- |
+| 400  | `invalid account`                                         | VA tidak ditemukan, atau bukan akun Anda / anak Anda.            |
+| 400  | `account has no registered bank account`                  | Akun belum punya rekening bank terdaftar.                        |
+| 400  | `max_withdraw must be greater than or equal to withdraw_amount` | Nominal per penarikan melebihi limit per periode.          |
+| 400  | `min_balance must be lower than max_withdraw`             | Saldo minimal melebihi limit per periode.                        |
+| 403  | `service 515 not found`                                   | Akses Auto Withdraw belum diaktifkan untuk akun Anda.            |
+| 404  | `auto withdraw registration not found`                    | Akun belum pernah mendaftar.                                     |
+| 409  | `account already registered for auto withdraw with status …` | Sudah ada konfigurasi untuk akun tersebut.                    |

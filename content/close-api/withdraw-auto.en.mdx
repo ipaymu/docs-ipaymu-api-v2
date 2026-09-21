@@ -1,0 +1,155 @@
+---
+title: Auto Withdraw
+description: Register automatic withdrawals for your own account or a child account, then track its approval status.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+Auto Withdraw periodically disburses a merchant's balance to its registered bank account without a
+per-transaction withdrawal request. This API lets you **register** that configuration yourself —
+previously registration was only possible through the iPaymu team.
+
+<Callout type="warn">
+  Registration is not active immediately. Every registration starts as `pending` and only runs once
+  the iPaymu team has reviewed and approved it. No withdrawal is executed while the status is not
+  `active`.
+</Callout>
+
+## Flow
+
+1. The merchant calls `withdraw-auto/register` for itself or for a child account.
+2. The configuration is stored with status `pending`.
+3. The iPaymu team approves (`active`) or rejects (`rejected`) it.
+4. The merchant tracks the result through `withdraw-auto/detail` or `withdraw-auto/list`. When
+   rejected, the reason is in `RejectReason`.
+
+## Requirements
+
+- The registered account must be verified and have a registered bank account.
+- To register a child account, that account must already be linked as a child through
+  [Register (Single Sign On)](/close-api/register) or an affiliate assignment.
+- An account can only have one auto withdraw configuration.
+
+## Request Headers
+
+See the [headers & signature](/close-api) required on every Close API request.
+
+---
+
+## Register
+
+**URL**: `{{baseUrl}}/api/v2/withdraw-auto/register`
+**Method**: `POST`
+
+| Environment | URL                                                        |
+| :---------- | :--------------------------------------------------------- |
+| Sandbox     | `https://sandbox.ipaymu.com/api/v2/withdraw-auto/register`  |
+| Production  | `https://my.ipaymu.com/api/v2/withdraw-auto/register`       |
+
+### Request Body
+
+| Parameter                      | Type    | Required        | Description                                                                              |
+| :----------------------------- | :------ | :-------------- | :---------------------------------------------------------------------------------------- |
+| `account`                      | string  | No              | VA of the account to register. Omit for your own account; pass a child VA for a child.     |
+| `max_withdraw`                 | numeric | Yes             | Maximum total withdrawal per period.                                                       |
+| `withdraw_amount`              | numeric | No              | Maximum amount per single withdrawal, minimum `50000`. Empty = same as `max_withdraw`.     |
+| `min_balance`                  | numeric | No              | Minimum balance to keep. Defaults to `0`.                                                  |
+| `withdraw_period`              | string  | Yes             | `day`, `date`, or `custom`.                                                                |
+| `withdraw_processed_day`       | array   | If `day`        | Withdrawal days: `monday` … `sunday`.                                                      |
+| `withdraw_processed_date`      | integer | If `date`       | Day of month, `1`–`31`.                                                                    |
+| `custom_withdraw_period_value` | integer | If `custom`     | Number of days between withdrawals.                                                        |
+| `withdraw_processed_time`      | string  | Yes             | Withdrawal time, `HH:mm:ss` format (e.g. `22:00:00`).                                      |
+
+<Callout>
+  The destination account and bank partner are not part of the request. Funds always go to the bank
+  account registered on the account, and the bank partner is decided by iPaymu during review.
+</Callout>
+
+### Example Request
+
+```json
+{
+  "account": "1234567890",
+  "max_withdraw": 10000000,
+  "withdraw_amount": 2000000,
+  "min_balance": 100000,
+  "withdraw_period": "day",
+  "withdraw_processed_day": ["monday", "thursday"],
+  "withdraw_processed_time": "22:00:00"
+}
+```
+
+### Example Response
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "registration submitted, waiting for approval",
+  "Data": {
+    "Id": 121,
+    "Va": "1234567890",
+    "Name": "PT Example Company",
+    "Status": "pending",
+    "MinBalance": 100000,
+    "MaxWithdraw": 10000000,
+    "WithdrawAmount": 2000000,
+    "WithdrawPeriod": "day",
+    "WithdrawProcessed": "monday,thursday",
+    "WithdrawProcessedTime": "22:00:00",
+    "RejectReason": null,
+    "LastWithdrawAt": null,
+    "ReviewedAt": null,
+    "CreatedAt": "2026-09-19 10:15:00"
+  }
+}
+```
+
+---
+
+## Detail
+
+Retrieve the status of a single registration.
+
+**URL**: `{{baseUrl}}/api/v2/withdraw-auto/detail`
+**Method**: `POST`
+
+| Parameter | Type   | Required | Description                                 |
+| :-------- | :----- | :------- | :------------------------------------------- |
+| `account` | string | No       | Account VA. Omit for your own account.        |
+
+---
+
+## List
+
+Retrieve every registration **you** submitted — your own and your children's.
+
+**URL**: `{{baseUrl}}/api/v2/withdraw-auto/list`
+**Method**: `POST`
+
+| Parameter | Type   | Required | Description                                             |
+| :-------- | :----- | :------- | :-------------------------------------------------------- |
+| `status`  | string | No       | Filter: `pending`, `active`, `rejected`, `inactive`.       |
+
+---
+
+## Statuses
+
+| Status     | Meaning                                                            |
+| :--------- | :------------------------------------------------------------------ |
+| `pending`  | Awaiting iPaymu review. No withdrawal runs yet.                      |
+| `active`   | Approved and running on the registered schedule.                     |
+| `rejected` | Rejected during review. The reason is in `RejectReason`.             |
+| `inactive` | Was active, then stopped by the iPaymu team.                         |
+
+## Error Codes
+
+| HTTP | Message                                                          | Cause                                                      |
+| :--- | :----------------------------------------------------------------- | :----------------------------------------------------------- |
+| 400  | `invalid account`                                                 | VA not found, or not your account / child.                   |
+| 400  | `account has no registered bank account`                          | The account has no registered bank account.                  |
+| 400  | `max_withdraw must be greater than or equal to withdraw_amount`   | Per-withdrawal amount exceeds the per-period limit.          |
+| 400  | `min_balance must be lower than max_withdraw`                     | Minimum balance exceeds the per-period limit.                |
+| 403  | `service 515 not found`                                           | Auto Withdraw access is not enabled for your account.        |
+| 404  | `auto withdraw registration not found`                            | The account has never registered.                            |
+| 409  | `account already registered for auto withdraw with status …`      | A configuration already exists for that account.             |
