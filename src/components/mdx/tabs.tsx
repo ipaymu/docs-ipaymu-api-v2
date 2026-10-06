@@ -84,7 +84,7 @@ export function TabsList({ children, className, ...props }: ComponentPropsWithou
           {context.isLanguage ? (
             <span className="docs-terminal-lights" aria-hidden="true"><i /><i /><i /></span>
           ) : (
-            <span className="text-xs font-medium text-muted-foreground">Format</span>
+            <span className="docs-format-label text-xs font-medium">Format</span>
           )}
           <label className="docs-language-select">
             <span className="sr-only">{context.isLanguage ? "Programming language" : "Payload format"}</span>
