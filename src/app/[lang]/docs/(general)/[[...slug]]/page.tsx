@@ -18,6 +18,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/mdx/tabs"
 import { CpuIcon, PanelsTopLeft, Database, Terminal } from "lucide-react";
 import { PostmanButton } from "@/components/mdx/postman-button";
 import { AIChatButton } from "@/components/mdx/ai-chat-button";
+import { EndpointPanel } from "@/components/environment";
+import { getDocsEndpoints } from "@/lib/docs-endpoints";
 
 // 3. BUAT DUMMY COMPONENT UNTUK FEEDBACKBLOCK (Supaya tidak error)
 const FeedbackBlock = ({ children }: { children: React.ReactNode }) => (
@@ -37,6 +39,7 @@ export default async function Page(props: { params: Promise<{ slug?: string[]; l
   if (!page) notFound();
 
   const MDX = page.data.body;
+  const endpoints = getDocsEndpoints(params.slug);
 
   return (
     <DocsPage
@@ -58,6 +61,7 @@ export default async function Page(props: { params: Promise<{ slug?: string[]; l
       </div>
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>
+        {endpoints.length > 0 && <EndpointPanel entries={endpoints} lang={params.lang} />}
         <MDX
           components={{
             ...getMDXComponents({

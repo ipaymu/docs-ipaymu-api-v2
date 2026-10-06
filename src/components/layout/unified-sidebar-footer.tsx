@@ -70,42 +70,40 @@ export function UnifiedSidebarFooter({ lang }: { lang: string }) {
           ref={dropdownRef}
           style={dropdownStyle}
           className={cn(
-            'z-[9999] bg-white dark:bg-zinc-950 opacity-100',
-            'border-2 border-black dark:border-white',
-            'shadow-brutal dark:shadow-[3px_3px_0px_0px_#ffffff]',
-            'rounded-none py-1 animate-in fade-in slide-in-from-bottom-2 duration-150'
+            'z-[9999] rounded-xl border border-border bg-card py-1 text-foreground shadow-xl',
+            'animate-in fade-in slide-in-from-bottom-2 duration-150'
           )}
         >
           <button
             type="button"
             onClick={() => toggleLanguage('id')}
             className={cn(
-              'flex items-center justify-between w-full px-3 py-2 text-xs font-bold text-left transition-colors cursor-pointer',
+              'flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-left transition-colors cursor-pointer',
               lang === 'id'
-                ? 'bg-primary text-white'
-                : 'text-foreground hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white'
+                ? 'bg-primary/10 text-primary'
+                : 'text-foreground hover:bg-secondary'
             )}
           >
             <span className="flex items-center gap-2">
               <span>🇮🇩</span> Bahasa Indonesia
             </span>
-            {lang === 'id' && <Check className="w-4 h-4 text-white stroke-[3]" />}
+            {lang === 'id' && <Check className="w-4 h-4 text-primary" />}
           </button>
 
           <button
             type="button"
             onClick={() => toggleLanguage('en')}
             className={cn(
-              'flex items-center justify-between w-full px-3 py-2 text-xs font-bold text-left transition-colors cursor-pointer border-t border-border/50',
+              'flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-left transition-colors cursor-pointer border-t border-border/50',
               lang === 'en'
-                ? 'bg-primary text-white'
-                : 'text-foreground hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white'
+                ? 'bg-primary/10 text-primary'
+                : 'text-foreground hover:bg-secondary'
             )}
           >
             <span className="flex items-center gap-2">
               <span>🇬🇧</span> English
             </span>
-            {lang === 'en' && <Check className="w-4 h-4 text-white stroke-[3]" />}
+            {lang === 'en' && <Check className="w-4 h-4 text-primary" />}
           </button>
         </div>,
         document.body
@@ -114,20 +112,19 @@ export function UnifiedSidebarFooter({ lang }: { lang: string }) {
 
   return (
     <div ref={triggerRef} className="relative w-full z-10">
-      {/* Neo-Brutalism Single Unified Sidebar Footer Bar */}
+      {/* Compact navigation preferences shared by all docs pages. */}
       <div
         className={cn(
-          'flex items-center justify-between gap-2 h-10 px-3',
-          'bg-background border-2 border-black dark:border-white',
-          'shadow-brutal dark:shadow-[2px_2px_0px_0px_#ffffff]',
-          'rounded-none text-xs w-full transition-all'
+          'flex items-center justify-between gap-2 h-10 px-2.5',
+          'bg-card border border-border shadow-sm',
+          'rounded-xl text-xs w-full transition-colors'
         )}
       >
         {/* Left: Language Select Trigger */}
         <button
           type="button"
           onClick={() => setOpen((prev) => !prev)}
-          className="flex items-center gap-2 flex-1 min-w-0 text-left text-xs font-bold text-foreground focus:outline-none cursor-pointer"
+          className="flex items-center gap-2 flex-1 min-w-0 text-left text-xs font-medium text-foreground focus-visible:outline-2 focus-visible:outline-primary rounded-md cursor-pointer"
         >
           <Languages className="w-4 h-4 text-primary shrink-0" />
           <span className="truncate flex-1">
@@ -141,15 +138,14 @@ export function UnifiedSidebarFooter({ lang }: { lang: string }) {
           />
         </button>
 
-        {/* Right: Theme Toggle with Distinct Active Background Highlight */}
-        <div className="flex items-center gap-1 border-l-2 border-black dark:border-white pl-2.5 shrink-0">
+        <div className="flex items-center gap-1 border-l border-border pl-2.5 shrink-0">
           <button
             type="button"
             onClick={() => setTheme('light')}
             className={cn(
-              'p-1.5 rounded-none transition-all cursor-pointer border border-transparent',
+              'p-1.5 rounded-md transition-colors cursor-pointer border border-transparent',
               theme !== 'dark'
-                ? 'bg-amber-400 text-black border-black font-bold shadow-xs'
+                ? 'bg-primary/10 text-primary'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             )}
             aria-label="Light mode"
@@ -162,9 +158,9 @@ export function UnifiedSidebarFooter({ lang }: { lang: string }) {
             type="button"
             onClick={() => setTheme('dark')}
             className={cn(
-              'p-1.5 rounded-none transition-all cursor-pointer border border-transparent',
+              'p-1.5 rounded-md transition-colors cursor-pointer border border-transparent',
               theme === 'dark'
-                ? 'bg-indigo-600 text-white border-white font-bold shadow-xs'
+                ? 'bg-primary/10 text-primary'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             )}
             aria-label="Dark mode"

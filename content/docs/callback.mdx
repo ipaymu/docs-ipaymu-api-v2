@@ -12,17 +12,17 @@ Ketika pembeli berhasil melakukan pembayaran, iPaymu akan mengirimkan notifikasi
 
 ## Konfigurasi
 
+URL callback adalah endpoint **di server Anda**, bukan Base URL API iPaymu. Contoh: `https://your-domain.com/ipaymu/callback`. Anda boleh memakai URL yang sama untuk Sandbox dan Production, atau URL terpisah (misalnya `https://staging.your-domain.com/ipaymu/callback` untuk Sandbox). Daftarkan URL yang Anda pilih di pengaturan masing-masing lingkungan:
+
+- **Production:** [Pengaturan Integrasi Production](https://my.ipaymu.com/integration/setting)
+- **Sandbox:** [Pengaturan Integrasi Sandbox](https://sandbox.ipaymu.com/integration/setting)
+
 Anda dapat mengatur tipe konten callback di dashboard iPaymu. Pilih format yang sesuai dengan sistem Anda:
 
 | Content-Type | Deskripsi |
 |:-------------|:----------|
 | `application/x-www-form-urlencoded` | Default. Direkomendasikan untuk stabilitas dan kompatibilitas yang lebih baik |
 | `application/json` | Format alternatif jika sistem Anda lebih menyukai JSON |
-
-**Link Pengaturan:**
-
-- **Production:** [https://my.ipaymu.com/integration/setting](https://my.ipaymu.com/integration/setting)
-- **Sandbox:** [https://sandbox.ipaymu.com/integration/setting](https://sandbox.ipaymu.com/integration/setting)
 
 ### Secret Key untuk Validasi Signature
 
@@ -74,7 +74,7 @@ Setiap request callback menyertakan headers berikut. `X-Signature` sangat pentin
 | Header | Value | Deskripsi |
 |:-------|:------|:----------|
 | `Accept` | `application/json` | Tipe konten yang diharapkan iPaymu untuk response |
-| `Content-Type` | `application/json` | Format body request |
+| `Content-Type` | `application/x-www-form-urlencoded` atau `application/json` | Format body sesuai pengaturan callback di dashboard |
 | `X-External-ID` | `20251111101052209120` | Identifier unik untuk request callback ini |
 | `X-Signature` | `c9594cc8...` | Signature HMAC-SHA256 untuk validasi |
 | `X-Timestamp` | `2025-11-11T10:10:52+07:00` | Timestamp ketika callback dibuat |
@@ -87,7 +87,7 @@ Berikut adalah contoh payload lengkap yang dikirimkan oleh iPaymu:
 
 ### Contoh x-www-form-urlencoded
 
-```
+```http
 POST /callback HTTP/1.1
 Host: your-domain.com
 Content-Type: application/x-www-form-urlencoded
@@ -292,7 +292,7 @@ Untuk memastikan callback benar-benar berasal dari iPaymu, Anda harus memvalidas
   </TabsList>
 
   <TabsContent value="js" className="p-0">
-    <Tabs defaultValue="urlencoded">
+    <Tabs defaultValue="urlencoded" groupId="format">
       <TabsList>
         <TabsTrigger value="urlencoded">x-www-form-urlencoded</TabsTrigger>
         <TabsTrigger value="json">application/json</TabsTrigger>
@@ -455,7 +455,7 @@ app.listen(PORT, () => {
   </TabsContent>
 
   <TabsContent value="php" className="p-0">
-    <Tabs defaultValue="urlencoded">
+    <Tabs defaultValue="urlencoded" groupId="format">
       <TabsList>
         <TabsTrigger value="urlencoded">x-www-form-urlencoded</TabsTrigger>
         <TabsTrigger value="json">application/json</TabsTrigger>
@@ -598,7 +598,7 @@ if (hash_equals($calculatedSignature, $receivedSignature)) {
   </TabsContent>
 
   <TabsContent value="go" className="p-0">
-    <Tabs defaultValue="urlencoded">
+    <Tabs defaultValue="urlencoded" groupId="format">
       <TabsList>
         <TabsTrigger value="urlencoded">x-www-form-urlencoded</TabsTrigger>
         <TabsTrigger value="json">application/json</TabsTrigger>
@@ -876,7 +876,7 @@ func main() {
   </TabsContent>
 
   <TabsContent value="rust" className="p-0">
-    <Tabs defaultValue="urlencoded">
+    <Tabs defaultValue="urlencoded" groupId="format">
       <TabsList>
         <TabsTrigger value="urlencoded">x-www-form-urlencoded</TabsTrigger>
         <TabsTrigger value="json">application/json</TabsTrigger>
@@ -1108,7 +1108,7 @@ async fn main() -> std::io::Result<()> {
   </TabsContent>
 
   <TabsContent value="python" className="p-0">
-    <Tabs defaultValue="urlencoded">
+    <Tabs defaultValue="urlencoded" groupId="format">
       <TabsList>
         <TabsTrigger value="urlencoded">x-www-form-urlencoded</TabsTrigger>
         <TabsTrigger value="json">application/json</TabsTrigger>

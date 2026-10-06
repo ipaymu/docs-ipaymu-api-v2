@@ -1,4 +1,4 @@
-import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
+import { Fira_Code, Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import { Provider } from "@/components/provider";
 import "@/app/global.css";
 import { type ReactNode } from "react";
@@ -17,6 +17,11 @@ const spaceGrotesk = Space_Grotesk({
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
+});
+
+const firaCode = Fira_Code({
+  subsets: ["latin"],
+  variable: "--font-code",
 });
 
 export function generateStaticParams() {
@@ -60,7 +65,7 @@ export default async function Layout({
   return (
     <html
       lang={lang}
-      className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}
+      className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} ${firaCode.variable}`}
       suppressHydrationWarning
     >
       <body className="flex flex-col min-h-screen" suppressHydrationWarning>

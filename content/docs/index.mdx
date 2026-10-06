@@ -22,11 +22,11 @@ Selamat datang di dokumentasi **iPaymu API v2**. API ini memungkinkan Anda untuk
 
 iPaymu API v2 menggunakan **autentikasi berbasis Signature**. Setiap request harus menyertakan header berikut:
 
-| Header      | Deskripsi                                                                                                                                       |
-| :---------- | :---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `va`        | Nomor Virtual Account Anda (dari Dashboard iPaymu).                                                                                             |
-| `signature` | String signature yang dihasilkan untuk memverifikasi request.                                                                                   |
-| `timestamp` | Timestamp saat ini (format: `YYYYMMDDHHmmss` atau ISO 8601 tergantung kebutuhan endpoint, biasanya `YYYYMMDDHHmmss` untuk pembuatan signature). |
+| Header | Tipe | Contoh | Deskripsi |
+| :----- | :--- | :----- | :-------- |
+| `va` | `string` | `YOUR_VA` | Nomor Virtual Account dari menu Integrasi [Production](https://my.ipaymu.com/integration) atau [Sandbox](https://sandbox.ipaymu.com/integration). Gunakan VA sesuai environment request. |
+| `signature` | `string` (64 karakter heksadesimal) | `GENERATED_SIGNATURE` | Hasil HMAC-SHA256 yang dibuat untuk request ini memakai API Key dari menu Integrasi [Production](https://my.ipaymu.com/integration) atau [Sandbox](https://sandbox.ipaymu.com/integration). API Key bukan nilai header ini. Lihat [Pembuatan Signature](/id/docs/signature). |
+| `timestamp` | `string` (14 digit) | `20260102153045` | Waktu request dalam format `YYYYMMDDHHmmss` (2 Januari 2026 pukul 15:30:45). Ikuti panduan endpoint jika mensyaratkan ISO 8601. |
 
 ## Contoh Kode (Sample Code)
 

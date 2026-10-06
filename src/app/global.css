@@ -147,7 +147,7 @@ body {
 
 /* Right Sidebar (TOC) Active State */
 .fd-toc-item[data-active="true"] {
-  @apply text-primary border-l-2 border-primary pl-4 font-bold bg-primary/10 py-1;
+  @apply text-primary border-l-2 border-primary pl-4 font-semibold bg-primary/5 py-1 rounded-r-md;
 }
 
 .fd-toc-item[data-active="true"] svg {
@@ -168,16 +168,20 @@ svg.fd-toc-marker {
 
 /* Main Sidebar Navigation Active State */
 .fd-sidebar-item[data-active="true"] {
-  @apply bg-accent/10 text-primary border-r-2 border-primary;
+  background: color-mix(in srgb, var(--primary) 10%, var(--card));
+  color: var(--primary);
+  font-weight: 600;
+  box-shadow: inset 2px 0 0 var(--color-primary);
 }
 
 .fd-sidebar-item[data-active="true"] svg {
   @apply text-primary stroke-current;
 }
 
-/* Ensure sidebar item base style allows for the border effect */
 .fd-sidebar-item {
-  @apply rounded-none border-r-2 border-transparent transition-all;
+  border: 0;
+  border-radius: 8px;
+  transition: background-color .18s ease, color .18s ease;
 }
 
 /* TOC hover effects */
@@ -191,7 +195,8 @@ svg.fd-toc-marker {
 
 /* Sidebar hover effects */
 .fd-sidebar-item:hover {
-  @apply text-gray-900 dark:text-gray-100;
+  background: var(--secondary);
+  color: var(--foreground);
 }
 
 /* Fix padding/margin issues in nested code blocks */
@@ -206,11 +211,143 @@ code,
 kbd,
 samp,
 pre {
-  font-family: var(--font-mono);
+  font-family: var(--font-code), var(--font-mono), monospace;
 }
 
 html {
   scroll-behavior: smooth;
+}
+
+/* Shared API environment control used by the docs and the homepage example. */
+.environment-switch {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--secondary);
+}
+
+.environment-switch button {
+  padding: 6px 11px;
+  border-radius: 999px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.environment-switch button[aria-pressed="true"] {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.environment-switch button:focus-visible,
+.endpoint-panel-row button:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.endpoint-panel {
+  margin: 28px 0 36px;
+  scroll-margin-top: 80px;
+}
+
+.endpoint-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.endpoint-panel-kicker {
+  margin: 0 0 4px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .12em;
+}
+
+.endpoint-panel-heading h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.endpoint-panel-list {
+  display: grid;
+  gap: 8px;
+}
+
+.endpoint-panel-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--background);
+}
+
+.endpoint-method {
+  flex: none;
+  min-width: 44px;
+  color: var(--color-primary);
+  font: 700 12px var(--font-mono), monospace;
+}
+
+.endpoint-address {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.endpoint-label {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.endpoint-address code {
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.endpoint-panel-row button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.endpoint-panel-row button:hover {
+  background: var(--secondary);
+  color: var(--foreground);
+}
+
+.endpoint-panel-note {
+  margin: 14px 0 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+@media (max-width: 520px) {
+  .endpoint-panel-row { gap: 8px; }
 }
 
 @keyframes accordion-down {
@@ -292,4 +429,229 @@ html {
     width: var(--fd-sidebar-width) !important;
     height: calc(100dvh - var(--fd-nav-height)) !important;
   }
+}
+
+/* Calm, scannable integration flows across the API guides. */
+.docs-flowchart > div:first-child {
+  align-items: flex-end;
+  padding-bottom: 18px;
+  border-color: var(--border);
+}
+
+.docs-flowchart > div:first-child > div:first-child > div:first-child {
+  border: 0;
+  border-radius: 10px;
+}
+
+.docs-flowchart > div:first-child h3 {
+  font-size: 18px;
+  line-height: 1.3;
+}
+
+.docs-flowchart > div:first-child > div:last-child {
+  border-radius: 10px;
+  background: var(--secondary);
+}
+
+.docs-flowchart > div:first-child > div:last-child button {
+  min-height: 32px;
+  border: 0;
+  border-radius: 7px;
+}
+
+.docs-flowchart > div:first-child > div:last-child button.shadow-sm {
+  box-shadow: 0 1px 4px rgba(15, 23, 42, .08);
+}
+
+.docs-flowchart > .grid > div,
+.docs-flowchart > .relative > div > div:nth-child(2) {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: 0 5px 18px rgba(15, 23, 42, .045);
+}
+
+.docs-flowchart > .grid > div:hover,
+.docs-flowchart > .relative > div > div:nth-child(2):hover {
+  border-color: color-mix(in srgb, var(--primary) 34%, var(--border));
+  box-shadow: 0 10px 24px rgba(15, 23, 42, .09);
+}
+
+.docs-flowchart > .grid > div.ring-2,
+.docs-flowchart > .relative > div > div:nth-child(2).ring-2 {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.docs-flowchart > .grid > div > div:first-child > div:first-child > span:first-child {
+  border-radius: 6px;
+  background: var(--secondary);
+  color: var(--muted-foreground);
+  font-weight: 600;
+}
+
+.docs-flowchart > .grid > div > div:first-child > div:first-child > span:last-child,
+.docs-flowchart > .relative > div > div:nth-child(2) span[class*="border"] {
+  border-radius: 6px;
+}
+
+.docs-flowchart > .grid > div > div:first-child > div:nth-child(2) > div:first-child,
+.docs-flowchart > .relative > div > div:nth-child(2) > div > div:first-child > div:first-child {
+  border: 0;
+  border-radius: 9px;
+}
+
+.docs-flowchart > .grid > div > div:last-child {
+  border-top-style: solid;
+}
+
+.docs-flowchart > .relative::before {
+  width: 1px;
+  background: color-mix(in srgb, var(--primary) 28%, var(--border));
+}
+
+.docs-flowchart > .relative > div > div:first-child {
+  border: 1px solid color-mix(in srgb, var(--primary) 30%, var(--border));
+  border-radius: 50%;
+  background: var(--card);
+  box-shadow: 0 0 0 4px var(--background);
+}
+
+.docs-flowchart > .relative > div > div:nth-child(2) span[class*="bg-emerald-600"] {
+  border-radius: 6px;
+}
+
+.fd-sidebar-item[data-active="true"]:hover {
+  background: color-mix(in srgb, var(--primary) 12%, var(--card));
+  color: var(--primary);
+}
+
+@media (max-width: 520px) {
+  .docs-flowchart > div:first-child { align-items: flex-start; }
+  .docs-flowchart > .grid > div { min-height: 0; }
+}
+
+/* Reference tables: quiet headers, clear row rhythm, no heavy frames. */
+.mdx-table-wrapper {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, .04);
+}
+
+.mdx-table-wrapper table { border: 0; border-collapse: separate; border-spacing: 0; }
+.mdx-table-wrapper thead { background: var(--secondary); }
+.mdx-table-wrapper th {
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--foreground);
+  font-size: 12px;
+  letter-spacing: .015em;
+  white-space: nowrap;
+}
+.mdx-table-wrapper td {
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  color: var(--foreground);
+  vertical-align: top;
+  line-height: 1.55;
+}
+.mdx-table-wrapper tbody tr { background: var(--card); }
+.mdx-table-wrapper tbody tr:last-child td { border-bottom: 0; }
+.mdx-table-wrapper tbody tr:hover { background: color-mix(in srgb, var(--primary) 4%, var(--card)); }
+
+/* Fumadocs emits highlighted fences as figures, not MDX pre elements. */
+#nd-page figure.shiki,
+.mdx-pre-wrapper figure.shiki {
+  margin: 24px 0;
+  border: 1px solid #35393f;
+  border-radius: 14px;
+  background: #1e1e1e !important;
+  box-shadow: 0 14px 28px rgba(9, 20, 36, .16);
+  color: #e1e4e8;
+  font-family: var(--font-code), monospace;
+}
+
+#nd-page figure.shiki::before,
+.mdx-pre-wrapper figure.shiki::before {
+  display: block;
+  height: 46px;
+  padding-left: 83px;
+  border-bottom: 1px solid #3a3d42;
+  background: radial-gradient(circle at 21px 22px,#f45b69 0 5px,transparent 6px),
+              radial-gradient(circle at 41px 22px,#f5bd4f 0 5px,transparent 6px),
+              radial-gradient(circle at 61px 22px,#46c874 0 5px,transparent 6px),#252526;
+  color: #aab3bf;
+  content: "code";
+  font: 12px/46px var(--font-code), monospace;
+}
+
+#nd-page figure.shiki > div:first-child,
+.mdx-pre-wrapper figure.shiki > div:first-child {
+  top: 7px;
+  right: 9px;
+  z-index: 5;
+  color: #b8c3d2;
+  backdrop-filter: none;
+}
+
+#nd-page figure.shiki > div:first-child button,
+.mdx-pre-wrapper figure.shiki > div:first-child button {
+  width: 31px;
+  height: 31px;
+  border: 1px solid #454b55;
+  border-radius: 7px;
+  background: #30343a;
+  color: #c9d1dc;
+}
+
+#nd-page figure.shiki > div:first-child button:hover,
+.mdx-pre-wrapper figure.shiki > div:first-child button:hover { background: #414751; color: #fff; }
+#nd-page figure.shiki .fd-scroll-container,
+.mdx-pre-wrapper figure.shiki .fd-scroll-container { background: #1e1e1e; color: #e1e4e8; }
+#nd-page figure.shiki pre,
+.mdx-pre-wrapper figure.shiki pre { margin: 0; background: transparent !important; font-family: var(--font-code), monospace; }
+#nd-page figure.shiki code,
+.mdx-pre-wrapper figure.shiki code { font-family: var(--font-code), monospace; }
+#nd-page figure.shiki code span[style],
+.mdx-pre-wrapper figure.shiki code span[style] { color: var(--shiki-dark) !important; }
+#nd-page figure.shiki code span[style*="--shiki-dark: #9ECBFF"],
+.mdx-pre-wrapper figure.shiki code span[style*="--shiki-dark: #9ECBFF"] { color: #e8d17a !important; }
+
+.docs-language-tabs { border-color: #35393f; background: #1e1e1e; box-shadow: 0 14px 28px rgba(9, 20, 36, .16); }
+.docs-language-tabs > div:first-child {
+  min-height: 48px;
+  border-color: #3a3d42;
+  background: #252526;
+}
+.docs-language-tabs > .tabs-content { background: #1e1e1e; }
+.docs-language-tabs > .tabs-content > div { padding: 0; }
+.docs-language-tabs figure.shiki { margin: 0 !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; }
+.docs-language-tabs figure.shiki::before { display: none !important; }
+.docs-format-tabs { border: 0; border-radius: 0; background: #1e1e1e; box-shadow: none; }
+.docs-format-tabs > div:first-child { min-height: 48px; border-color: #3a3d42; background: #252526; }
+.docs-format-tabs > .tabs-content { background: #1e1e1e; }
+.docs-format-tabs > .tabs-content > div { padding: 0; }
+.docs-terminal-lights { display: inline-flex; gap: 7px; align-items: center; }
+.docs-terminal-lights i { width: 11px; height: 11px; border-radius: 50%; background: #f45b69; }
+.docs-terminal-lights i:nth-child(2) { background: #f5bd4f; }
+.docs-terminal-lights i:nth-child(3) { background: #46c874; }
+.docs-language-select { position: relative; display: inline-flex; align-items: center; color: #d8e1ec; }
+.docs-language-select select {
+  min-width: 128px;
+  padding: 7px 30px 7px 12px;
+  appearance: none;
+  border: 1px solid #4b535f;
+  border-radius: 8px;
+  background: #30343a;
+  color: #e8eef7;
+  font: 12px var(--font-code), monospace;
+  cursor: pointer;
+}
+.docs-language-select svg { position: absolute; right: 10px; pointer-events: none; }
+.docs-language-select select:focus-visible { outline: 2px solid #9fc8f7; outline-offset: 2px; }
+
+@media(max-width:520px){
+  .mdx-table-wrapper th,.mdx-table-wrapper td{padding:10px 12px}
+  #nd-page figure.shiki .fd-scroll-container{max-height:480px}
 }

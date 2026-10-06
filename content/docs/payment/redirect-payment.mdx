@@ -6,14 +6,6 @@ postman: https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=late
 
 import { Callout } from "fumadocs-ui/components/callout";
 
-<a
-  href="https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#5f0710b1-1aaa-4ece-aab2-a8e04b3ec9c6"
-  target="_blank"
-  className="button button--primary button--sm"
->
-  Coba di Postman
-</a>
-
 Redirect Payment memungkinkan Anda menggunakan halaman pembayaran yang di-host oleh iPaymu. Ini adalah cara termudah untuk integrasi jika Anda tidak ingin menangani UI untuk pemilihan pembayaran.
 
 <DanaNoticeCallout isRedirect />
@@ -25,19 +17,9 @@ Redirect Payment memungkinkan Anda menggunakan halaman pembayaran yang di-host o
 
 <RedirectPaymentFlowchart />
 
-## Endpoint
-
-**URL**: `{{baseUrl}}/api/v2/payment`
-**Metode**: `POST`
-
 ## Request Headers
 
-| Kunci          | Nilai              | Deskripsi                                                                |
-| :------------- | :----------------- | :----------------------------------------------------------------------- |
-| `Content-Type` | `application/json` |                                                                          |
-| `signature`    | `{{signature}}`    | Signature yang dihasilkan. Lihat [Pembuatan Signature](/docs/signature). |
-| `va`           | `{{va}}`           | Nomor Virtual Account Anda.                                              |
-| `timestamp`    | `{{timestamp}}`    | Timestamp saat ini.                                                      |
+<ApiRequestHeaders />
 
 ## Request Body
 

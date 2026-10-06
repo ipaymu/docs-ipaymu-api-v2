@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { ArrowUpRight, Send } from "lucide-react";
 
 export function PostmanButton({ className, url }: { className?: string, url?: string }) {
     if (!url) return null;
@@ -9,17 +10,13 @@ export function PostmanButton({ className, url }: { className?: string, url?: st
             target="_blank"
             rel="noopener noreferrer"
             className={cn(
-                "inline-flex w-fit items-center justify-center px-4 py-2 text-xs font-bold text-white bg-[#FF6C37] hover:bg-[#FF6C37]/90 border-2 border-black dark:border-white shadow-brutal dark:shadow-[3px_3px_0px_0px_#ffffff] hover:translate-y-px hover:translate-x-px hover:shadow-brutal-hover dark:hover:shadow-[1px_1px_0px_0px_#ffffff] transition-all rounded-none uppercase tracking-wider no-underline",
+                "inline-flex min-h-9 w-fit items-center justify-center gap-2 rounded-lg border border-[#e65b2b] bg-[#ff6c37] px-3.5 py-2 text-xs font-semibold text-white no-underline shadow-sm transition-colors hover:bg-[#e95c2d] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff6c37]",
                 className
             )}
         >
-            <img
-                src="https://run.pstmn.io/button.svg"
-                alt="Postman"
-                className="w-4 h-4 mr-2 m-0 p-0 block"
-                style={{ filter: "brightness(0) invert(1)" }}
-            />
+            <Send className="size-3.5" aria-hidden="true" />
             Test on Postman
+            <ArrowUpRight className="size-3.5 opacity-80" aria-hidden="true" />
         </a>
     );
 }

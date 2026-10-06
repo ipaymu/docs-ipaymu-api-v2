@@ -1,342 +1,160 @@
 import Link from "next/link";
-import { HorizontalNavbar } from "@/components/layout/horizontal-navbar";
-import { SidebarProvider } from "fumadocs-ui/components/sidebar/base";
-import { ArrowRight, Code2, Terminal, ShieldCheck, Plug, MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
+import { SidebarProvider } from "fumadocs-ui/components/sidebar/base";
+import { ArrowRight, ArrowUpRight, Bell, BookOpen, Check, Code2, CreditCard, KeyRound, Plug, ShieldCheck, Terminal } from "lucide-react";
+import { HorizontalNavbar } from "@/components/layout/horizontal-navbar";
+import { HomeSearch } from "@/components/home-search";
+import { HomePaymentExample } from "@/components/home-payment-example";
 import { withBasePath } from "@/lib/utils";
+import styles from "./home.module.css";
 
 export function generateStaticParams() {
   return [{ lang: "id" }, { lang: "en" }];
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ lang: string }>;
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
   const { lang } = await params;
-  const isEN = lang === "en";
-
-  const title = isEN ? "iPaymu API Documentation" : "Dokumentasi API iPaymu";
-  const description = isEN
-    ? "Complete integration hub for iPaymu payment gateway. API documentation, verification guides, and CMS plugin manuals for developers."
-    : "Hub integrasi lengkap payment gateway iPaymu. Dokumentasi API, panduan verifikasi, dan manual plugin CMS untuk developer.";
-  const url = `https://ipaymu.github.io${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/${lang}`;
-
+  const title = lang === "en" ? "iPaymu API Documentation" : "Dokumentasi API iPaymu";
+  const description = lang === "en"
+    ? "Start integrating iPaymu payments with a clear setup guide, API examples, and webhook documentation."
+    : "Mulai integrasi pembayaran iPaymu dengan panduan awal, contoh API, dan dokumentasi webhook yang jelas.";
   return {
-    title,
-    description,
-    keywords: isEN
-      ? ["iPaymu", "payment gateway", "API documentation", "Indonesia payment", "integration guide"]
-      : ["iPaymu", "payment gateway", "dokumentasi API", "pembayaran Indonesia", "panduan integrasi"],
+    title, description,
     openGraph: {
-      title,
-      description,
-      url,
-      siteName: "iPaymu Documentation",
-      type: "website",
-      images: [
-        {
-          url: withBasePath("/img/ipaymu.webp"),
-          width: 800,
-          height: 400,
-          alt: "iPaymu API Documentation",
-        },
-      ],
+      title, description,
+      url: `https://ipaymu.github.io${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/${lang}`,
+      siteName: "iPaymu Documentation", type: "website",
+      images: [{ url: withBasePath("/img/ipaymu.webp"), width: 800, height: 400, alt: title }],
     },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: [withBasePath("/img/ipaymu.webp")],
-    },
+    twitter: { card: "summary_large_image", title, description, images: [withBasePath("/img/ipaymu.webp")] },
   };
 }
 
-const HOMEPAGE_TEXT = {
+const COPY = {
   id: {
-    hero: {
-      headline: "Dokumentasi Pembayaran",
-      headlineBreak: "untuk Developer.",
-      subheadline:
-        "Hub lengkap integrasi iPaymu. API canggih, dokumentasi, dan tools untuk developer.",
-      btnApi: "Mulai Integrasi API",
-    },
-    paths: {
-      title: "Dokumentasi Teknis",
-      card1: {
-        title: "Docs Teknis",
-        desc: "Dokumentasi API lengkap untuk integrasi pembayaran custom.",
-        link: "/docs",
-        icon: Code2,
-      },
-      card2: {
-        title: "Docs Verifikasi",
-        desc: "Panduan lengkap proses verifikasi akun dan merchant.",
-        link: "/docs/verification",
-        icon: ShieldCheck,
-      },
-      card3: {
-        title: "Docs Plugin",
-        desc: "Panduan instalasi dan konfigurasi plugin CMS (WooCommerce, dll).",
-        link: "/docs-plugins",
-        icon: Plug,
-      },
-    },
-    dev: {
-      tag: "Developer First",
-      title: "Integrasi Pertama dalam Hitungan Menit",
-      desc: "API kami dirancang dengan prinsip kesederhanaan. Dapatkan URL pembayaran hanya dengan satu request JSON sederhana.",
-      points: [
-        "RESTful API Architecture",
-        "Sandbox Environment Gratis",
-        "Support Multi-Bahasa (PHP, Node, Go, Python)",
-        "Webhook Notifikasi Real-time",
-      ],
-      link: "Lihat API Reference Lengkap",
-    },
-    support: {
-      title: "Bingung Memulai?",
-      desc: "Tim support kami siap membantu Anda 24/7. Tanyakan apa saja mulai dari teknis integrasi hingga pendaftaran akun.",
-      btn: "Chat Support via WhatsApp",
-    },
+    eyebrow: "DOKUMENTASI IPAYMU API V2",
+    headline: "Tentukan cara",
+    headlineAccent: "pelanggan membayar",
+    intro: "Pilih Redirect untuk checkout melalui halaman iPaymu, atau Direct untuk memilih metode pembayaran langsung dari aplikasi Anda.",
+    start: "Mulai integrasi", reference: "Lihat referensi API",
+    heroNote: "Alur cepat untuk developer",
+    heroSteps: ["Siapkan VA & API Key", "Buat signature request", "Kirim request pembayaran", "Validasi callback"],
+    pathsEyebrow: "PILIH JALUR", pathsTitle: "Mulai dari kebutuhan Anda",
+    pathsIntro: "Dokumentasi disusun berdasarkan pekerjaan yang ingin Anda selesaikan.",
+    paths: [
+      { title: "Integrasi API", desc: "Siapkan kredensial dan buat pembayaran pertama.", href: "/docs/getting-started", icon: Code2, label: "Panduan awal" },
+      { title: "Verifikasi akun", desc: "Lengkapi data merchant agar akun siap digunakan.", href: "/docs/verification", icon: ShieldCheck, label: "Langkah verifikasi" },
+      { title: "Plugin CMS", desc: "Hubungkan iPaymu ke platform toko tanpa membangun integrasi dari awal.", href: "/docs-plugins", icon: Plug, label: "Lihat plugin" },
+    ],
+    stepsEyebrow: "ALUR INTEGRASI", stepsTitle: "Empat langkah sampai pembayaran pertama",
+    steps: [
+      { title: "Ambil kredensial", desc: "Temukan VA dan API Key di dashboard iPaymu. Gunakan kredensial sandbox untuk pengujian.", href: "/docs/getting-started", link: "Panduan awal", icon: KeyRound },
+      { title: "Tandatangani request", desc: "Buat signature HMAC-SHA256 dan sertakan timestamp pada setiap request API.", href: "/docs/signature", link: "Cara membuat signature", icon: Code2 },
+      { title: "Pilih alur pembayaran", desc: "Redirect membuka halaman pembayaran iPaymu; Direct menentukan metode dan channel dari aplikasi Anda.", href: "#example-title", link: "Bandingkan dua alur", icon: CreditCard },
+      { title: "Tangani callback", desc: "Terima notifikasi status dan validasi signature sebelum memperbarui transaksi.", href: "/docs/callback", link: "Panduan callback", icon: Bell },
+    ],
+    exampleEyebrow: "DUA CARA MEMBUAT PEMBAYARAN", exampleTitle: "Pilih alur, lihat request-nya",
+    exampleIntro: "Endpoint-nya berbeda. Bandingkan contoh Redirect dan Direct sebelum memilih yang cocok untuk aplikasi Anda.",
+    moreEyebrow: "LANJUTKAN INTEGRASI",
+    moreTitle: "Setelah request pertama berhasil",
+    more: [
+      { title: "Metode pembayaran", desc: "Lihat kanal dan metode yang tersedia.", href: "/docs/payment/payment-channels", icon: CreditCard },
+      { title: "Notifikasi pembayaran", desc: "Pastikan status transaksi diproses dengan aman.", href: "/docs/callback", icon: Bell },
+      { title: "Referensi lengkap", desc: "Telusuri seluruh endpoint dan panduan teknis.", href: "/docs", icon: BookOpen },
+    ],
+    footer: "Dokumentasi iPaymu API V2",
   },
   en: {
-    hero: {
-      headline: "Payment Documentation",
-      headlineBreak: "for Developers.",
-      subheadline:
-        "The complete iPaymu integration hub. Advanced APIs, documentation, and tools for developers.",
-      btnApi: "Start API Integration",
-    },
-    paths: {
-      title: "Technical Documentation",
-      card1: {
-        title: "Technical Docs",
-        desc: "Complete API documentation for custom payment integration.",
-        link: "/docs",
-        icon: Code2,
-      },
-      card2: {
-        title: "Verification Docs",
-        desc: "Complete guide for account and merchant verification processes.",
-        link: "/docs/verification",
-        icon: ShieldCheck,
-      },
-      card3: {
-        title: "Plugin Docs",
-        desc: "Installation and configuration guides for CMS plugins (WooCommerce, etc).",
-        link: "/docs-plugins",
-        icon: Plug,
-      },
-    },
-    dev: {
-      tag: "Developer First",
-      title: "First Integration in Minutes",
-      desc: "Our API is designed with simplicity in mind. Get a payment URL with just a single simple JSON request.",
-      points: [
-        "RESTful API Architecture",
-        "Free Sandbox Environment",
-        "Multi-Language Support (PHP, Node, Go, Python)",
-        "Real-time Webhook Notifications",
-      ],
-      link: "View Complete API Reference",
-    },
-    support: {
-      title: "Confused Where to Start?",
-      desc: "Our support team is ready to help you 24/7. Ask anything from technical integration to account registration.",
-      btn: "Chat Support via WhatsApp",
-    },
+    eyebrow: "IPAYMU API V2 DOCUMENTATION",
+    headline: "Choose how",
+    headlineAccent: "customers pay",
+    intro: "Choose Redirect for checkout on an iPaymu page, or Direct to select a payment method right from your app.",
+    start: "Start integrating", reference: "Explore API reference",
+    heroNote: "A quick path for developers",
+    heroSteps: ["Get your VA & API Key", "Sign the request", "Create a payment", "Validate the callback"],
+    pathsEyebrow: "CHOOSE A PATH", pathsTitle: "Start with your goal",
+    pathsIntro: "The docs are organized around the task you want to complete.",
+    paths: [
+      { title: "API integration", desc: "Get credentials and create your first payment.", href: "/docs/getting-started", icon: Code2, label: "Getting started" },
+      { title: "Account verification", desc: "Complete merchant details to prepare your account.", href: "/docs/verification", icon: ShieldCheck, label: "Verification guide" },
+      { title: "CMS plugins", desc: "Connect iPaymu to your store without building from scratch.", href: "/docs-plugins", icon: Plug, label: "Browse plugins" },
+    ],
+    stepsEyebrow: "INTEGRATION FLOW", stepsTitle: "Four steps to your first payment",
+    steps: [
+      { title: "Get credentials", desc: "Find your VA and API Key in the iPaymu dashboard. Use sandbox credentials for testing.", href: "/docs/getting-started", link: "Getting started", icon: KeyRound },
+      { title: "Sign the request", desc: "Create an HMAC-SHA256 signature and include a timestamp in each API request.", href: "/docs/signature", link: "Signature guide", icon: Code2 },
+      { title: "Choose a payment flow", desc: "Redirect opens iPaymu's checkout page; Direct selects the method and channel in your app.", href: "#example-title", link: "Compare both flows", icon: CreditCard },
+      { title: "Handle the callback", desc: "Receive status updates and verify their signature before updating a transaction.", href: "/docs/callback", link: "Callback guide", icon: Bell },
+    ],
+    exampleEyebrow: "TWO WAYS TO CREATE A PAYMENT", exampleTitle: "Choose a flow, see the request",
+    exampleIntro: "The endpoints differ. Compare Redirect and Direct examples before choosing the right fit for your app.",
+    moreEyebrow: "KEEP BUILDING",
+    moreTitle: "After your first request succeeds",
+    more: [
+      { title: "Payment methods", desc: "Find available methods and channels.", href: "/docs/payment/payment-channels", icon: CreditCard },
+      { title: "Payment notifications", desc: "Process transaction status securely.", href: "/docs/callback", icon: Bell },
+      { title: "Complete reference", desc: "Browse every endpoint and technical guide.", href: "/docs", icon: BookOpen },
+    ],
+    footer: "iPaymu API V2 Documentation",
   },
 };
 
 export default async function HomePage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
-  const t = HOMEPAGE_TEXT[lang as keyof typeof HOMEPAGE_TEXT] || HOMEPAGE_TEXT.id;
+  const t = lang === "en" ? COPY.en : COPY.id;
+  const to = (path: string) => `/${lang}${path}`;
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      <SidebarProvider>
-        <HorizontalNavbar lang={lang} current="home" showSidebarTrigger={false} />
-      </SidebarProvider>
-
-      <main className="flex-1 flex flex-col">
-        {/* HERO SECTION */}
-        <section className="relative py-20 lg:py-32 overflow-hidden px-4 md:px-6">
-          <div className="container mx-auto text-center max-w-4xl relative z-10">
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 bg-clip-text text-transparent bg-linear-to-r from-primary to-blue-600 dark:from-blue-400 dark:to-blue-200 animate-fade-in">
-              {t.hero.headline} <br className="hidden md:block" /> {t.hero.headlineBreak}
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto animate-slide-in">
-              {t.hero.subheadline}
-            </p>
-
-            <div
-              className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-in"
-              style={{ animationDelay: "100ms" }}
-            >
-              <Link
-                href={`/${lang}/docs`}
-                className="w-full sm:w-auto px-8 py-3 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/25"
-              >
-                {t.hero.btnApi} <Terminal className="w-5 h-5" />
-              </Link>
-            </div>
-          </div>
-
-          {/* Background decoration */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl -z-10" />
-        </section>
-
-        {/* CARD GRID SECTION */}
-        <section className="py-16 bg-muted/30 border-y border-border px-4 md:px-6">
-          <div className="container mx-auto">
-            <h2 className="text-2xl font-bold text-center mb-12">{t.paths.title}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Card 1: Technical Docs */}
-              <Link
-                href={`/${lang}${t.paths.card1.link}`}
-                className="group p-6 rounded-xl border bg-card hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
-              >
-                <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <t.paths.card1.icon className="w-6 h-6" />
+    <div className={styles.home}>
+      <SidebarProvider><HorizontalNavbar lang={lang} current="home" showSidebarTrigger={false} /></SidebarProvider>
+      <main>
+        <section className={styles.hero} aria-labelledby="home-title">
+          <div className={styles.heroGlow} aria-hidden="true" />
+          <div className={styles.container}>
+            <div className={styles.heroGrid}>
+              <div className={styles.heroCopy}>
+                <p className={styles.eyebrow}>{t.eyebrow}</p>
+                <h1 id="home-title" className={styles.heroTitle}>{t.headline} <span>{t.headlineAccent}</span></h1>
+                <p className={styles.heroIntro}>{t.intro}</p>
+                <HomeSearch lang={lang} />
+                <div className={styles.heroActions}>
+                  <Link className={styles.primaryAction} href={to("/docs/getting-started")}>{t.start} <ArrowRight size={17} aria-hidden="true" /></Link>
+                  <Link className={styles.secondaryAction} href={to("/docs")}>{t.reference} <ArrowUpRight size={16} aria-hidden="true" /></Link>
                 </div>
-                <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
-                  {t.paths.card1.title}
-                </h3>
-                <p className="text-muted-foreground text-sm">{t.paths.card1.desc}</p>
-              </Link>
-
-              {/* Card 2: Verification Docs */}
-              <Link
-                href={`/${lang}${t.paths.card2.link}`}
-                className="group p-6 rounded-xl border bg-card hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
-              >
-                <div className="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <t.paths.card2.icon className="w-6 h-6" />
-                </div>
-                <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
-                  {t.paths.card2.title}
-                </h3>
-                <p className="text-muted-foreground text-sm">{t.paths.card2.desc}</p>
-              </Link>
-
-              {/* Card 3: Plugin Docs */}
-              <Link
-                href={`/${lang}${t.paths.card3.link}`}
-                className="group p-6 rounded-xl border bg-card hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
-              >
-                <div className="w-12 h-12 rounded-lg bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <t.paths.card3.icon className="w-6 h-6" />
-                </div>
-                <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
-                  {t.paths.card3.title}
-                </h3>
-                <p className="text-muted-foreground text-sm">{t.paths.card3.desc}</p>
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        {/* DEVELOPER HOOK (CODE) */}
-        <section className="py-20 px-4 md:px-6">
-          <div className="container mx-auto grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-semibold mb-4">
-                <Terminal className="w-3 h-3" /> {t.dev.tag}
               </div>
-              <h2 className="text-3xl font-bold mb-4">{t.dev.title}</h2>
-              <p className="text-muted-foreground mb-6 text-lg">{t.dev.desc}</p>
-
-              <ul className="space-y-3 mb-8">
-                {t.dev.points.map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 text-sm font-medium">
-                    <div className="w-5 h-5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 flex items-center justify-center">
-                      <svg
-                        className="w-3 after:h-3"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={3}
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-
-              <Link
-                href={`/${lang}/docs`}
-                className="text-primary font-semibold hover:underline inline-flex items-center gap-1"
-              >
-                {t.dev.link} <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            {/* Code Block Mockup */}
-            <div className="relative group min-w-0">
-              <div className="absolute -inset-1 bg-linear-to-r from-primary to-blue-600 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
-              <div className="relative rounded-xl overflow-hidden bg-[#1e1e1e] shadow-2xl border border-white/10">
-                <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10 bg-[#252526]">
-                  <div className="flex gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
-                    <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
-                    <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
-                  </div>
-                  <div className="ml-2 text-xs text-white/40 font-mono">bash</div>
-                </div>
-                <div className="p-4 overflow-x-auto">
-                  <pre className="font-mono text-sm leading-relaxed whitespace-pre">
-                    <code className="language-bash">
-                      <span className="text-purple-400">curl</span>{" "}
-                      <span className="text-green-400">-X</span>{" POST https://my.ipaymu.com/api/v2/payment/direct \\\n"}
-                      <span className="text-white/50">{"  -H "}</span>
-                      <span className="text-amber-300">{"\"Content-Type: application/json\""}</span>{" \\\n"}
-                      <span className="text-white/50">{"  -H "}</span>
-                      <span className="text-amber-300">{"\"va: YOUR_VA\""}</span>{" \\\n"}
-                      <span className="text-white/50">{"  -H "}</span>
-                      <span className="text-amber-300">{"\"signature: YOUR_SIGNATURE\""}</span>{" \\\n"}
-                      <span className="text-white/50">{"  -d "}</span>
-                      <span className="text-amber-300">{"'{\n  \"name\": \"Buyer\",\n  \"phone\": \"08123456789\",\n  \"email\": \"buyer@mail.com\",\n  \"amount\": 100000,\n  \"paymentMethod\": \"qris\"\n}'"}</span>
-                    </code>
-                  </pre>
+              <div className={styles.heroPanel} aria-label={t.heroNote}>
+                <div className={styles.panelTopline}><span className={styles.panelDot} aria-hidden="true" /><span>ipaymu / quickstart</span><Terminal size={16} aria-hidden="true" /></div>
+                <div className={styles.panelContent}>
+                  <p className={styles.panelCaption}>{t.heroNote}</p>
+                  <ol className={styles.heroChecklist}>{t.heroSteps.map((step, index) => <li key={step}><span className={styles.stepIndex}>0{index + 1}</span><span>{step}</span><Check size={15} aria-hidden="true" /></li>)}</ol>
+                  <div className={styles.endpointPreview}><span>Redirect <code>POST /api/v2/payment</code></span><span>Direct <code>POST /api/v2/payment/direct</code></span></div>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* FOOTER SUPPORT BANNER */}
-        <section className="py-8 bg-background px-4 md:px-6">
-          <div className="container mx-auto">
-            <div className="rounded-2xl bg-linear-to-r from-blue-900 to-primary p-8 md:p-12 text-white text-center shadow-xl relative overflow-hidden">
-              {/* Decorative circles */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-              <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+        <section className={styles.section} aria-labelledby="paths-title"><div className={styles.container}>
+          <p className={styles.eyebrow}>{t.pathsEyebrow}</p><h2 id="paths-title" className={styles.sectionTitle}>{t.pathsTitle}</h2><p className={styles.sectionIntro}>{t.pathsIntro}</p>
+          <div className={styles.pathGrid}>{t.paths.map((path) => { const Icon = path.icon; return <Link key={path.href} href={to(path.href)} className={styles.pathCard}><span className={styles.iconCircle}><Icon size={22} strokeWidth={1.7} aria-hidden="true" /></span><span className={styles.pathTitle}>{path.title}</span><span className={styles.pathDescription}>{path.desc}</span><span className={styles.cardLink}>{path.label} <ArrowRight size={15} aria-hidden="true" /></span></Link>; })}</div>
+        </div></section>
 
-              <h2 className="text-2xl md:text-3xl font-bold mb-4 relative z-10">
-                {t.support.title}
-              </h2>
-              <p className="text-blue-100 mb-8 max-w-xl mx-auto relative z-10">{t.support.desc}</p>
+        <section className={`${styles.section} ${styles.sectionBorder}`} aria-labelledby="steps-title"><div className={styles.container}>
+          <p className={styles.eyebrow}>{t.stepsEyebrow}</p><h2 id="steps-title" className={styles.sectionTitle}>{t.stepsTitle}</h2>
+          <div className={styles.stepsGrid}>{t.steps.map((step, index) => { const Icon = step.icon; return <article key={step.href} className={styles.stepCard}><div className={styles.stepHead}><span className={styles.stepNumber}>0{index + 1}</span><span className={styles.iconCircle}><Icon size={21} strokeWidth={1.7} aria-hidden="true" /></span></div><h3>{step.title}</h3><p>{step.desc}</p><Link href={step.href.startsWith("#") ? step.href : to(step.href)} className={styles.inlineLink}>{step.link} <ArrowRight size={15} aria-hidden="true" /></Link></article>; })}</div>
+        </div></section>
 
-              <a
-                href="https://wa.me/6281936972473" /* Replace with actual WA link */
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-white text-primary rounded-full font-bold hover:bg-blue-50 transition-colors relative z-10 shadow-lg"
-              >
-                <MessageCircle className="w-5 h-5 fill-current" /> {t.support.btn}
-              </a>
-            </div>
+        <section className={`${styles.section} ${styles.sectionBorder}`} aria-labelledby="example-title"><div className={styles.container}>
+          <div className={styles.exampleHeading}><div><p className={styles.eyebrow}>{t.exampleEyebrow}</p><h2 id="example-title" className={styles.sectionTitle}>{t.exampleTitle}</h2><p className={styles.sectionIntro}>{t.exampleIntro}</p></div></div>
+          <HomePaymentExample lang={lang} />
+        </div></section>
 
-            <footer className="mt-16 text-center text-sm text-muted-foreground pb-8">
-              <p>&copy; {new Date().getFullYear()} iPaymu. All rights reserved.</p>
-            </footer>
-          </div>
-        </section>
+        <section className={`${styles.section} ${styles.sectionBorder}`} aria-labelledby="more-title"><div className={styles.container}>
+          <p className={styles.eyebrow}>{t.moreEyebrow}</p><h2 id="more-title" className={styles.sectionTitle}>{t.moreTitle}</h2>
+          <div className={styles.moreGrid}>{t.more.map((item) => { const Icon = item.icon; return <Link key={item.href} href={to(item.href)} className={styles.moreLink}><Icon size={20} strokeWidth={1.7} aria-hidden="true" /><span><strong>{item.title}</strong><small>{item.desc}</small></span><ArrowUpRight size={16} aria-hidden="true" /></Link>; })}</div>
+        </div></section>
       </main>
+      <footer className={styles.footer}><div className={styles.container}>© {new Date().getFullYear()} iPaymu · {t.footer}</div></footer>
     </div>
   );
 }

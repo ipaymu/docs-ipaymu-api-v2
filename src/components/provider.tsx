@@ -2,10 +2,11 @@
 import SearchDialog from '@/components/search';
 import { RootProvider } from 'fumadocs-ui/provider/next';
 import { type ReactNode } from 'react';
+import { EnvironmentProvider } from '@/components/environment';
 
 export function Provider({ children, locale }: { children: ReactNode; locale: string }) {
   return (
-    <RootProvider
+    <EnvironmentProvider><RootProvider
       search={{ SearchDialog }}
       i18n={{
         locale,
@@ -16,6 +17,6 @@ export function Provider({ children, locale }: { children: ReactNode; locale: st
       }}
     >
       {children}
-    </RootProvider>
+    </RootProvider></EnvironmentProvider>
   );
 }

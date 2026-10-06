@@ -6,14 +6,6 @@ postman: https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=late
 
 import { Callout } from "fumadocs-ui/components/callout";
 
-<a
-  href="https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#005ef6ea-96e4-47f7-9282-afd1ce5a2904"
-  target="_blank"
-  className="button button--primary button--sm"
->
-  Coba di Postman
-</a>
-
 <DanaNoticeCallout />
 
 <Callout type="warn" title="Persyaratan Production">
@@ -25,16 +17,9 @@ Endpoint ini digunakan untuk memproses pembayaran langsung (Direct Payment).
 
 <DirectPaymentFlowchart />
 
-**Endpoint:** `POST https://my.ipaymu.com/api/v2/payment/direct`
-
 ## Headers
 
-| Kunci          | Nilai              | Deskripsi                 |
-| :------------- | :----------------- | :------------------------ |
-| `Content-Type` | `application/json` |                           |
-| `signature`    | `string`           | Signature yang dihasilkan |
-| `va`           | `string`           | Nomor Virtual Account     |
-| `timestamp`    | `string`           | Waktu request             |
+<ApiRequestHeaders />
 
 ## Parameter Body
 

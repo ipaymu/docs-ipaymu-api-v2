@@ -21,11 +21,11 @@ Welcome to the **iPaymu API v2** documentation. This API allows you to integrate
 
 iPaymu API v2 uses **Signature-based authentication**. Every request must include the following headers:
 
-| Header      | Description                                                                                                                                     |
-| :---------- | :---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `va`        | Your Virtual Account number (from iPaymu Dashboard).                                                                                            |
-| `signature` | A generated signature string to verify the request.                                                                                             |
-| `timestamp` | Current timestamp (format: `YYYYMMDDHHmmss` or ISO 8601 depending on endpoint requirements, usually `YYYYMMDDHHmmss` for signature generation). |
+| Header | Type | Example | Description |
+| :----- | :--- | :------ | :---------- |
+| `va` | `string` | `YOUR_VA` | Virtual Account number from the Integration menu in [Production](https://my.ipaymu.com/integration) or [Sandbox](https://sandbox.ipaymu.com/integration). Use the VA for the request environment. |
+| `signature` | `string` (64 hexadecimal characters) | `GENERATED_SIGNATURE` | HMAC-SHA256 value generated for this request using the API Key from [Production](https://my.ipaymu.com/integration) or [Sandbox](https://sandbox.ipaymu.com/integration). The API Key itself is not this header value. See [Signature Generation](/en/docs/signature). |
+| `timestamp` | `string` (14 digits) | `20260102153045` | Request time in `YYYYMMDDHHmmss` format (2 January 2026 at 15:30:45). Follow the endpoint guide if it requires ISO 8601. |
 
 ## Sample Code
 

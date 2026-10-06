@@ -22,6 +22,7 @@ interface HorizontalNavbarProps {
 export function HorizontalNavbar({ lang, current, showSidebarTrigger = true }: HorizontalNavbarProps) {
   const pathname = usePathname();
   const { open } = useSidebar();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     // Only lock scroll on mobile/drawer mode
@@ -98,10 +99,32 @@ export function HorizontalNavbar({ lang, current, showSidebarTrigger = true }: H
                   <Menu className="h-5 w-5" />
                 </SidebarTrigger>
               )}
+              {!showSidebarTrigger && (
+                <button
+                  type="button"
+                  aria-label={lang === "en" ? "Open navigation" : "Buka navigasi"}
+                  aria-expanded={mobileMenuOpen}
+                  onClick={() => setMobileMenuOpen((value) => !value)}
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
+                >
+                  <Menu className="h-5 w-5" />
+                </button>
+              )}
             </div>
           </div>
         </div>
       </div>
+      {!showSidebarTrigger && mobileMenuOpen && (
+        <div className="absolute top-14 left-0 right-0 border-b border-border bg-background p-4 shadow-lg md:hidden">
+          <div className="flex flex-col gap-1">
+            {navItems.map((item: any) => (
+              <Link key={item.url} href={item.url} onClick={() => setMobileMenuOpen(false)} className="rounded-md px-3 py-2 text-sm text-foreground hover:bg-accent">
+                {item.text}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
@@ -112,7 +135,7 @@ function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="relative flex items-center justify-center w-8 h-8 rounded-md hover:bg-accent text-muted-foreground hover:text-white transition-colors cursor-pointer"
+      className="relative flex items-center justify-center w-8 h-8 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
       aria-label="Toggle theme"
     >
       <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
@@ -134,7 +157,7 @@ function LanguageSwitcher({ lang, pathname }: { lang: string; pathname: string }
   return (
     <button
       onClick={toggleLanguage}
-      className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-accent text-muted-foreground hover:text-white transition-colors cursor-pointer text-xs font-bold uppercase"
+      className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer text-xs font-bold uppercase"
       aria-label="Switch language"
     >
       <span>{lang}</span>

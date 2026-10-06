@@ -70,7 +70,7 @@ export function IpDomainValidationFlowchart({ lang = 'id' }: { lang?: 'id' | 'en
   const totalSteps = VALIDATION_STEPS.length;
 
   return (
-    <div className="my-8 w-full font-sans">
+    <div className="docs-flowchart my-8 w-full font-sans">
       {/* Header Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6 pb-3 border-b border-border">
         <div className="flex items-center gap-2.5">

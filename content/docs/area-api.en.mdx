@@ -30,12 +30,12 @@ All Area endpoints are under the `/areas` prefix.
 
 Every request must be signed. The signature middleware (`signaturecheck`) requires these **HTTP headers**:
 
-| Header      | Required | Description |
-|-------------|----------|-------------|
-| `va`        | ✅ Yes   | Your iPaymu Virtual Account number (the account's `baccount`). |
-| `signature` | ✅ Yes   | HMAC-SHA256 signature of the request (see below). |
-| `timestamp` | Recommended | Request timestamp, format `YYYYMMDDHHmmss`. |
-| `Content-Type` | ✅ Yes | `application/json` |
+| Header | Required | Type | Example / value | Description |
+| :----- | :------- | :--- | :-------------- | :---------- |
+| `va` | ✅ Yes | `string` | `YOUR_IPAYMU_VA` | Virtual Account number (`baccount`) from the Integration menu in [Production](https://my.ipaymu.com/integration) or [Sandbox](https://sandbox.ipaymu.com/integration). Use the VA for the request environment. |
+| `signature` | ✅ Yes | `string` (64 hexadecimal characters) | `GENERATED_SIGNATURE` | HMAC-SHA256 value for this request (see below), generated with the API Key from [Production](https://my.ipaymu.com/integration) or [Sandbox](https://sandbox.ipaymu.com/integration). Do not send the API Key as this header value. |
+| `timestamp` | Recommended | `string` (14 digits) | `20260102153045` | Request time in `YYYYMMDDHHmmss` format (2 January 2026 at 15:30:45). |
+| `Content-Type` | ✅ Yes | `string` | `application/json` | MIME type for the JSON request. |
 
 The account tied to the `va` must be **active** and have an **API key**.
 

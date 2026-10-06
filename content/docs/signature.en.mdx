@@ -5,7 +5,7 @@ description: To ensure the security of transactions, iPaymu requires a signature
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/mdx/tabs";
 
-To ensure the security of transactions, iPaymu requires a `signature` header in every API request. This signature is generated using your **API Key** and request details.
+To ensure the security of transactions, iPaymu requires a `signature` header in every API request. This signature is generated using your **API Key** and request details. Get your VA and API Key from the Integration menu in [Production](https://my.ipaymu.com/integration) or [Sandbox](https://sandbox.ipaymu.com/integration) for the selected environment; generate the `signature` for each request instead of copying it from the dashboard.
 
 ## How to Generate Signature
 
@@ -23,11 +23,11 @@ Signature = HMAC-SHA256(String to Sign, APIKey)
 ### Components
 
 1.  **Method**: HTTP Method (e.g., `GET`, `POST`).
-2.  **VA**: Your Virtual Account Number.
+2.  **VA**: Your Virtual Account number from the Integration menu.
 3.  **RequestBody**:
     - For **GET** requests: The JSON stringified query parameters.
     - For **POST** requests: The SHA256 hash of the JSON body.
-4.  **APIKey**: Your iPaymu API Key.
+4.  **APIKey**: Your iPaymu API Key from the Integration menu in the same environment as the VA. Do not send the API Key as the `signature` header.
 
 ### Example Implementation
 

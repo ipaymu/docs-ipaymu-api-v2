@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 export default function RootPage() {
   const router = useRouter();
   useEffect(() => {
-    router.replace('/id/docs');
+    router.replace('/id');
   }, [router]);
   return null;
 }

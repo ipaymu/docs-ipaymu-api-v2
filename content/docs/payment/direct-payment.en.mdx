@@ -6,14 +6,6 @@ postman: https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=late
 
 import { Callout } from "fumadocs-ui/components/callout";
 
-<a
-  href="https://documenter.getpostman.com/view/40296808/2sB3WtseBT?version=latest#005ef6ea-96e4-47f7-9282-afd1ce5a2904"
-  target="_blank"
-  className="button button--primary button--sm"
->
-  Try it in Postman
-</a>
-
 <DanaNoticeCallout lang="en" />
 
 <Callout type="warn" title="Production Requirement">
@@ -24,16 +16,9 @@ This endpoint is used to process direct payments.
 
 <DirectPaymentFlowchart lang="en" />
 
-**Endpoint:** `POST https://my.ipaymu.com/api/v2/payment/direct`
-
 ## Headers
 
-| Key            | Value              | Description               |
-| :------------- | :----------------- | :------------------------ |
-| `Content-Type` | `application/json` |                           |
-| `signature`    | `string`           | Generated Signature       |
-| `va`           | `string`           | Virtual Account Number    |
-| `timestamp`    | `string`           | Request timestamp         |
+<ApiRequestHeaders lang="en" />
 
 ## Body Parameters
 

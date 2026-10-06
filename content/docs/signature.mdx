@@ -5,7 +5,7 @@ description: Untuk memastikan keamanan transaksi, iPaymu mewajibkan header signa
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/mdx/tabs";
 
-Untuk memastikan keamanan transaksi, iPaymu mewajibkan header `signature` di setiap request API. Signature ini dibuat menggunakan **API Key** Anda dan detail request.
+Untuk memastikan keamanan transaksi, iPaymu mewajibkan header `signature` di setiap request API. Signature ini dibuat menggunakan **API Key** Anda dan detail request. Ambil VA dan API Key dari menu Integrasi [Production](https://my.ipaymu.com/integration) atau [Sandbox](https://sandbox.ipaymu.com/integration) sesuai environment; nilai `signature` harus dihitung untuk setiap request, bukan disalin dari dashboard.
 
 ## Cara Membuat Signature
 
@@ -23,11 +23,11 @@ Signature = HMAC-SHA256(String to Sign, APIKey)
 ### Komponen
 
 1.  **Method**: Metode HTTP (contoh: `GET`, `POST`).
-2.  **VA**: Nomor Virtual Account Anda.
+2.  **VA**: Nomor Virtual Account Anda dari menu Integrasi.
 3.  **RequestBody**:
     - Untuk request **GET**: Query parameters yang di-stringify JSON.
     - Untuk request **POST**: Hash SHA256 dari body JSON.
-4.  **APIKey**: API Key iPaymu Anda.
+4.  **APIKey**: API Key iPaymu dari menu Integrasi pada environment yang sama dengan VA. Jangan kirim API Key sebagai header `signature`.
 
 ### Contoh Implementasi
 

@@ -30,12 +30,12 @@ Semua endpoint Area berada di bawah prefiks `/areas`.
 
 Setiap permintaan harus ditandatangani. Middleware tanda tangan (`signaturecheck`) memerlukan header HTTP berikut:
 
-| Header      | Wajib | Deskripsi |
-|-------------|----------|-------------|
-| `va`        | ✅ Ya   | Nomor Virtual Account iPaymu Anda (nomor akun `baccount`). |
-| `signature` | ✅ Ya   | Tanda tangan HMAC-SHA256 dari permintaan (lihat di bawah). |
-| `timestamp` | Direkomendasikan | Timestamp permintaan, format `YYYYMMDDHHmmss`. |
-| `Content-Type` | ✅ Ya | `application/json` |
+| Header | Wajib | Tipe | Contoh / nilai | Deskripsi |
+| :----- | :---- | :--- | :------------- | :-------- |
+| `va` | ✅ Ya | `string` | `YOUR_IPAYMU_VA` | Nomor Virtual Account (`baccount`) dari menu Integrasi [Production](https://my.ipaymu.com/integration) atau [Sandbox](https://sandbox.ipaymu.com/integration). Gunakan sesuai environment request. |
+| `signature` | ✅ Ya | `string` (64 karakter heksadesimal) | `GENERATED_SIGNATURE` | Hasil HMAC-SHA256 untuk request ini (lihat di bawah), memakai API Key dari menu Integrasi [Production](https://my.ipaymu.com/integration) atau [Sandbox](https://sandbox.ipaymu.com/integration). Jangan kirim API Key sebagai nilai header. |
+| `timestamp` | Direkomendasikan | `string` (14 digit) | `20260102153045` | Waktu request dalam format `YYYYMMDDHHmmss` (2 Januari 2026 pukul 15:30:45). |
+| `Content-Type` | ✅ Ya | `string` | `application/json` | Tipe MIME untuk request JSON. |
 
 Akun yang terikat dengan `va` harus **aktif** dan memiliki kunci API (**API key**).
 
@@ -117,7 +117,7 @@ Semua respon menggunakan wrapper yang sama:
 
 ---
 
-## Endpoint
+## Daftar Endpoint
 
 ### 1. Dapatkan Provinsi (Get Provinces)
 

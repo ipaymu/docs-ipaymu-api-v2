@@ -50,6 +50,9 @@ export function AIChatButton({ className }: { className?: string }) {
       top: rect.bottom + 8,
       left: clampedLeft,
       width: 200,
+      zIndex: 2147483000,
+      backgroundColor: "var(--card)",
+      opacity: 1,
     });
   }, []);
 
@@ -107,9 +110,8 @@ export function AIChatButton({ className }: { className?: string }) {
           <div
             className={cn(
               "inline-flex items-center gap-2 px-5 py-3 text-sm font-medium",
-              "bg-white dark:bg-zinc-900 border-2 border-black dark:border-white",
-              "shadow-brutal dark:shadow-[3px_3px_0px_0px_#ffffff]",
-              "rounded-none animate-in slide-in-from-bottom-4 fade-in duration-200"
+              "rounded-lg border border-border bg-card text-foreground shadow-lg",
+              "animate-in slide-in-from-bottom-4 fade-in duration-200"
             )}
           >
             <Check className="w-4 h-4 text-green-500" />
@@ -127,9 +129,7 @@ export function AIChatButton({ className }: { className?: string }) {
         style={dropdownStyle}
         className={cn(
           "z-[9999] min-w-[200px]",
-          "border-2 border-black dark:border-white",
-          "shadow-brutal dark:shadow-[3px_3px_0px_0px_#ffffff]",
-          "bg-white dark:bg-zinc-950 opacity-100 rounded-none overflow-hidden"
+          "rounded-xl border border-border bg-card opacity-100 shadow-xl overflow-hidden isolate"
         )}
       >
         <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground border-b border-border">
@@ -142,7 +142,7 @@ export function AIChatButton({ className }: { className?: string }) {
             onClick={() => handleOpen(provider)}
             className={cn(
               "flex w-full items-center gap-3 px-3 py-2.5 text-xs font-bold text-left cursor-pointer transition-colors",
-              "text-foreground hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white group"
+              "text-foreground hover:bg-secondary group"
             )}
           >
             <span
@@ -168,7 +168,7 @@ export function AIChatButton({ className }: { className?: string }) {
             }}
             className={cn(
               "flex w-full items-center gap-3 px-3 py-2.5 text-xs font-bold text-left cursor-pointer transition-colors",
-              "text-muted-foreground hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white group"
+              "text-muted-foreground hover:bg-secondary hover:text-foreground group"
             )}
           >
             {copied ? (
@@ -191,13 +191,8 @@ export function AIChatButton({ className }: { className?: string }) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "inline-flex w-fit items-center justify-center px-4 py-2 text-xs font-bold cursor-pointer",
-          "text-white bg-primary hover:bg-primary/90",
-          "border-2 border-black dark:border-white",
-          "shadow-brutal dark:shadow-[3px_3px_0px_0px_#ffffff]",
-          "hover:translate-y-px hover:translate-x-px",
-          "hover:shadow-brutal-hover dark:hover:shadow-[1px_1px_0px_0px_#ffffff]",
-          "transition-all rounded-none uppercase tracking-wider gap-2",
+          "inline-flex min-h-9 w-fit items-center justify-center gap-2 rounded-lg border border-border bg-card px-3.5 py-2 text-xs font-semibold text-foreground shadow-sm cursor-pointer",
+          "transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
           className
         )}
       >

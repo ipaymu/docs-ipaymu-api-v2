@@ -7,6 +7,8 @@ import { DirectPaymentFlowchart } from '@/components/mdx/direct-payment-flowchar
 import { RedirectPaymentFlowchart } from '@/components/mdx/redirect-payment-flowchart';
 import { SignatureFlowchart } from '@/components/mdx/signature-flowchart';
 import { IpDomainValidationFlowchart } from '@/components/mdx/ip-domain-validation-flowchart';
+import { EnvironmentInlineCode, EnvironmentPre } from '@/components/mdx/environment-code';
+import { ApiRequestHeaders } from '@/components/mdx/api-request-headers';
 
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
   return {
@@ -17,22 +19,24 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     RedirectPaymentFlowchart,
     SignatureFlowchart,
     IpDomainValidationFlowchart,
+    ApiRequestHeaders,
     ...components,
+    code: EnvironmentInlineCode,
     pre: ({ ref: _ref, ...props }) => (
-      <div className="mdx-pre-wrapper border-2 border-black dark:border-white shadow-brutal dark:shadow-[4px_4px_0px_0px_#ffffff] bg-background rounded-none overflow-hidden my-6 transition-all w-full [&_.fd-scroll-container]:w-full [&_pre]:bg-transparent! [&_figure]:bg-transparent! [&_figure]:m-0!">
-        <defaultMdxComponents.pre {...props} />
+      <div className="mdx-pre-wrapper my-6 w-full overflow-hidden rounded-xl">
+        <EnvironmentPre {...props} />
       </div>
     ),
     table: ({ ref: _ref, ...props }) => (
-      <div className="mdx-table-wrapper border-2 border-black dark:border-white shadow-brutal dark:shadow-[4px_4px_0px_0px_#ffffff] bg-background rounded-none my-6 transition-all w-full overflow-x-auto">
+      <div className="mdx-table-wrapper my-6 w-full overflow-x-auto">
         <table className="w-full text-left text-sm m-0!" {...props} />
       </div>
     ),
     th: ({ ref: _ref, ...props }) => (
-      <th className="border-b-2 border-black dark:border-white px-4 py-3 font-semibold bg-secondary/20 dark:bg-zinc-900/50" {...props} />
+      <th className="px-4 py-3 font-semibold" {...props} />
     ),
     td: ({ ref: _ref, ...props }) => (
-      <td className="border-b border-black dark:border-white px-4 py-3" {...props} />
+      <td className="px-4 py-3" {...props} />
     ),
     tr: ({ ref: _ref, ...props }) => (
       <tr className="hover:bg-muted/50 transition-colors" {...props} />
