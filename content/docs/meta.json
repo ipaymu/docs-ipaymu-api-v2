@@ -1,15 +1,15 @@
 {
-    "pages": [
-        "index",
-        "getting-started",
-        "signature",
-        "payment",
-        "cod",
-        "callback",
-        "balance",
-        "transaction",
-        "verification",
-        "ip-domain-validation",
-        "area-api"
-    ]
+  "pages": [
+    "index",
+    "getting-started",
+    "signature",
+    "payment",
+    "cod",
+    "callback",
+    "balance",
+    "transaction",
+    "verification",
+    "area-api",
+    "(ip-domain)"
+  ]
 }

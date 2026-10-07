@@ -1,0 +1,20 @@
+services:
+  app:
+    image: ${APP_IMAGE:?Set APP_IMAGE to an immutable image tag}
+    restart: unless-stopped
+    init: true
+    ports:
+      - "127.0.0.1:${HOST_PORT:-3030}:3000"
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+      MCP_ALLOWED_ORIGINS: ${MCP_ALLOWED_ORIGINS:-}
+      DOCS_PUBLIC_URL: https://${DOMAIN:?Set DOMAIN}
+    mem_limit: ${APP_MEMORY_LIMIT:-512m}
+    cpus: ${APP_CPU_LIMIT:-1.0}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

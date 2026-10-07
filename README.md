@@ -3,16 +3,14 @@
 This is a Next.js application generated with
 [Create Fumadocs](https://github.com/fuma-nama/fumadocs).
 
-It is a Next.js app with [Static Export](https://nextjs.org/docs/app/guides/static-exports) configured.
+It is a Next.js app with standalone Node output for VPS deployment and a separate static export for previews. GitLab CI/CD uses npm to build a Docker image and deploy it via Docker Compose, following the my-hallobali runner pattern. Build and deploy runner tags are configurable separately.
+
+See [the VPS deployment guide](deploy/README.md) for GitLab variables, runner setup, Nginx, health checks, rollback, and the public documentation MCP endpoint at `/api/mcp`.
 
 Run development server:
 
 ```bash
 npm run dev
-# or
-pnpm dev
-# or
-yarn dev
 ```
 
 Open http://localhost:3000 with your browser to see the result.

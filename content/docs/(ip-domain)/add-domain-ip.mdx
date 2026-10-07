@@ -1,0 +1,199 @@
+---
+title: Menambahkan Domain dan IP
+description: Mengatasi error Invalid IP/Domain dengan mendaftarkan IP server dan domain melalui dashboard iPaymu.
+---
+
+import Image from "next/image";
+import { withBasePath } from "@/lib/utils";
+import login from "../../../public/img/ip-domain/ipaymu-dashboard-login.png";
+import integrationIp from "../../../public/img/ip-domain/ipaymu-api-integration-ip.png";
+import addIp from "../../../public/img/ip-domain/ipaymu-add-ip.png";
+import integrationDomain from "../../../public/img/ip-domain/ipaymu-api-integration-domain.png";
+
+Ketika integrasi mengembalikan response `Invalid IP` atau `Invalid Domain`, masalah biasanya berkaitan dengan IP atau domain integrasi dan konfigurasi yang terdaftar pada dashboard iPaymu. Gunakan panduan troubleshooting ini untuk memeriksa dan memperbarui konfigurasi tersebut.
+
+## Error "Invalid IP"
+
+IP yang digunakan server untuk mengakses API iPaymu perlu didaftarkan pada dashboard iPaymu.
+
+<Callout type="info" title="Gunakan IP server yang melakukan request">
+  IP yang didaftarkan adalah IP dari server yang melakukan request ke iPaymu,
+  bukan sekadar IP perangkat yang digunakan untuk membuka dashboard.
+</Callout>
+
+<Steps>
+  <Step>
+
+### 1. Login ke dashboard
+
+Masuk ke [dashboard iPaymu](https://my.ipaymu.com/login).
+
+<Image
+  src={withBasePath(login.src)}
+  width={login.width}
+  height={login.height}
+  alt="Halaman login dashboard iPaymu"
+  className="h-auto w-full rounded-lg"
+  loading="lazy"
+  sizes="(max-width: 768px) 100vw, 900px"
+/>
+
+  </Step>
+  <Step>
+
+### 2. Buka API Integrasi
+
+Pilih menu **API Integrasi** pada dashboard.
+
+  </Step>
+  <Step>
+
+### 3. Buka detail IP terdaftar
+
+Pada bagian **Domain & IP**, pilih **IP Terdaftar → Detail**.
+
+<Image
+  src={withBasePath(integrationIp.src)}
+  width={integrationIp.width}
+  height={integrationIp.height}
+  alt="Menu API Integrasi dan IP Terdaftar di dashboard iPaymu"
+  className="h-auto w-full rounded-lg"
+  loading="lazy"
+  sizes="(max-width: 768px) 100vw, 900px"
+/>
+
+  </Step>
+  <Step>
+
+### 4. Pastikan IP statik
+
+Pastikan IP server yang akan didaftarkan adalah **IP statik**.
+
+  </Step>
+  <Step>
+
+### 5. Pilih IP Baru
+
+Klik **IP Baru** untuk membuka form penambahan IP.
+
+  </Step>
+  <Step>
+
+### 6. Masukkan IP server
+
+Masukkan IP server atau website yang benar-benar melakukan request ke API iPaymu.
+
+<Image
+  src={withBasePath(addIp.src)}
+  width={addIp.width}
+  height={addIp.height}
+  alt="Form Tambah IP pada dashboard iPaymu"
+  className="h-auto w-full rounded-lg"
+  loading="lazy"
+  sizes="(max-width: 768px) 100vw, 900px"
+/>
+
+  </Step>
+  <Step>
+
+### 7. Submit
+
+Klik **Submit** untuk menambahkan IP.
+
+  </Step>
+  <Step>
+
+### 8. Coba request kembali
+
+Setelah IP berhasil ditambahkan, kirim ulang request API.
+
+  </Step>
+</Steps>
+
+## Error "Invalid Domain"
+
+Daftarkan domain melalui dashboard iPaymu dan periksa kesesuaiannya dengan domain callback pada integrasi.
+
+<Callout type="warn" title="Periksa domain callback">
+  Jika mendapatkan response 'Invalid Domain', periksa kembali apakah domain pada
+  callback sama dengan domain yang didaftarkan di dashboard iPaymu.
+</Callout>
+
+<Steps>
+  <Step>
+
+### 1. Login ke dashboard
+
+Masuk ke [dashboard iPaymu](https://my.ipaymu.com/login).
+
+<Image
+  src={withBasePath(login.src)}
+  width={login.width}
+  height={login.height}
+  alt="Halaman login dashboard iPaymu"
+  className="h-auto w-full rounded-lg"
+  loading="lazy"
+  sizes="(max-width: 768px) 100vw, 900px"
+/>
+
+  </Step>
+  <Step>
+
+### 2. Buka API Integrasi
+
+Pilih menu **API Integrasi** pada dashboard.
+
+  </Step>
+  <Step>
+
+### 3. Buka detail domain terdaftar
+
+Pada bagian **Domain & IP**, pilih **Domain Terdaftar → Detail**.
+
+<Image
+  src={withBasePath(integrationDomain.src)}
+  width={integrationDomain.width}
+  height={integrationDomain.height}
+  alt="Menu API Integrasi dan Domain Terdaftar di dashboard iPaymu"
+  className="h-auto w-full rounded-lg"
+  loading="lazy"
+  sizes="(max-width: 768px) 100vw, 900px"
+/>
+
+  </Step>
+  <Step>
+
+### 4. Daftarkan domain
+
+Ikuti proses pendaftaran domain yang tersedia pada dashboard.
+
+  </Step>
+  <Step>
+
+### 5. Periksa callback
+
+Pastikan callback yang digunakan pada integrasi berasal dari **domain yang sama** dengan domain yang didaftarkan.
+
+  </Step>
+  <Step>
+
+### 6. Periksa domain tambahan
+
+Jika ingin menambahkan second domain atau domain tambahan, pastikan **model bisnisnya sama**.
+
+  </Step>
+  <Step>
+
+### 7. Verifikasi domain
+
+Domain yang didaftarkan akan diverifikasi oleh tim iPaymu.
+
+  </Step>
+</Steps>
+
+## Setelah konfigurasi diperbarui
+
+- **IP:** coba kirim request API kembali setelah IP berhasil ditambahkan.
+- **Domain:** pastikan domain dan callback sudah sesuai, lalu tunggu proses verifikasi oleh tim iPaymu jika diperlukan.
+
+Lihat juga [Validasi IP & Domain](./ip-domain-validation) untuk panduan konfigurasi integrasi.

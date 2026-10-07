@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 
 const basePath = "/docs-ipaymu-api-v2";
 
-const child = spawn("bun", ["run", "build"], {
+const child = spawn(process.platform === "win32" ? "npm.cmd" : "npm", ["run", "build:export"], {
   stdio: "inherit",
   shell: process.platform === "win32",
   env: {

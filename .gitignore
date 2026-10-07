@@ -25,6 +25,9 @@ yarn-error.log*
 # others
 .env*.local
 .vercel
+.ci-docker-*/
+.deploy.env
+.current-image
 next-env.d.ts
 
 # Artefak konten Close API (dikirim ke ipaymu-core, jangan di-commit)

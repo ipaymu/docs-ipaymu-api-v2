@@ -613,8 +613,11 @@ html {
 .mdx-pre-wrapper figure.shiki pre { margin: 0; background: transparent !important; font-family: var(--font-code), monospace; }
 #nd-page figure.shiki code,
 .mdx-pre-wrapper figure.shiki code { font-family: var(--font-code), monospace; }
-#nd-page figure.shiki code span[style],
-.mdx-pre-wrapper figure.shiki code span[style] { color: var(--shiki-dark) !important; }
+/* Code panels deliberately use a dark terminal surface in both themes. Fumadocs
+   defaults unstyled Shiki spans to the light-theme foreground. Use the inherited
+   dark foreground for plain text and each token's dark color for highlighting. */
+#nd-page figure.shiki code span,
+.mdx-pre-wrapper figure.shiki code span { color: var(--shiki-dark, #e1e4e8) !important; }
 #nd-page figure.shiki code span[style*="--shiki-dark: #9ECBFF"],
 .mdx-pre-wrapper figure.shiki code span[style*="--shiki-dark: #9ECBFF"] { color: #e8d17a !important; }
 

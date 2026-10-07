@@ -1,0 +1,199 @@
+---
+title: Adding Domains and IP Addresses
+description: Resolve Invalid IP/Domain errors by registering your server IP and domain in the iPaymu dashboard.
+---
+
+import Image from "next/image";
+import { withBasePath } from "@/lib/utils";
+import login from "../../../public/img/ip-domain/ipaymu-dashboard-login.png";
+import integrationIp from "../../../public/img/ip-domain/ipaymu-api-integration-ip.png";
+import addIp from "../../../public/img/ip-domain/ipaymu-add-ip.png";
+import integrationDomain from "../../../public/img/ip-domain/ipaymu-api-integration-domain.png";
+
+When your integration returns `Invalid IP` or `Invalid Domain`, the issue usually relates to the integration's IP or domain and the configuration registered in the iPaymu dashboard. Use this troubleshooting guide to check and update that configuration.
+
+## Error "Invalid IP"
+
+The IP address used by your server to access the iPaymu API must be registered in the iPaymu dashboard.
+
+<Callout type="info" title="Use the IP of the server making requests">
+  Register the IP address of the server that sends requests to iPaymu, rather
+  than simply the IP address of the device used to open the dashboard.
+</Callout>
+
+<Steps>
+  <Step>
+
+### 1. Log in to the dashboard
+
+Sign in to the [iPaymu dashboard](https://my.ipaymu.com/login).
+
+<Image
+  src={withBasePath(login.src)}
+  width={login.width}
+  height={login.height}
+  alt="iPaymu dashboard login page"
+  className="h-auto w-full rounded-lg"
+  loading="lazy"
+  sizes="(max-width: 768px) 100vw, 900px"
+/>
+
+  </Step>
+  <Step>
+
+### 2. Open API Integrasi
+
+Select **API Integrasi** in the dashboard.
+
+  </Step>
+  <Step>
+
+### 3. Open registered IP details
+
+In the **Domain & IP** section, select **IP Terdaftar → Detail**.
+
+<Image
+  src={withBasePath(integrationIp.src)}
+  width={integrationIp.width}
+  height={integrationIp.height}
+  alt="API Integrasi menu and registered IP addresses in the iPaymu dashboard"
+  className="h-auto w-full rounded-lg"
+  loading="lazy"
+  sizes="(max-width: 768px) 100vw, 900px"
+/>
+
+  </Step>
+  <Step>
+
+### 4. Confirm a static IP
+
+Make sure the server IP you are registering is a **static IP**.
+
+  </Step>
+  <Step>
+
+### 5. Select IP Baru
+
+Click **IP Baru** to open the form for adding an IP address.
+
+  </Step>
+  <Step>
+
+### 6. Enter the server IP
+
+Enter the IP address of the server or website that actually sends requests to the iPaymu API.
+
+<Image
+  src={withBasePath(addIp.src)}
+  width={addIp.width}
+  height={addIp.height}
+  alt="Add IP form in the iPaymu dashboard"
+  className="h-auto w-full rounded-lg"
+  loading="lazy"
+  sizes="(max-width: 768px) 100vw, 900px"
+/>
+
+  </Step>
+  <Step>
+
+### 7. Submit
+
+Click **Submit** to add the IP address.
+
+  </Step>
+  <Step>
+
+### 8. Retry the request
+
+After the IP address has been added successfully, send the API request again.
+
+  </Step>
+</Steps>
+
+## Error "Invalid Domain"
+
+Register your domain in the iPaymu dashboard and check that it matches the callback domain used by your integration.
+
+<Callout type="warn" title="Check the callback domain">
+  If you receive an 'Invalid Domain' response, check that the callback domain
+  matches the domain registered in the iPaymu dashboard.
+</Callout>
+
+<Steps>
+  <Step>
+
+### 1. Log in to the dashboard
+
+Sign in to the [iPaymu dashboard](https://my.ipaymu.com/login).
+
+<Image
+  src={withBasePath(login.src)}
+  width={login.width}
+  height={login.height}
+  alt="iPaymu dashboard login page"
+  className="h-auto w-full rounded-lg"
+  loading="lazy"
+  sizes="(max-width: 768px) 100vw, 900px"
+/>
+
+  </Step>
+  <Step>
+
+### 2. Open API Integrasi
+
+Select **API Integrasi** in the dashboard.
+
+  </Step>
+  <Step>
+
+### 3. Open registered domain details
+
+In the **Domain & IP** section, select **Domain Terdaftar → Detail**.
+
+<Image
+  src={withBasePath(integrationDomain.src)}
+  width={integrationDomain.width}
+  height={integrationDomain.height}
+  alt="API Integrasi menu and registered domains in the iPaymu dashboard"
+  className="h-auto w-full rounded-lg"
+  loading="lazy"
+  sizes="(max-width: 768px) 100vw, 900px"
+/>
+
+  </Step>
+  <Step>
+
+### 4. Register the domain
+
+Follow the domain registration process available in the dashboard.
+
+  </Step>
+  <Step>
+
+### 5. Check the callback
+
+Make sure the callback used by your integration comes from the **same domain** as the registered domain.
+
+  </Step>
+  <Step>
+
+### 6. Check additional domains
+
+If you want to add a second or additional domain, make sure it uses the **same business model**.
+
+  </Step>
+  <Step>
+
+### 7. Domain verification
+
+The iPaymu team will verify the registered domain.
+
+  </Step>
+</Steps>
+
+## After updating the configuration
+
+- **IP:** retry the API request after the IP address has been added successfully.
+- **Domain:** make sure the domain and callback match, then wait for verification by the iPaymu team if required.
+
+See [IP & Domain Validation](./ip-domain-validation) for integration configuration guidance.

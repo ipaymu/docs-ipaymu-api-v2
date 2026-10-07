@@ -28,7 +28,7 @@ export default async function Layout({
         component: <HorizontalNavbar lang={lang} current="plugins" />,
       }}
       sidebar={{
-        footer: <UnifiedSidebarFooter lang={lang} />,
+        footer: <UnifiedSidebarFooter key="sidebar-footer" lang={lang} />,
       }}
       i18n={false}
       themeSwitch={{ enabled: false }}

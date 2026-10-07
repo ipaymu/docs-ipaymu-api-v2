@@ -25,7 +25,7 @@ export default async function Layout({
       }}
       sidebar={{
         enabled: true,
-        footer: <UnifiedSidebarFooter lang={lang} />,
+        footer: <UnifiedSidebarFooter key="sidebar-footer" lang={lang} />,
       }}
     >
       {children}

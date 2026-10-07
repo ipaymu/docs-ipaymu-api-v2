@@ -6,9 +6,9 @@ description: Untuk memastikan keamanan transaksi, iPaymu menerapkan validasi ket
 Untuk memastikan keamanan transaksi, iPaymu menerapkan validasi ketat untuk alamat IP dan Domain, terutama di lingkungan **Production/Live**.
 
 <Callout type="warn" title="Persyaratan Production">
-  Dalam mode Production, alamat IP server Anda dan domain yang digunakan dalam body request WAJIB
-  terdaftar dan divalidasi oleh iPaymu. Kegagalan melakukan ini akan mengakibatkan error `Invalid
-  IP` atau `Invalid Domain`.
+  Dalam mode Production, alamat IP server Anda dan domain yang digunakan dalam
+  body request WAJIB terdaftar dan divalidasi oleh iPaymu. Kegagalan melakukan
+  ini akan mengakibatkan error `Invalid IP` atau `Invalid Domain`.
 </Callout>
 
 ## Validasi Alamat IP
@@ -38,5 +38,5 @@ Untuk alamat IP, buka [Manajemen IP](https://my.ipaymu.com/ip) dan tambahkan IP 
 - **Subdomain Tidak Terdaftar**: Pastikan subdomain juga diperbolehkan jika Anda menggunakannya.
 - **Ketidakcocokan Protokol**: Pastikan Anda menggunakan protokol yang benar (`http` vs `https`) sesuai yang terdaftar.
 
-Untuk panduan rinci tentang pemecahan masalah ini, silakan merujuk ke postingan blog resmi:
-[Mengatasi Masalah Error Invalid IP & Domain di iPaymu](https://blog.ipaymu.com/mengatasi-masalah-error-invalid-ip-domain-di-ipaymu/)
+Untuk mengatasi error `Invalid IP` atau `Invalid Domain`, ikuti panduan
+[Menambahkan Domain dan IP](./add-domain-ip).

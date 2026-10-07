@@ -26,11 +26,11 @@ async function run(command, args, options = {}) {
   });
 }
 
-await run("bun", ["./scripts/build-pages.mjs"]);
+await run(process.execPath, ["./scripts/build-pages.mjs"]);
 
 await rm(previewPath, { recursive: true, force: true });
 await mkdir(previewPath, { recursive: true });
 await cp("out", previewPath, { recursive: true });
 
 console.log(`\nServing GitHub Pages preview at /${basePath}/\n`);
-await run("serve", [previewRoot]);
+await run(process.execPath, ["node_modules/serve/build/main.js", previewRoot]);

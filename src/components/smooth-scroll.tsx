@@ -14,6 +14,15 @@ export function SmoothScroll() {
       wheelMultiplier: 1,
       touchMultiplier: 2,
       prevent: (node) => {
+        const codeViewport = node.closest<HTMLElement>(
+          "figure.shiki .fd-scroll-container",
+        );
+
+        // Short code blocks must still let Lenis scroll the surrounding page.
+        if (codeViewport && codeViewport.scrollHeight > codeViewport.clientHeight + 1) {
+          return true;
+        }
+
         return (
           node.nodeName === "ASIDE" ||
           node.hasAttribute("data-lenis-prevent") ||

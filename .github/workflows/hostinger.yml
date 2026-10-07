@@ -10,14 +10,12 @@
 # dependensi Hostinger tidak punya manifest untuk dibaca.
 #
 # Memakai npm (bukan bun) supaya alat di CI sama dengan yang dipakai di
-# Hostinger; bun hanya dipakai di mesin lokal.
+# Hostinger. Deployment VPS runtime ada di vps.yml.
 
 name: Bundel Hostinger
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
 
 jobs:
   bundle:
@@ -39,7 +37,7 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm run build
+        run: npm run build:export
 
       - name: Pastikan konten Close API tidak bocor ke bundel publik
         # Cangkang Close API memang ada di bundel dan itu wajar, jadi mencari
@@ -66,7 +64,9 @@ jobs:
         run: |
           mkdir -p bundel/public_html
           cp -a out/. bundel/public_html/
-          cp Caddyfile bundel/
+          # Older checkouts may not include a Caddyfile. The bundle remains
+          # usable with Apache/LiteSpeed via the included .htaccess.
+          if [ -f Caddyfile ]; then cp Caddyfile bundel/; fi
           cat > bundel/CARA-UNGGAH.txt <<'EOF'
           Isi bundel ini:
 
@@ -76,16 +76,19 @@ jobs:
                               source sebelumnya — selama berkas itu masih ada,
                               pemindai dependensi akan terus melaporkan CVE.
 
-            Caddyfile      -> taruh DI LUAR webroot, lalu arahkan FrankenPHP ke
+            Caddyfile      -> jika tersedia, taruh DI LUAR webroot, lalu arahkan FrankenPHP ke
                               berkas ini. Setel:
                                 SITE_ROOT     = path ke public_html
                                 SITE_ADDRESS  = docs.ipaymu.com
 
-          Tanpa Caddyfile ini, rute seperti /id/docs akan 404: Next.js
+          Pada Caddy/FrankenPHP, konfigurasi try_files diperlukan: Next.js
           mengemit `docs.html` berdampingan dengan folder kembar `docs/` yang
           tidak punya index.html, jadi server perlu aturan `try_files`.
           Berkas .htaccess di dalam public_html hanya berguna kalau suatu saat
           situs dilayani Apache/LiteSpeed; Caddy mengabaikannya.
+
+          Bundel ini hanya static export; MCP membutuhkan deployment runtime
+          melalui workflow Deploy docs to VPS. Lihat deploy/README.md.
           EOF
 
       - name: Upload bundel

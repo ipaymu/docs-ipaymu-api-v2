@@ -51,6 +51,7 @@ const res = spawnSync(NEXT_BIN, ["build"], {
   stdio: "inherit",
   env: {
     ...process.env,
+    NEXT_OUTPUT: "export",
     PRIVATE_BUILD: "1",
     NEXT_PUBLIC_PRIVATE_BUILD: "1",
     PUPPETEER_CHROMIUM_FLAGS: process.env.PUPPETEER_CHROMIUM_FLAGS || "--no-sandbox",
