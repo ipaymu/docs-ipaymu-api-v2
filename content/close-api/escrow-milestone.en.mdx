@@ -65,6 +65,10 @@ Every endpoint on this page accepts one of:
 - the `sessionId` of a redirect payment, or
 - the `referenceId` you sent when creating the payment.
 
+The value is matched exactly, in this order: iPaymu transaction ID, then `sessionId`, then
+`referenceId`. If the same `referenceId` was used for more than one payment, the newest transaction
+is used. Send the iPaymu transaction ID to be certain.
+
 For a child account, also send the `account` parameter with the child's VA, the same as the
 [Check Transaction](/docs/transaction/check-transaction) endpoint.
 
@@ -95,6 +99,10 @@ Releases part of the Escrow to the merchant balance.
 | `account`       | string  | No                        | Child account VA, when the transaction belongs to a child account.                             |
 
 Send **either** `percentage` or `amount`, not both.
+
+A `percentage` release is rounded to the nearest cent. Percentages that add up to 100% (e.g. `33.33`,
+`33.33`, `33.34`) always empty the Escrow: the few cents of rounding difference on the last release
+are taken from the remaining balance, so no small change stays held.
 
 <Callout title="Idempotency">
   If a request with the same `referenceId` is sent again (for example after a timeout), iPaymu does

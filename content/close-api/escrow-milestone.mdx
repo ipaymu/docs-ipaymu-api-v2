@@ -65,6 +65,10 @@ Semua endpoint di halaman ini menerima salah satu dari:
 - `sessionId` dari pembayaran redirect, atau
 - `referenceId` yang Anda kirim saat membuat pembayaran.
 
+Nilainya dicocokkan persis, berurutan: ID transaksi iPaymu, lalu `sessionId`, lalu `referenceId`.
+Jika `referenceId` yang sama pernah dipakai untuk lebih dari satu pembayaran, yang dipakai adalah
+transaksi terbaru. Kirim ID transaksi iPaymu bila ingin pasti.
+
 Untuk akun anak, kirim juga parameter `account` berisi VA anak, sama seperti endpoint
 [Cek Transaksi](/docs/transaction/check-transaction).
 
@@ -95,6 +99,10 @@ Mencairkan sebagian dana Escrow ke saldo merchant.
 | `account`       | string  | Tidak                       | VA akun anak, bila transaksi milik akun anak.                                                     |
 
 Kirim **salah satu** dari `percentage` atau `amount`, tidak keduanya.
+
+Release dengan `percentage` dibulatkan ke sen terdekat. Persentase yang totalnya 100% (mis. `33.33`,
+`33.33`, `33.34`) selalu menghabiskan Escrow: selisih pembulatan beberapa sen pada release terakhir
+diambil dari sisa saldo, jadi tidak ada sisa receh yang tertahan.
 
 <Callout title="Idempotensi">
   Jika request dengan `referenceId` yang sama dikirim ulang (misalnya karena timeout), iPaymu tidak
