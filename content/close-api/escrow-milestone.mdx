@@ -1,0 +1,464 @@
+---
+title: Escrow Milestone Release
+description: Menahan dana pembayaran di Escrow lalu mencairkannya ke merchant secara bertahap per milestone proyek.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+Escrow Milestone dipakai untuk transaksi bernilai besar yang dibayar penuh di awal tetapi dikerjakan
+bertahap, misalnya proyek pembangunan rumah. Buyer membayar seluruh nilai proyek, dana ditahan di
+Escrow, lalu merchant mencairkannya ke saldo sendiri **sedikit demi sedikit** sesuai progres
+proyek. Pencairan tidak pernah terjadi otomatis berdasarkan waktu; selalu dipicu oleh request API.
+
+<Callout type="warn">
+  Fitur ini harus diaktifkan **per akun** oleh tim iPaymu (layanan `516`). Setelah aktif,
+  **setiap** pembayaran escrow yang diterima akun tersebut menjadi Escrow Milestone dan tidak lagi
+  dirilis otomatis setelah 7 hari. Pembayaran escrow yang dibuat **sebelum** fitur aktif tetap
+  mengikuti escrow biasa.
+</Callout>
+
+## Alur
+
+1. Buyer membayar penuh, misalnya Rp500.000.000, lewat pembayaran dengan opsi escrow (`escrow: true`).
+2. Dana masuk dan ditahan di Escrow. Transaksi berstatus escrow (`transaction_status_code` `7`) dan
+   **belum** menambah saldo merchant.
+3. Setiap milestone selesai, merchant memanggil `escrow/release` dengan persentase atau nominal.
+4. Setiap release dicatat sebagai transaksi terpisah dan langsung menambah saldo merchant.
+5. Setelah 100% dirilis, Escrow berstatus `fully_released` dan tertutup.
+6. Jika proyek batal, merchant memanggil `escrow/refund` untuk mengembalikan sisa dana ke buyer.
+
+Contoh release untuk nilai proyek Rp500.000.000:
+
+| Milestone | Release              | Akumulasi | Sisa Escrow     |
+| :-------- | :------------------- | :-------- | :-------------- |
+| Tahap 1   | 30% → Rp150.000.000  | 30%       | Rp350.000.000   |
+| Tahap 2   | 20% → Rp100.000.000  | 50%       | Rp250.000.000   |
+| Tahap 3   | 20% → Rp100.000.000  | 70%       | Rp150.000.000   |
+| Tahap 4   | 30% → Rp150.000.000  | 100%      | Rp0             |
+
+## Saldo Escrow dan Fee
+
+- **Saldo Escrow** (`EscrowAmount`) adalah nilai yang akan diterima merchant, yaitu total
+  pembayaran dikurangi fee transaksi. Persentase release selalu dihitung dari nilai ini, bukan dari
+  sisa saldo.
+- Fee sudah dipotong saat buyer membayar. Setiap release membawa bagian fee yang proporsional
+  (`Fee`) sebagai catatan; nominal `Amount` yang dirilis adalah yang masuk ke saldo merchant
+  secara utuh.
+- Total release tidak pernah bisa melebihi saldo Escrow. Release yang menghabiskan sisa saldo
+  otomatis mengambil sisa yang tepat, jadi tidak ada selisih pembulatan.
+
+<Callout>
+  Jika transaksi dikunci oleh iPaymu (misalnya nominal melebihi batas maksimal harga produk akun),
+  release ditolak sampai transaksi dibuka oleh tim iPaymu. Hubungi tim iPaymu untuk menaikkan batas
+  tersebut bila nilai proyek Anda besar.
+</Callout>
+
+## Request Header
+
+Lihat [header & signature](/close-api) yang wajib disertakan pada setiap request Close API.
+
+## Parameter `transactionId`
+
+Semua endpoint di halaman ini menerima salah satu dari:
+
+- ID transaksi iPaymu (`trx_id` pada callback pembayaran),
+- `sessionId` dari pembayaran redirect, atau
+- `referenceId` yang Anda kirim saat membuat pembayaran.
+
+Untuk akun anak, kirim juga parameter `account` berisi VA anak, sama seperti endpoint
+[Cek Transaksi](/docs/transaction/check-transaction).
+
+---
+
+## Release
+
+Mencairkan sebagian dana Escrow ke saldo merchant.
+
+**URL**: `{{baseUrl}}/api/v2/escrow/release`
+**Method**: `POST`
+
+| Lingkungan | URL                                                  |
+| :--------- | :--------------------------------------------------- |
+| Sandbox    | `https://sandbox.ipaymu.com/api/v2/escrow/release`   |
+| Production | `https://my.ipaymu.com/api/v2/escrow/release`        |
+
+### Request Body
+
+| Parameter       | Tipe    | Wajib                       | Deskripsi                                                                                         |
+| :-------------- | :------ | :-------------------------- | :------------------------------------------------------------------------------------------------ |
+| `transactionId` | string  | Ya                          | Transaksi escrow. Lihat [Parameter `transactionId`](#parameter-transactionid).                     |
+| `referenceId`   | string  | Ya                          | ID unik release dari sistem Anda, maks. 100 karakter. Dipakai untuk mencegah release ganda.        |
+| `percentage`    | numeric | Jika `amount` kosong        | Persentase dari total saldo Escrow, lebih dari `0` dan maks. `100`. Boleh desimal, mis. `12.5`.    |
+| `amount`        | numeric | Jika `percentage` kosong    | Nominal rupiah yang dirilis, lebih dari `0`.                                                       |
+| `milestone`     | string  | Tidak                       | Nama milestone, maks. 100 karakter, mis. `Tahap 1 - Pondasi`.                                     |
+| `notes`         | string  | Tidak                       | Catatan, maks. 255 karakter.                                                                      |
+| `account`       | string  | Tidak                       | VA akun anak, bila transaksi milik akun anak.                                                     |
+
+Kirim **salah satu** dari `percentage` atau `amount`, tidak keduanya.
+
+<Callout title="Idempotensi">
+  Jika request dengan `referenceId` yang sama dikirim ulang (misalnya karena timeout), iPaymu tidak
+  merilis dana lagi. Response berisi release yang sudah ada dengan message
+  `escrow release already processed`. Gunakan `referenceId` baru untuk setiap milestone.
+</Callout>
+
+### Contoh Request
+
+```json
+{
+  "transactionId": "PROJECT-001",
+  "referenceId": "MS-1",
+  "percentage": 30,
+  "milestone": "Tahap 1 - Pondasi"
+}
+```
+
+Atau dengan nominal:
+
+```json
+{
+  "transactionId": "PROJECT-001",
+  "referenceId": "MS-2",
+  "amount": 100000000,
+  "milestone": "Tahap 2 - Struktur"
+}
+```
+
+### Contoh Response
+
+`Data.Release` adalah release yang baru dibuat, `Data.Escrow` adalah kondisi Escrow setelahnya
+(format sama dengan [Detail](#detail)).
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "escrow released",
+  "Data": {
+    "Release": {
+      "ReleaseId": 1,
+      "ReferenceId": "MS-1",
+      "Type": "release",
+      "Milestone": "Tahap 1 - Pondasi",
+      "Notes": null,
+      "Percentage": 30,
+      "Amount": 150000000,
+      "Fee": 1200000,
+      "EscrowBalanceBefore": 500000000,
+      "EscrowBalanceAfter": 350000000,
+      "ReleaseTransactionId": 2,
+      "CreatedAt": "2026-10-12 16:23:48"
+    },
+    "Escrow": {
+      "TransactionId": 1,
+      "SessionId": "a1b2c3d4-sid",
+      "ReferenceId": "PROJECT-001",
+      "EscrowStatus": "partially_released",
+      "EscrowAmount": 500000000,
+      "ReleasedAmount": 150000000,
+      "RefundedAmount": 0,
+      "RemainingAmount": 350000000,
+      "ReleasedPercentage": 30,
+      "ExpiredAt": "2027-10-12 16:23:48",
+      "IsExpired": false,
+      "Releases": [
+        {
+          "ReleaseId": 1,
+          "ReferenceId": "MS-1",
+          "Type": "release",
+          "Milestone": "Tahap 1 - Pondasi",
+          "Notes": null,
+          "Percentage": 30,
+          "Amount": 150000000,
+          "Fee": 1200000,
+          "EscrowBalanceBefore": 500000000,
+          "EscrowBalanceAfter": 350000000,
+          "ReleaseTransactionId": 2,
+          "CreatedAt": "2026-10-12 16:23:48"
+        }
+      ]
+    }
+  }
+}
+```
+
+---
+
+## Refund
+
+Mengembalikan **seluruh sisa** dana Escrow ke buyer dan menutup Escrow, misalnya ketika proyek
+dibatalkan atau terjadi dispute. Dana yang sudah dirilis sebelumnya tidak ikut dikembalikan.
+
+**URL**: `{{baseUrl}}/api/v2/escrow/refund`
+**Method**: `POST`
+
+### Request Body
+
+| Parameter       | Tipe   | Wajib | Deskripsi                                                              |
+| :-------------- | :----- | :---- | :--------------------------------------------------------------------- |
+| `transactionId` | string | Ya    | Transaksi escrow.                                                      |
+| `referenceId`   | string | Ya    | ID unik refund dari sistem Anda, maks. 100 karakter.                    |
+| `notes`         | string | Tidak | Alasan refund, maks. 255 karakter.                                      |
+| `account`       | string | Tidak | VA akun anak, bila transaksi milik akun anak.                           |
+
+<Callout type="warn">
+  - Refund tidak bisa dibatalkan, dan setelah refund tidak ada release lagi.
+  - Buyer menerima sisa saldo Escrow (`Amount`). Bagian fee dari sisa tersebut (`Fee`) tetap
+    menjadi biaya iPaymu.
+  - Pengembalian dana ke rekening buyer diproses oleh tim iPaymu setelah refund tercatat.
+</Callout>
+
+### Contoh Request
+
+```json
+{
+  "transactionId": "PROJECT-001",
+  "referenceId": "REFUND-1",
+  "notes": "Proyek dibatalkan"
+}
+```
+
+### Contoh Response
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "escrow refunded",
+  "Data": {
+    "Release": {
+      "ReleaseId": 3,
+      "ReferenceId": "REFUND-1",
+      "Type": "refund",
+      "Milestone": null,
+      "Notes": "Proyek dibatalkan",
+      "Percentage": 50,
+      "Amount": 250000000,
+      "Fee": 2000000,
+      "EscrowBalanceBefore": 250000000,
+      "EscrowBalanceAfter": 0,
+      "ReleaseTransactionId": 4,
+      "CreatedAt": "2026-10-12 16:23:49"
+    },
+    "Escrow": {
+      "TransactionId": 1,
+      "SessionId": "a1b2c3d4-sid",
+      "ReferenceId": "PROJECT-001",
+      "EscrowStatus": "refunded",
+      "EscrowAmount": 500000000,
+      "ReleasedAmount": 250000000,
+      "RefundedAmount": 250000000,
+      "RemainingAmount": 0,
+      "ReleasedPercentage": 50,
+      "ExpiredAt": "2027-10-12 16:23:48",
+      "IsExpired": false,
+      "Releases": ["..."]
+    }
+  }
+}
+```
+
+---
+
+## Detail
+
+Mengambil status Escrow beserta riwayat seluruh release dan refund.
+
+**URL**: `{{baseUrl}}/api/v2/escrow/detail`
+**Method**: `POST`
+
+| Parameter       | Tipe   | Wajib | Deskripsi                                     |
+| :-------------- | :----- | :---- | :-------------------------------------------- |
+| `transactionId` | string | Ya    | Transaksi escrow.                             |
+| `account`       | string | Tidak | VA akun anak, bila transaksi milik akun anak. |
+
+### Contoh Response
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "success",
+  "Data": {
+    "TransactionId": 1,
+    "SessionId": "a1b2c3d4-sid",
+    "ReferenceId": "PROJECT-001",
+    "EscrowStatus": "partially_released",
+    "EscrowAmount": 500000000,
+    "ReleasedAmount": 250000000,
+    "RefundedAmount": 0,
+    "RemainingAmount": 250000000,
+    "ReleasedPercentage": 50,
+    "ExpiredAt": "2027-10-12 16:23:48",
+    "IsExpired": false,
+    "Releases": [
+      {
+        "ReleaseId": 1,
+        "ReferenceId": "MS-1",
+        "Type": "release",
+        "Milestone": "Tahap 1 - Pondasi",
+        "Notes": null,
+        "Percentage": 30,
+        "Amount": 150000000,
+        "Fee": 1200000,
+        "EscrowBalanceBefore": 500000000,
+        "EscrowBalanceAfter": 350000000,
+        "ReleaseTransactionId": 2,
+        "CreatedAt": "2026-10-12 16:23:48"
+      },
+      {
+        "ReleaseId": 2,
+        "ReferenceId": "MS-2",
+        "Type": "release",
+        "Milestone": "Tahap 2 - Struktur",
+        "Notes": null,
+        "Percentage": 20,
+        "Amount": 100000000,
+        "Fee": 800000,
+        "EscrowBalanceBefore": 350000000,
+        "EscrowBalanceAfter": 250000000,
+        "ReleaseTransactionId": 3,
+        "CreatedAt": "2026-10-12 16:23:49"
+      }
+    ]
+  }
+}
+```
+
+### Field Escrow
+
+| Field                | Deskripsi                                                                    |
+| :------------------- | :--------------------------------------------------------------------------- |
+| `TransactionId`      | ID transaksi pembayaran escrow.                                              |
+| `SessionId`          | Session ID pembayaran (pembayaran redirect).                                 |
+| `ReferenceId`        | Reference ID yang Anda kirim saat membuat pembayaran.                        |
+| `EscrowStatus`       | Lihat [Status Escrow](#status-escrow).                                       |
+| `EscrowAmount`       | Total saldo Escrow: total pembayaran dikurangi fee.                          |
+| `ReleasedAmount`     | Total yang sudah dirilis ke saldo merchant.                                  |
+| `RefundedAmount`     | Total yang dikembalikan ke buyer.                                            |
+| `RemainingAmount`    | Sisa saldo Escrow yang masih ditahan.                                        |
+| `ReleasedPercentage` | Persentase `ReleasedAmount` terhadap `EscrowAmount`.                         |
+| `ExpiredAt`          | Batas waktu Escrow. Lihat [Batas Waktu](#batas-waktu).                       |
+| `IsExpired`          | `true` jika batas waktu sudah lewat dan Escrow belum selesai.                |
+| `Releases`           | Riwayat release dan refund, urut dari yang pertama.                          |
+
+### Field Release
+
+| Field                  | Deskripsi                                                                     |
+| :--------------------- | :---------------------------------------------------------------------------- |
+| `ReleaseId`            | ID release di iPaymu.                                                         |
+| `ReferenceId`          | `referenceId` yang Anda kirim.                                                |
+| `Type`                 | `release` (ke merchant) atau `refund` (ke buyer).                             |
+| `Milestone`, `Notes`   | Nilai yang Anda kirim.                                                        |
+| `Percentage`           | Persentase dari `EscrowAmount`.                                               |
+| `Amount`               | Nominal yang dirilis ke merchant atau dikembalikan ke buyer.                  |
+| `Fee`                  | Bagian fee transaksi untuk nominal ini (sudah dipotong saat pembayaran).      |
+| `EscrowBalanceBefore`  | Sisa saldo Escrow sebelum release ini.                                        |
+| `EscrowBalanceAfter`   | Sisa saldo Escrow setelah release ini.                                        |
+| `ReleaseTransactionId` | ID transaksi "Escrow Release" yang tercatat di riwayat transaksi merchant.     |
+| `CreatedAt`            | Waktu release.                                                                |
+
+---
+
+## Status Escrow
+
+| Status               | Arti                                                                     |
+| :------------------- | :----------------------------------------------------------------------- |
+| `pending`            | Dana ditahan penuh, belum ada release.                                   |
+| `partially_released` | Sebagian dana sudah dirilis, sisanya masih ditahan.                      |
+| `fully_released`     | 100% dana sudah dirilis ke merchant. Escrow tertutup.                    |
+| `refunded`           | Sisa dana dikembalikan ke buyer. Escrow tertutup.                        |
+
+Status transaksi pembayarannya sendiri tetap `7` (escrow) selama dan sesudah proses ini. Setiap
+release muncul sebagai transaksi terpisah berjenis **Escrow Release** di riwayat transaksi merchant.
+
+## Batas Waktu
+
+Setiap Escrow Milestone punya batas waktu (`ExpiredAt`), 365 hari sejak pembayaran dibuat. Jika
+lewat batas waktu dan Escrow belum `fully_released` atau `refunded`:
+
+- iPaymu mengirim callback `escrow_expired` dan tim iPaymu akan menindaklanjuti.
+- `IsExpired` menjadi `true`.
+- Dana **tetap ditahan**. Tidak ada release atau refund otomatis; Anda masih bisa memanggil
+  `escrow/release` atau `escrow/refund`.
+
+---
+
+## Callback
+
+Setiap release, refund, dan Escrow yang melewati batas waktu dikirim ke `notifyUrl` pembayaran
+escrow dengan `Content-Type: application/x-www-form-urlencoded`.
+
+<Callout type="warn">
+  Callback ini dikirim ke URL yang sama dengan callback pembayaran. Bedakan dengan field `event`
+  dan jangan memprosesnya sebagai notifikasi pembayaran: field `status` di sini berisi status
+  Escrow (mis. `partially_released`), bukan `berhasil`. Callback ini tidak memiliki header
+  signature, jadi konfirmasi datanya lewat endpoint [Detail](#detail) sebelum memprosesnya.
+</Callout>
+
+| Field                  | Deskripsi                                                                     |
+| :--------------------- | :---------------------------------------------------------------------------- |
+| `event`                | `escrow_release`, `escrow_refund`, atau `escrow_expired`.                     |
+| `event_id`             | ID unik event: `ReleaseId`, atau `expired` untuk `escrow_expired`.            |
+| `trx_id`               | ID transaksi pembayaran escrow.                                               |
+| `sid`                  | Session ID pembayaran.                                                        |
+| `reference_id`         | Reference ID pembayaran dari sistem Anda.                                     |
+| `status`               | Status Escrow setelah event.                                                  |
+| `escrow_amount`        | Total saldo Escrow.                                                           |
+| `released_amount`      | Total yang sudah dirilis.                                                     |
+| `refunded_amount`      | Total yang dikembalikan ke buyer.                                             |
+| `remaining_amount`     | Sisa saldo Escrow.                                                            |
+| `released_percentage`  | Persentase yang sudah dirilis.                                                |
+| `expired_at`           | Batas waktu Escrow.                                                           |
+| `release_id`           | `ReleaseId` (tidak ada pada `escrow_expired`).                                |
+| `release_type`         | `release` atau `refund` (tidak ada pada `escrow_expired`).                    |
+| `release_reference_id` | `referenceId` release yang Anda kirim.                                        |
+| `milestone`            | Nama milestone, jika dikirim.                                                 |
+| `percentage`           | Persentase release ini.                                                       |
+| `amount`               | Nominal release ini.                                                          |
+| `fee`                  | Bagian fee untuk release ini.                                                 |
+| `release_trx_id`       | ID transaksi "Escrow Release".                                                |
+| `released_at`          | Waktu release.                                                                |
+
+### Contoh Callback
+
+```
+event=escrow_release&event_id=1&trx_id=1&sid=a1b2c3d4-sid&reference_id=PROJECT-001
+&status=partially_released&escrow_amount=500000000&released_amount=150000000
+&refunded_amount=0&remaining_amount=350000000&released_percentage=30
+&expired_at=2027-10-12+16%3A23%3A48&release_id=1&release_type=release
+&release_reference_id=MS-1&milestone=Tahap+1+-+Pondasi&percentage=30
+&amount=150000000&fee=1200000&release_trx_id=2&released_at=2026-10-12+16%3A23%3A48
+```
+
+---
+
+## Kode Error
+
+| HTTP | Message                                                 | Penyebab                                                                               |
+| :--- | :------------------------------------------------------ | :------------------------------------------------------------------------------------- |
+| 400  | `release amount exceeds escrow balance`                 | Nominal melebihi sisa saldo Escrow. Sisa saldo ada di `Data.RemainingAmount`.           |
+| 400  | `release amount must be greater than 0`                 | Persentase terlalu kecil sehingga nominalnya `0`.                                      |
+| 400  | `send either amount or percentage, not both`            | `amount` dan `percentage` dikirim bersamaan.                                            |
+| 400  | `escrow already closed`                                 | Escrow sudah `fully_released` atau `refunded`.                                         |
+| 400  | `escrow transaction is not paid`                        | Pembayaran escrow belum dibayar buyer.                                                 |
+| 400  | `transaction is locked, please contact iPaymu support`  | Transaksi dikunci iPaymu. Hubungi tim iPaymu.                                          |
+| 400  | `escrow has no balance`                                 | Total pembayaran setelah fee bernilai `0`.                                             |
+| 400  | pesan validasi                                          | Parameter wajib kosong atau formatnya salah, mis. `percentage` lebih dari `100`.       |
+| 403  | `service 516 not found`                                 | Layanan Escrow Milestone belum diaktifkan untuk akun Anda.                             |
+| 404  | `escrow not found`                                      | Transaksi tidak ditemukan, bukan milik Anda, atau bukan Escrow Milestone.              |
+| 406  | `invalid account`                                       | VA pada `account` tidak ditemukan atau bukan akun anak Anda.                           |
+| 409  | `referenceId already used`                              | `referenceId` sudah dipakai untuk jenis lain (mis. release dipakai lagi untuk refund).  |
+
+Contoh error saldo tidak cukup:
+
+```json
+{
+  "Status": 400,
+  "Success": false,
+  "Message": "release amount exceeds escrow balance",
+  "Data": {
+    "RemainingAmount": 250000000
+  }
+}
+```

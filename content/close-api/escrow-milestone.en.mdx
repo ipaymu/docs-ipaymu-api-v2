@@ -1,0 +1,464 @@
+---
+title: Escrow Milestone Release
+description: Hold a payment in Escrow and release it to the merchant step by step, per project milestone.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+Escrow Milestone is for high-value transactions that are paid in full upfront but delivered in
+stages, such as a house construction project. The buyer pays the whole project value, the funds are
+held in Escrow, and the merchant releases them to its own balance **step by step** as the project
+progresses. A release never happens automatically on a timer; it is always triggered by an API
+request.
+
+<Callout type="warn">
+  This feature must be enabled **per account** by the iPaymu team (service `516`). Once enabled,
+  **every** escrow payment received by that account becomes an Escrow Milestone and is no longer
+  auto-released after 7 days. Escrow payments created **before** the feature was enabled keep the
+  regular escrow behaviour.
+</Callout>
+
+## Flow
+
+1. The buyer pays in full, e.g. Rp500,000,000, through a payment with the escrow option (`escrow: true`).
+2. The funds are held in Escrow. The transaction has the escrow status (`transaction_status_code`
+   `7`) and does **not** add to the merchant balance yet.
+3. Each time a milestone is done, the merchant calls `escrow/release` with a percentage or an amount.
+4. Each release is recorded as a separate transaction and is added to the merchant balance right away.
+5. Once 100% is released, the Escrow becomes `fully_released` and is closed.
+6. If the project is cancelled, the merchant calls `escrow/refund` to return the remainder to the buyer.
+
+Example releases for a Rp500,000,000 project:
+
+| Milestone | Release               | Cumulative | Escrow remaining |
+| :-------- | :-------------------- | :--------- | :--------------- |
+| Stage 1   | 30% → Rp150,000,000   | 30%        | Rp350,000,000    |
+| Stage 2   | 20% → Rp100,000,000   | 50%        | Rp250,000,000    |
+| Stage 3   | 20% → Rp100,000,000   | 70%        | Rp150,000,000    |
+| Stage 4   | 30% → Rp150,000,000   | 100%       | Rp0              |
+
+## Escrow Balance and Fees
+
+- The **Escrow balance** (`EscrowAmount`) is what the merchant will receive: the total payment
+  minus the transaction fee. Release percentages are always calculated from this value, not from the
+  remaining balance.
+- The fee was already deducted when the buyer paid. Each release carries its proportional share of
+  the fee (`Fee`) for reference; the released `Amount` is credited to the merchant balance in full.
+- Total releases can never exceed the Escrow balance. The release that empties the Escrow takes the
+  exact remainder, so there are no rounding differences.
+
+<Callout>
+  If the transaction is locked by iPaymu (for example its amount exceeds the account's maximum
+  product price), releases are rejected until the iPaymu team unlocks it. Contact the iPaymu team
+  to raise that limit if your project values are large.
+</Callout>
+
+## Request Header
+
+See the [header & signature](/close-api) that every Close API request must include.
+
+## The `transactionId` Parameter
+
+Every endpoint on this page accepts one of:
+
+- the iPaymu transaction ID (`trx_id` in the payment callback),
+- the `sessionId` of a redirect payment, or
+- the `referenceId` you sent when creating the payment.
+
+For a child account, also send the `account` parameter with the child's VA, the same as the
+[Check Transaction](/docs/transaction/check-transaction) endpoint.
+
+---
+
+## Release
+
+Releases part of the Escrow to the merchant balance.
+
+**URL**: `{{baseUrl}}/api/v2/escrow/release`
+**Method**: `POST`
+
+| Environment | URL                                                  |
+| :---------- | :--------------------------------------------------- |
+| Sandbox     | `https://sandbox.ipaymu.com/api/v2/escrow/release`   |
+| Production  | `https://my.ipaymu.com/api/v2/escrow/release`        |
+
+### Request Body
+
+| Parameter       | Type    | Required                  | Description                                                                                    |
+| :-------------- | :------ | :------------------------ | :--------------------------------------------------------------------------------------------- |
+| `transactionId` | string  | Yes                       | The escrow transaction. See [The `transactionId` Parameter](#the-transactionid-parameter).      |
+| `referenceId`   | string  | Yes                       | Unique release ID from your system, max 100 characters. Prevents double releases.              |
+| `percentage`    | numeric | If `amount` is empty      | Percentage of the total Escrow balance, greater than `0` and at most `100`. Decimals allowed, e.g. `12.5`. |
+| `amount`        | numeric | If `percentage` is empty  | Amount in rupiah to release, greater than `0`.                                                 |
+| `milestone`     | string  | No                        | Milestone name, max 100 characters, e.g. `Stage 1 - Foundation`.                               |
+| `notes`         | string  | No                        | Notes, max 255 characters.                                                                     |
+| `account`       | string  | No                        | Child account VA, when the transaction belongs to a child account.                             |
+
+Send **either** `percentage` or `amount`, not both.
+
+<Callout title="Idempotency">
+  If a request with the same `referenceId` is sent again (for example after a timeout), iPaymu does
+  not release the funds again. The response contains the existing release with the message
+  `escrow release already processed`. Use a new `referenceId` for every milestone.
+</Callout>
+
+### Example Request
+
+```json
+{
+  "transactionId": "PROJECT-001",
+  "referenceId": "MS-1",
+  "percentage": 30,
+  "milestone": "Stage 1 - Foundation"
+}
+```
+
+Or with an amount:
+
+```json
+{
+  "transactionId": "PROJECT-001",
+  "referenceId": "MS-2",
+  "amount": 100000000,
+  "milestone": "Stage 2 - Structure"
+}
+```
+
+### Example Response
+
+`Data.Release` is the release just created; `Data.Escrow` is the Escrow state after it (same format
+as [Detail](#detail)).
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "escrow released",
+  "Data": {
+    "Release": {
+      "ReleaseId": 1,
+      "ReferenceId": "MS-1",
+      "Type": "release",
+      "Milestone": "Stage 1 - Foundation",
+      "Notes": null,
+      "Percentage": 30,
+      "Amount": 150000000,
+      "Fee": 1200000,
+      "EscrowBalanceBefore": 500000000,
+      "EscrowBalanceAfter": 350000000,
+      "ReleaseTransactionId": 2,
+      "CreatedAt": "2026-10-12 16:23:48"
+    },
+    "Escrow": {
+      "TransactionId": 1,
+      "SessionId": "a1b2c3d4-sid",
+      "ReferenceId": "PROJECT-001",
+      "EscrowStatus": "partially_released",
+      "EscrowAmount": 500000000,
+      "ReleasedAmount": 150000000,
+      "RefundedAmount": 0,
+      "RemainingAmount": 350000000,
+      "ReleasedPercentage": 30,
+      "ExpiredAt": "2027-10-12 16:23:48",
+      "IsExpired": false,
+      "Releases": [
+        {
+          "ReleaseId": 1,
+          "ReferenceId": "MS-1",
+          "Type": "release",
+          "Milestone": "Stage 1 - Foundation",
+          "Notes": null,
+          "Percentage": 30,
+          "Amount": 150000000,
+          "Fee": 1200000,
+          "EscrowBalanceBefore": 500000000,
+          "EscrowBalanceAfter": 350000000,
+          "ReleaseTransactionId": 2,
+          "CreatedAt": "2026-10-12 16:23:48"
+        }
+      ]
+    }
+  }
+}
+```
+
+---
+
+## Refund
+
+Returns the **whole remaining** Escrow balance to the buyer and closes the Escrow, for example when
+the project is cancelled or disputed. Funds already released are not returned.
+
+**URL**: `{{baseUrl}}/api/v2/escrow/refund`
+**Method**: `POST`
+
+### Request Body
+
+| Parameter       | Type   | Required | Description                                                       |
+| :-------------- | :----- | :------- | :---------------------------------------------------------------- |
+| `transactionId` | string | Yes      | The escrow transaction.                                           |
+| `referenceId`   | string | Yes      | Unique refund ID from your system, max 100 characters.            |
+| `notes`         | string | No       | Refund reason, max 255 characters.                                |
+| `account`       | string | No       | Child account VA, when the transaction belongs to a child account.|
+
+<Callout type="warn">
+  - A refund cannot be undone, and no further releases are possible after it.
+  - The buyer receives the remaining Escrow balance (`Amount`). The fee share of that remainder
+    (`Fee`) stays with iPaymu.
+  - The money is paid back to the buyer's account by the iPaymu team after the refund is recorded.
+</Callout>
+
+### Example Request
+
+```json
+{
+  "transactionId": "PROJECT-001",
+  "referenceId": "REFUND-1",
+  "notes": "Project cancelled"
+}
+```
+
+### Example Response
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "escrow refunded",
+  "Data": {
+    "Release": {
+      "ReleaseId": 3,
+      "ReferenceId": "REFUND-1",
+      "Type": "refund",
+      "Milestone": null,
+      "Notes": "Project cancelled",
+      "Percentage": 50,
+      "Amount": 250000000,
+      "Fee": 2000000,
+      "EscrowBalanceBefore": 250000000,
+      "EscrowBalanceAfter": 0,
+      "ReleaseTransactionId": 4,
+      "CreatedAt": "2026-10-12 16:23:49"
+    },
+    "Escrow": {
+      "TransactionId": 1,
+      "SessionId": "a1b2c3d4-sid",
+      "ReferenceId": "PROJECT-001",
+      "EscrowStatus": "refunded",
+      "EscrowAmount": 500000000,
+      "ReleasedAmount": 250000000,
+      "RefundedAmount": 250000000,
+      "RemainingAmount": 0,
+      "ReleasedPercentage": 50,
+      "ExpiredAt": "2027-10-12 16:23:48",
+      "IsExpired": false,
+      "Releases": ["..."]
+    }
+  }
+}
+```
+
+---
+
+## Detail
+
+Returns the Escrow status with the history of all releases and refunds.
+
+**URL**: `{{baseUrl}}/api/v2/escrow/detail`
+**Method**: `POST`
+
+| Parameter       | Type   | Required | Description                                                        |
+| :-------------- | :----- | :------- | :----------------------------------------------------------------- |
+| `transactionId` | string | Yes      | The escrow transaction.                                            |
+| `account`       | string | No       | Child account VA, when the transaction belongs to a child account. |
+
+### Example Response
+
+```json
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "success",
+  "Data": {
+    "TransactionId": 1,
+    "SessionId": "a1b2c3d4-sid",
+    "ReferenceId": "PROJECT-001",
+    "EscrowStatus": "partially_released",
+    "EscrowAmount": 500000000,
+    "ReleasedAmount": 250000000,
+    "RefundedAmount": 0,
+    "RemainingAmount": 250000000,
+    "ReleasedPercentage": 50,
+    "ExpiredAt": "2027-10-12 16:23:48",
+    "IsExpired": false,
+    "Releases": [
+      {
+        "ReleaseId": 1,
+        "ReferenceId": "MS-1",
+        "Type": "release",
+        "Milestone": "Stage 1 - Foundation",
+        "Notes": null,
+        "Percentage": 30,
+        "Amount": 150000000,
+        "Fee": 1200000,
+        "EscrowBalanceBefore": 500000000,
+        "EscrowBalanceAfter": 350000000,
+        "ReleaseTransactionId": 2,
+        "CreatedAt": "2026-10-12 16:23:48"
+      },
+      {
+        "ReleaseId": 2,
+        "ReferenceId": "MS-2",
+        "Type": "release",
+        "Milestone": "Stage 2 - Structure",
+        "Notes": null,
+        "Percentage": 20,
+        "Amount": 100000000,
+        "Fee": 800000,
+        "EscrowBalanceBefore": 350000000,
+        "EscrowBalanceAfter": 250000000,
+        "ReleaseTransactionId": 3,
+        "CreatedAt": "2026-10-12 16:23:49"
+      }
+    ]
+  }
+}
+```
+
+### Escrow Fields
+
+| Field                | Description                                                              |
+| :------------------- | :----------------------------------------------------------------------- |
+| `TransactionId`      | ID of the escrow payment transaction.                                    |
+| `SessionId`          | Payment session ID (redirect payments).                                  |
+| `ReferenceId`        | Reference ID you sent when creating the payment.                         |
+| `EscrowStatus`       | See [Escrow Status](#escrow-status).                                     |
+| `EscrowAmount`       | Total Escrow balance: the total payment minus the fee.                   |
+| `ReleasedAmount`     | Total released to the merchant balance.                                  |
+| `RefundedAmount`     | Total returned to the buyer.                                             |
+| `RemainingAmount`    | Escrow balance still held.                                               |
+| `ReleasedPercentage` | `ReleasedAmount` as a percentage of `EscrowAmount`.                      |
+| `ExpiredAt`          | Escrow deadline. See [Deadline](#deadline).                              |
+| `IsExpired`          | `true` when the deadline has passed and the Escrow is not closed.        |
+| `Releases`           | History of releases and refunds, oldest first.                           |
+
+### Release Fields
+
+| Field                  | Description                                                                   |
+| :--------------------- | :---------------------------------------------------------------------------- |
+| `ReleaseId`            | iPaymu release ID.                                                            |
+| `ReferenceId`          | The `referenceId` you sent.                                                   |
+| `Type`                 | `release` (to the merchant) or `refund` (to the buyer).                       |
+| `Milestone`, `Notes`   | The values you sent.                                                          |
+| `Percentage`           | Percentage of `EscrowAmount`.                                                 |
+| `Amount`               | Amount released to the merchant or returned to the buyer.                     |
+| `Fee`                  | Transaction fee share for this amount (already deducted at payment).          |
+| `EscrowBalanceBefore`  | Escrow balance before this release.                                           |
+| `EscrowBalanceAfter`   | Escrow balance after this release.                                            |
+| `ReleaseTransactionId` | ID of the "Escrow Release" transaction in the merchant's transaction history. |
+| `CreatedAt`            | Release time.                                                                 |
+
+---
+
+## Escrow Status
+
+| Status               | Meaning                                                              |
+| :------------------- | :------------------------------------------------------------------- |
+| `pending`            | Funds fully held, no release yet.                                    |
+| `partially_released` | Part of the funds released, the rest still held.                     |
+| `fully_released`     | 100% released to the merchant. The Escrow is closed.                 |
+| `refunded`           | The remainder was returned to the buyer. The Escrow is closed.       |
+
+The payment transaction itself keeps status `7` (escrow) during and after this process. Every
+release appears as a separate **Escrow Release** transaction in the merchant's transaction history.
+
+## Deadline
+
+Every Escrow Milestone has a deadline (`ExpiredAt`), 365 days after the payment was created. If the
+deadline passes and the Escrow is not `fully_released` or `refunded`:
+
+- iPaymu sends an `escrow_expired` callback and the iPaymu team follows up.
+- `IsExpired` becomes `true`.
+- The funds **stay held**. Nothing is released or refunded automatically; you can still call
+  `escrow/release` or `escrow/refund`.
+
+---
+
+## Callback
+
+Every release, refund, and expired Escrow is sent to the escrow payment's `notifyUrl` with
+`Content-Type: application/x-www-form-urlencoded`.
+
+<Callout type="warn">
+  These callbacks go to the same URL as payment callbacks. Tell them apart by the `event` field and
+  do not process them as payment notifications: the `status` field here holds the Escrow status
+  (e.g. `partially_released`), not `berhasil`. These callbacks carry no signature header, so confirm
+  the data through the [Detail](#detail) endpoint before acting on it.
+</Callout>
+
+| Field                  | Description                                                                   |
+| :--------------------- | :---------------------------------------------------------------------------- |
+| `event`                | `escrow_release`, `escrow_refund`, or `escrow_expired`.                       |
+| `event_id`             | Unique event ID: the `ReleaseId`, or `expired` for `escrow_expired`.          |
+| `trx_id`               | ID of the escrow payment transaction.                                         |
+| `sid`                  | Payment session ID.                                                           |
+| `reference_id`         | Payment reference ID from your system.                                        |
+| `status`               | Escrow status after the event.                                                |
+| `escrow_amount`        | Total Escrow balance.                                                         |
+| `released_amount`      | Total released.                                                               |
+| `refunded_amount`      | Total returned to the buyer.                                                  |
+| `remaining_amount`     | Escrow balance remaining.                                                     |
+| `released_percentage`  | Percentage released.                                                          |
+| `expired_at`           | Escrow deadline.                                                              |
+| `release_id`           | `ReleaseId` (absent on `escrow_expired`).                                     |
+| `release_type`         | `release` or `refund` (absent on `escrow_expired`).                           |
+| `release_reference_id` | The release `referenceId` you sent.                                           |
+| `milestone`            | Milestone name, if sent.                                                      |
+| `percentage`           | Percentage of this release.                                                   |
+| `amount`               | Amount of this release.                                                       |
+| `fee`                  | Fee share of this release.                                                    |
+| `release_trx_id`       | ID of the "Escrow Release" transaction.                                       |
+| `released_at`          | Release time.                                                                 |
+
+### Example Callback
+
+```
+event=escrow_release&event_id=1&trx_id=1&sid=a1b2c3d4-sid&reference_id=PROJECT-001
+&status=partially_released&escrow_amount=500000000&released_amount=150000000
+&refunded_amount=0&remaining_amount=350000000&released_percentage=30
+&expired_at=2027-10-12+16%3A23%3A48&release_id=1&release_type=release
+&release_reference_id=MS-1&milestone=Stage+1+-+Foundation&percentage=30
+&amount=150000000&fee=1200000&release_trx_id=2&released_at=2026-10-12+16%3A23%3A48
+```
+
+---
+
+## Error Codes
+
+| HTTP | Message                                                 | Cause                                                                                   |
+| :--- | :------------------------------------------------------ | :-------------------------------------------------------------------------------------- |
+| 400  | `release amount exceeds escrow balance`                 | Amount is above the remaining Escrow balance, which is in `Data.RemainingAmount`.        |
+| 400  | `release amount must be greater than 0`                 | The percentage is so small that the amount rounds to `0`.                               |
+| 400  | `send either amount or percentage, not both`            | `amount` and `percentage` were sent together.                                           |
+| 400  | `escrow already closed`                                 | The Escrow is already `fully_released` or `refunded`.                                   |
+| 400  | `escrow transaction is not paid`                        | The buyer has not paid the escrow payment yet.                                          |
+| 400  | `transaction is locked, please contact iPaymu support`  | The transaction is locked by iPaymu. Contact the iPaymu team.                           |
+| 400  | `escrow has no balance`                                 | The payment total after fees is `0`.                                                    |
+| 400  | validation message                                      | A required parameter is missing or invalid, e.g. `percentage` above `100`.              |
+| 403  | `service 516 not found`                                 | The Escrow Milestone service is not enabled for your account.                           |
+| 404  | `escrow not found`                                      | Transaction not found, not yours, or not an Escrow Milestone.                           |
+| 406  | `invalid account`                                       | The `account` VA was not found or is not your child account.                            |
+| 409  | `referenceId already used`                              | The `referenceId` was used for the other type (e.g. a release ID reused for a refund).  |
+
+Example of an insufficient balance error:
+
+```json
+{
+  "Status": 400,
+  "Success": false,
+  "Message": "release amount exceeds escrow balance",
+  "Data": {
+    "RemainingAmount": 250000000
+  }
+}
+```

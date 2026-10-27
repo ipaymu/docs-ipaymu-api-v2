@@ -5,6 +5,7 @@
         "register",
         "transfer-va",
         "withdraw-auto",
+        "escrow-milestone",
         "profile",
         "area",
         "bank-list",
